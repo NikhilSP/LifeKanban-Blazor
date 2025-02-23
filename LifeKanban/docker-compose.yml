@@ -1,0 +1,6 @@
+﻿services:
+  lifekanban:
+    image: lifekanban
+    build:
+      context: .
+      dockerfile: Dockerfile
