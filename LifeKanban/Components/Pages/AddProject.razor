@@ -1,0 +1,28 @@
+@page "/AddProject"
+@using LifeKanban.Client
+@using LifeKanban.Model
+@inject ProjectsClient Client
+
+<h3>Add Project</h3>
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="@_project" FormName="AddProject" OnSubmit="OnAddProject" Enhance>
+            <div class="mb-3 mt-3">
+                <label for="projectName" class="form-label">Project Name</label>
+                <InputText id="projectName" class="form-control" @bind-Value="_project.Name"/>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm] 
+    private Project _project { get; set; } = new(id: -1, name: string.Empty);
+
+    private void OnAddProject()
+    {
+        Client.AddProject(_project);
+    }
+}
