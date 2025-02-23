@@ -1,0 +1,150 @@
+@page "/kanbanboard"
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Project Kanban Board</h2>
+    
+    <div class="row">
+        @foreach (var column in columns)
+        {
+            <div class="col-md-3">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <h5 class="card-title mb-0">@column.Title</h5>
+                    </div>
+                    <div class="card-body kanban-column" 
+                         ondragover="event.preventDefault()"
+                         @ondrop="@(async () => await OnDrop(column.Id))"
+                         style="min-height: 500px;">
+                        
+                        @foreach (var task in tasks.Where(t => t.ColumnId == column.Id))
+                        {
+                            <div class="card mb-2 task-card" 
+                                 draggable="true"
+                                 @ondragstart="@(() => OnDragStart(task.Id))"
+                                 @key="task.Id">
+                                <div class="card-body">
+                                    <h6 class="card-title">@task.Title</h6>
+                                    <p class="card-text small text-muted mb-0">@task.Description</p>
+                                    <div class="mt-2">
+                                        <span class="badge bg-@task.Priority.ToLower()">@task.Priority</span>
+                                        <small class="text-muted float-end">@task.AssignedTo</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .kanban-column {
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        padding: 10px;
+    }
+    
+    .task-card {
+        cursor: grab;
+        transition: all 0.2s ease;
+    }
+    
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+</style>
+
+@code {
+    private List<KanbanColumn> columns = new()
+    {
+        new KanbanColumn { Id = 1, Title = "To Do" },
+        new KanbanColumn { Id = 2, Title = "In Progress" },
+        new KanbanColumn { Id = 3, Title = "Review" },
+        new KanbanColumn { Id = 4, Title = "Done" }
+    };
+
+    private List<KanbanTask> tasks = new();
+    private int? draggedTaskId;
+
+    protected override void OnInitialized()
+    {
+        // Initialize with sample tasks
+        tasks = new List<KanbanTask>
+        {
+            new KanbanTask 
+            { 
+                Id = 1, 
+                Title = "Implement Login", 
+                Description = "Create user authentication system",
+                ColumnId = 1,
+                Priority = "High",
+                AssignedTo = "John Doe"
+            },
+            new KanbanTask 
+            { 
+                Id = 2, 
+                Title = "Design Database", 
+                Description = "Create ERD and implement schema",
+                ColumnId = 1,
+                Priority = "Medium",
+                AssignedTo = "Jane Smith"
+            },
+            new KanbanTask 
+            { 
+                Id = 3, 
+                Title = "API Integration", 
+                Description = "Connect to payment gateway",
+                ColumnId = 2,
+                Priority = "High",
+                AssignedTo = "Mike Johnson"
+            },
+            new KanbanTask 
+            { 
+                Id = 4, 
+                Title = "Unit Tests", 
+                Description = "Write tests for core functions",
+                ColumnId = 3,
+                Priority = "Low",
+                AssignedTo = "Sarah Wilson"
+            }
+        };
+    }
+
+    private void OnDragStart(int taskId)
+    {
+        draggedTaskId = taskId;
+    }
+
+    private async Task OnDrop(int newColumnId)
+    {
+        if (draggedTaskId.HasValue)
+        {
+            var task = tasks.FirstOrDefault(t => t.Id == draggedTaskId.Value);
+            if (task != null)
+            {
+                task.ColumnId = newColumnId;
+                draggedTaskId = null;
+                StateHasChanged();
+            }
+        }
+    }
+
+    public class KanbanColumn
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+    }
+
+    public class KanbanTask
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public int ColumnId { get; set; }
+        public string Priority { get; set; }
+        public string AssignedTo { get; set; }
+    }
+}
