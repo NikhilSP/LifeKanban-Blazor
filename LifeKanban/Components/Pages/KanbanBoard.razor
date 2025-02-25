@@ -1,8 +1,9 @@
+@rendermode InteractiveServer
 @page "/kanbanboard"
 
 <div class="container-fluid mt-4">
-    <h2 class="mb-4">Project Kanban Board</h2>
-    
+    <h2 class="mb-4">Kanban Board</h2>
+
     <div class="row">
         @foreach (var column in columns)
         {
@@ -11,16 +12,19 @@
                     <div class="card-header bg-light">
                         <h5 class="card-title mb-0">@column.Title</h5>
                     </div>
-                    <div class="card-body kanban-column" 
-                         ondragover="event.preventDefault()"
-                         @ondrop="@(async () => await OnDrop(column.Id))"
+                    <div class="card-body kanban-column"
+                         dropzone="move"
+                         ondragover="event.preventDefault();"
+                         ondragenter="event.preventDefault();"
+                         ondrop="@(() => HandleDrop(column.Id))"
                          style="min-height: 500px;">
-                        
+
                         @foreach (var task in tasks.Where(t => t.ColumnId == column.Id))
                         {
-                            <div class="card mb-2 task-card" 
+                            <div class="card mb-2 task-card"
                                  draggable="true"
-                                 @ondragstart="@(() => OnDragStart(task.Id))"
+                                 @ondragstart="() => HandleDragStart(task)"
+                                 @ondragend="HandleDragEnd"
                                  @key="task.Id">
                                 <div class="card-body">
                                     <h6 class="card-title">@task.Title</h6>
@@ -58,6 +62,7 @@
 </style>
 
 @code {
+
     private List<KanbanColumn> columns = new()
     {
         new KanbanColumn { Id = 1, Title = "To Do" },
@@ -67,44 +72,44 @@
     };
 
     private List<KanbanTask> tasks = new();
-    private int? draggedTaskId;
+    private KanbanTask draggedTask;
 
     protected override void OnInitialized()
     {
         // Initialize with sample tasks
         tasks = new List<KanbanTask>
         {
-            new KanbanTask 
-            { 
-                Id = 1, 
-                Title = "Implement Login", 
+            new KanbanTask
+            {
+                Id = 1,
+                Title = "Implement Login",
                 Description = "Create user authentication system",
                 ColumnId = 1,
                 Priority = "High",
                 AssignedTo = "John Doe"
             },
-            new KanbanTask 
-            { 
-                Id = 2, 
-                Title = "Design Database", 
+            new KanbanTask
+            {
+                Id = 2,
+                Title = "Design Database",
                 Description = "Create ERD and implement schema",
                 ColumnId = 1,
                 Priority = "Medium",
                 AssignedTo = "Jane Smith"
             },
-            new KanbanTask 
-            { 
-                Id = 3, 
-                Title = "API Integration", 
+            new KanbanTask
+            {
+                Id = 3,
+                Title = "API Integration",
                 Description = "Connect to payment gateway",
                 ColumnId = 2,
                 Priority = "High",
                 AssignedTo = "Mike Johnson"
             },
-            new KanbanTask 
-            { 
-                Id = 4, 
-                Title = "Unit Tests", 
+            new KanbanTask
+            {
+                Id = 4,
+                Title = "Unit Tests",
                 Description = "Write tests for core functions",
                 ColumnId = 3,
                 Priority = "Low",
@@ -113,22 +118,26 @@
         };
     }
 
-    private void OnDragStart(int taskId)
+    private void HandleDragStart(KanbanTask task)
     {
-        draggedTaskId = taskId;
+        draggedTask = task;
+        Console.WriteLine($"Started dragging");
     }
 
-    private async Task OnDrop(int newColumnId)
+    private void HandleDragEnd()
     {
-        if (draggedTaskId.HasValue)
+        Console.WriteLine("Drag ended");
+    }
+
+    private void HandleDrop(int newColumnId)
+    {
+        if (draggedTask != null)
         {
-            var task = tasks.FirstOrDefault(t => t.Id == draggedTaskId.Value);
-            if (task != null)
-            {
-                task.ColumnId = newColumnId;
-                draggedTaskId = null;
-                StateHasChanged();
-            }
+            Console.WriteLine($"Dropping task ");
+
+            draggedTask.ColumnId = newColumnId;
+            draggedTask = null;
+            StateHasChanged();
         }
     }
 
@@ -147,4 +156,5 @@
         public string Priority { get; set; }
         public string AssignedTo { get; set; }
     }
+
 }
