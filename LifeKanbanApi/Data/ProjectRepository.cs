@@ -11,9 +11,9 @@ public class ProjectRepository : IProjectRepository
         new Project() { Id = Guid.NewGuid(), Name = "Project 3" }
     ];
 
-    public async Task<Project[]> GetProjects(CancellationToken cancellationToken = default)
+    public async Task<List<Project>> GetProjects(CancellationToken cancellationToken = default)
     {
-        return _projects.ToArray();
+        return _projects;
     }
 
     public Task<Project> GetProject(Guid id, CancellationToken cancellationToken = default)

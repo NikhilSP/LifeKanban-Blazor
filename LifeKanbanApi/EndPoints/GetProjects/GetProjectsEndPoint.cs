@@ -8,7 +8,7 @@ namespace LifeKanbanApi.EndPoints.GetProjects;
 
 public record GetProjectsRequest();
 
-public record GetProjectsResponse(IEnumerable<Project> Projects);
+public record GetProjectsResponse(List<Project> Projects);
 
 public class GetProjectsEndPoint : ICarterModule
 {

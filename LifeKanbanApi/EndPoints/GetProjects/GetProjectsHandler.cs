@@ -6,7 +6,7 @@ namespace LifeKanbanApi.EndPoints.GetProjects;
 
 public record GetProjectsCommand():ICommand<GetProjectsResult>;
 
-public record GetProjectsResult(IEnumerable<Project> Projects);
+public record GetProjectsResult(List<Project> Projects);
 
 public class GetProjectsHandler(ProjectRepository projectRepository):ICommandHandler<GetProjectsCommand,GetProjectsResult>
 {

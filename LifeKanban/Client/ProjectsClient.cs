@@ -1,22 +1,23 @@
+using System.Text.Json;
 using LifeKanban.Model;
 
 namespace LifeKanban.Client;
 
-public class ProjectsClient
+public class ProjectsClient(HttpClient httpClient)
 {
-    private List<Project> _projects = [
-        new Project(id: 1, name: "Project A"),
-        new Project(id: 2, name: "Project B"),
-        new Project(id: 3, name: "Project C"),];
-    
-    
-    public Project[] GetProjects()
+    public async Task<List<ProjectItem>> GetProjects()
     {
-        return _projects.ToArray();
+        var options = new JsonSerializerOptions 
+        {
+            PropertyNameCaseInsensitive = true // This ignores case differences
+        };
+
+        var res = await httpClient.GetFromJsonAsync<GetProjectsResponse>("projects", options);
+
+        return res?.Projects ??[];
     }
 
-    public void AddProject(Project newProject)
+    public void AddProject(ProjectItem newProjectItem)
     {
-        _projects.Add(newProject);
     }
 }

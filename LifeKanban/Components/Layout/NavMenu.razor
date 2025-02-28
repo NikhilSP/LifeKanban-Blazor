@@ -1,4 +1,5 @@
 ﻿@using LifeKanban.Client
+@using LifeKanban.Model
 @inject ProjectsClient Client
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -17,11 +18,11 @@
             </NavLink>
         </div>
         
-        @foreach (var project in Client.GetProjects())
+        @foreach (var project in Projects)
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="kanbanboard">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @project.Name
+                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @project.name
                 </NavLink>
             </div>
         }
@@ -33,3 +34,14 @@
         </div>
     </nav>
 </div>
+
+
+@code
+{
+    List<ProjectItem> Projects = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        Projects = await Client.GetProjects();
+    }
+}
