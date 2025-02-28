@@ -5,12 +5,12 @@ using LifeKanbanApi.Model;
 
 namespace LifeKanbanApi.EndPoints.CreateProject;
 
-public record CreateProjectCommand(Guid Id,string ProjectName) 
+public record CreateProjectCommand(Guid Id, string ProjectName)
     : ICommand<CreateProjectResult>;
 
 public record CreateProjectResult(bool IsSuccess);
 
-public class CreateProjectValidator:AbstractValidator<CreateProjectCommand>
+public class CreateProjectValidator : AbstractValidator<CreateProjectCommand>
 {
     public CreateProjectValidator()
     {
@@ -19,11 +19,14 @@ public class CreateProjectValidator:AbstractValidator<CreateProjectCommand>
     }
 }
 
-public class CreateProjectHandler(IProjectRepository projectRepository): ICommandHandler<CreateProjectCommand, CreateProjectResult>
+public class CreateProjectHandler(ProjectRepository projectRepository)
+    : ICommandHandler<CreateProjectCommand, CreateProjectResult>
 {
     public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
     {
-       var result = await projectRepository.AddProject(new Project(request.Id, request.ProjectName),cancellationToken);
-       return new CreateProjectResult(result);
+        var result = await projectRepository.AddProject(
+            new Project() { Id = request.Id, Name = request.ProjectName },
+            cancellationToken);
+        return new CreateProjectResult(result);
     }
 }

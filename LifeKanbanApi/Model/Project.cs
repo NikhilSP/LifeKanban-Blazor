@@ -2,14 +2,7 @@ namespace LifeKanbanApi.Model;
 
 public class Project
 {
-    public Project(Guid id, string name)
-    {
-        Id = id;
-        Name = name;
-    }
-
-    public Guid Id { get; }
-    public string Name { get; set; }
-    
-    public IReadOnlyList<ProjectTask> Tasks { get; set; }
+    public Guid Id { get; set; } = Guid.Empty;
+    public string Name { get; set; } = string.Empty;
+    public List<ProjectTask> Tasks { get; set; } = new ();
 }

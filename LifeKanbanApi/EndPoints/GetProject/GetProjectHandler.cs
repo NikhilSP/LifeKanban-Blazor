@@ -8,11 +8,11 @@ public record GetProjectCommand(Guid Id):ICommand<GetProjectResult>;
 
 public record GetProjectResult(Project Project);
 
-public class GetProjectHandler(IProjectRepository projectRepository):ICommandHandler<GetProjectCommand,GetProjectResult>
+public class GetProjectHandler(ProjectRepository projectRepository):ICommandHandler<GetProjectCommand,GetProjectResult>
 {
     public async Task<GetProjectResult> Handle(GetProjectCommand request, CancellationToken cancellationToken)
     {
         var projects = await projectRepository.GetProject(request.Id, cancellationToken);
-        return new GetProjectResult(projects);
+        return new GetProjectResult( new Project() { Id = Guid.NewGuid(), Name = "Project Temp" });
     }
 }

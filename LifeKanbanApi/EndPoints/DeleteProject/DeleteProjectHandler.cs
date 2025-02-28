@@ -8,7 +8,7 @@ public record DeleteProjectCommand(Guid Id):ICommand<DeleteProjectResult>;
 
 public record DeleteProjectResult(bool IsSuccess);
 
-public class DeleteProjectHandler(IProjectRepository projectRepository):ICommandHandler<DeleteProjectCommand,DeleteProjectResult>
+public class DeleteProjectHandler(ProjectRepository projectRepository):ICommandHandler<DeleteProjectCommand,DeleteProjectResult>
 {
     public async Task<DeleteProjectResult> Handle(DeleteProjectCommand request, CancellationToken cancellationToken)
     {

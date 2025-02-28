@@ -6,9 +6,9 @@ namespace LifeKanbanApi.EndPoints.GetProjects;
 
 public record GetProjectsCommand():ICommand<GetProjectsResult>;
 
-public record GetProjectsResult(Project[] Projects);
+public record GetProjectsResult(IEnumerable<Project> Projects);
 
-public class GetProjectsHandler(IProjectRepository projectRepository):ICommandHandler<GetProjectsCommand,GetProjectsResult>
+public class GetProjectsHandler(ProjectRepository projectRepository):ICommandHandler<GetProjectsCommand,GetProjectsResult>
 {
     public async Task<GetProjectsResult> Handle(GetProjectsCommand request, CancellationToken cancellationToken)
     {

@@ -12,7 +12,7 @@ public class CreateProjectEndPoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapPost("/project", async (CreateProjectRequest request, ISender sender) =>
+        app.MapPost("/addProject", async (CreateProjectRequest request, ISender sender) =>
             {
                 var command = request.Adapt<CreateProjectCommand>();
 
