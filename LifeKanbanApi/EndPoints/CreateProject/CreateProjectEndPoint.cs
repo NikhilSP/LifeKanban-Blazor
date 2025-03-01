@@ -1,10 +1,11 @@
 using Carter;
+using LifeKanbanApi.Model;
 using Mapster;
 using MediatR;
 
 namespace LifeKanbanApi.EndPoints.CreateProject;
 
-public record CreateProjectRequest(Guid Id, string ProjectName);
+public record CreateProjectRequest(Project Project);
 
 public record CreateProjectResponse(bool IsSuccess);
 

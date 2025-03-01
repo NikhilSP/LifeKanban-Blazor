@@ -1,6 +1,11 @@
 ﻿@using LifeKanban.Client
 @using LifeKanban.Model
+@using LifeKanban.StateManagement
 @inject ProjectsClient Client
+@inject ProjectStateService ProjectStateService
+@implements IDisposable
+@rendermode InteractiveServer
+
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
@@ -17,13 +22,16 @@
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        
+
         @foreach (var project in Projects)
         {
-            <div class="nav-item px-3">
+            <div class="nav-item d-flex align-items-center justify-content-between px-3">
                 <NavLink class="nav-link" href="kanbanboard">
                     <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @project.name
                 </NavLink>
+                <button type="button" class="btn btn-link text-white" @onclick="() => DeleteProject(project.id)">
+                    <span class="bi bi-trash"></span>
+                </button>
             </div>
         }
 
@@ -39,9 +47,47 @@
 @code
 {
     List<ProjectItem> Projects = [];
+    private bool _isInitialized = false;
+
+    protected override void OnInitialized()
+    {
+        ProjectStateService.ProjectsChanged += OnProjectsChanged;
+    }
+
+    private async void OnProjectsChanged()
+    {
+        await RefreshProjects();
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        await RefreshProjects();
+        _isInitialized = true;
+    }
+
+    private async Task RefreshProjects()
+    {
         Projects = await Client.GetProjects();
+
+        // Only call StateHasChanged if already initialized
+        // This prevents issues during component initialization
+        if (_isInitialized)
+        {
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        ProjectStateService.ProjectsChanged -= OnProjectsChanged;
+    }
+
+    private async void DeleteProject(Guid projectId)
+    {
+        var res = await Client.DeleteProjects(projectId);
+        if (res)
+        {
+            await RefreshProjects();
+        }
     }
 }

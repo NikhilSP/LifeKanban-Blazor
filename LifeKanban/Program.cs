@@ -1,15 +1,19 @@
 using LifeKanban.Client;
 using LifeKanban.Components;
+using LifeKanban.StateManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.
+    Services.
+    AddRazorComponents().
+    AddInteractiveServerComponents();
 
 builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5190/") });
 
 builder.Services.AddSingleton<ProjectsClient>();
+builder.Services.AddSingleton<ProjectStateService>();
 
 var app = builder.Build();
 

@@ -1,13 +1,15 @@
 @page "/AddProject"
 @using LifeKanban.Client
 @using LifeKanban.Model
+@using LifeKanban.StateManagement
 @inject ProjectsClient Client
+@inject ProjectStateService ProjectStateService
 
 <h3>Add Project</h3>
 
 <div class="row">
     <div class="col-md-4">
-        <EditForm Model="@ProjectItem" FormName="AddProject" OnSubmit="OnAddProject" Enhance>
+        <EditForm Model="@ProjectItem" FormName="AddProject" OnValidSubmit=@OnAddProject>
             <div class="mb-3 mt-3">
                 <label for="projectName" class="form-label">Project Name</label>
                 <InputText id="projectName" class="form-control" @bind-Value="ProjectItem.name"/>
@@ -18,11 +20,15 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new ProjectItem() { id = Guid.Empty, name = string.Empty };
+    [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new ProjectItem() { id = Guid.NewGuid(), name = string.Empty };
 
-    private void OnAddProject()
+    private async void OnAddProject()
     {
-        Client.AddProject(ProjectItem);
+        var result = await Client.AddProject(ProjectItem);
+        if (result)
+        {
+            ProjectStateService.NotifyStateChanged();
+        }
     }
 
 }

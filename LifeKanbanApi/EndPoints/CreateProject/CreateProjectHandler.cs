@@ -5,7 +5,7 @@ using LifeKanbanApi.Model;
 
 namespace LifeKanbanApi.EndPoints.CreateProject;
 
-public record CreateProjectCommand(Guid Id, string ProjectName)
+public record CreateProjectCommand(Project Project)
     : ICommand<CreateProjectResult>;
 
 public record CreateProjectResult(bool IsSuccess);
@@ -14,8 +14,8 @@ public class CreateProjectValidator : AbstractValidator<CreateProjectCommand>
 {
     public CreateProjectValidator()
     {
-        RuleFor(x => x.ProjectName).NotNull().WithMessage("ProjectName can't be null");
-        RuleFor(x => x.ProjectName).NotEmpty().WithMessage("ProjectName can't be empty");
+        RuleFor(x => x.Project.Name).NotNull().WithMessage("ProjectName can't be null");
+        RuleFor(x => x.Project.Name).NotEmpty().WithMessage("ProjectName can't be empty");
     }
 }
 
@@ -24,9 +24,7 @@ public class CreateProjectHandler(ProjectRepository projectRepository)
 {
     public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
     {
-        var result = await projectRepository.AddProject(
-            new Project() { Id = request.Id, Name = request.ProjectName },
-            cancellationToken);
+        var result = await projectRepository.AddProject(request.Project, cancellationToken);
         return new CreateProjectResult(result);
     }
 }

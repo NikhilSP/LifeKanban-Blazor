@@ -16,7 +16,7 @@ public class Program
             config.RegisterServicesFromAssembly(assembly);
         });
         
-        builder.Services.AddScoped<ProjectRepository>();
+        builder.Services.AddSingleton<ProjectRepository>();
         
         var app = builder.Build();
         app.MapCarter();

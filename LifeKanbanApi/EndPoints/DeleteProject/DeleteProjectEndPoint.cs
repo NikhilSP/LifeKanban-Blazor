@@ -17,7 +17,7 @@ public class DeleteProjectEndPoint : ICarterModule
                 var request = new DeleteProjectRequest(id);
                 var command = request.Adapt<DeleteProjectCommand>();
                 var result = await sender.Send(command);
-                var response = result.Adapt<DeleteProjectRequest>();
+                var response = result.Adapt<DeleteProjectResponse>();
                 return Results.Ok(response);
             }).WithName("DeleteProject")
             .Produces<DeleteProjectResponse>(StatusCodes.Status201Created)
