@@ -26,7 +26,7 @@
         @foreach (var project in Projects)
         {
             <div class="nav-item d-flex align-items-center justify-content-between px-3">
-                <NavLink class="nav-link" href="kanbanboard">
+                <NavLink class="nav-link" href="@($"/kanbanboard/{project.id}")">
                     <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @project.name
                 </NavLink>
                 <button type="button" class="btn btn-link text-white" @onclick="() => DeleteProject(project.id)">

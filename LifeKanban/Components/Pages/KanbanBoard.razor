@@ -1,16 +1,21 @@
 @rendermode InteractiveServer
-@page "/kanbanboard"
+@inject ProjectsClient Client
+@page "/kanbanboard/{projectId:guid}"
+@using LifeKanban.Client
 
 <div class="container-fluid mt-4">
-    <h2 class="mb-4">Kanban Board</h2>
+    <h3>Kanban Board</h3>
 
     <div class="row">
         @foreach (var column in columns)
         {
             <div class="col-md-3">
                 <div class="card">
-                    <div class="card-header bg-light">
+                    <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
                         <h5 class="card-title mb-0">@column.Title</h5>
+                        <button type="button" class="btn btn-link">
+                            <span class="bi bi-plus"></span>
+                        </button>
                     </div>
                     <div class="card-body kanban-column"
                          dropzone="move"
@@ -63,6 +68,7 @@
 
 @code {
 
+    [Parameter] public Guid projectId { get; set; } 
     private List<KanbanColumn> columns = new()
     {
         new KanbanColumn { Id = 1, Title = "To Do" },
@@ -73,50 +79,28 @@
 
     private List<KanbanTask> tasks = new();
     private KanbanTask draggedTask;
-
-    protected override void OnInitialized()
+    
+    protected override async Task OnInitializedAsync()
     {
-        // Initialize with sample tasks
-        tasks = new List<KanbanTask>
+        var project = await Client.GetProjectById(projectId);
+
+        if (project is not null)
         {
-            new KanbanTask
+            foreach (var task in project.tasks)
             {
-                Id = 1,
-                Title = "Implement Login",
-                Description = "Create user authentication system",
-                ColumnId = 1,
-                Priority = "High",
-                AssignedTo = "John Doe"
-            },
-            new KanbanTask
-            {
-                Id = 2,
-                Title = "Design Database",
-                Description = "Create ERD and implement schema",
-                ColumnId = 1,
-                Priority = "Medium",
-                AssignedTo = "Jane Smith"
-            },
-            new KanbanTask
-            {
-                Id = 3,
-                Title = "API Integration",
-                Description = "Connect to payment gateway",
-                ColumnId = 2,
-                Priority = "High",
-                AssignedTo = "Mike Johnson"
-            },
-            new KanbanTask
-            {
-                Id = 4,
-                Title = "Unit Tests",
-                Description = "Write tests for core functions",
-                ColumnId = 3,
-                Priority = "Low",
-                AssignedTo = "Sarah Wilson"
+                tasks.Add(new KanbanTask()
+                {
+                    Id = task.id,
+                    Title =task.title,
+                    Description =task.description,
+                    ColumnId =1,
+                    Priority = "High",
+                    AssignedTo = "Me"
+                });
             }
-        };
+        }
     }
+
 
     private void HandleDragStart(KanbanTask task)
     {
@@ -149,7 +133,7 @@
 
     public class KanbanTask
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
         public int ColumnId { get; set; }

@@ -12,7 +12,7 @@ public class GetProjectHandler(ProjectRepository projectRepository):ICommandHand
 {
     public async Task<GetProjectResult> Handle(GetProjectCommand request, CancellationToken cancellationToken)
     {
-        var projects = await projectRepository.GetProject(request.Id, cancellationToken);
-        return new GetProjectResult( new Project() { Id = Guid.NewGuid(), Name = "Project Temp" });
+        var project = await projectRepository.GetProject(request.Id, cancellationToken);
+        return new GetProjectResult( project);
     }
 }

@@ -16,6 +16,25 @@ public class ProjectsClient(HttpClient httpClient)
 
         return res?.Projects ??[];
     }
+    
+    public async Task<ProjectItem?> GetProjectById(Guid id)
+    {
+        try
+        {
+            var options = new JsonSerializerOptions 
+            {
+                PropertyNameCaseInsensitive = true 
+            };
+
+            var res = await httpClient.GetFromJsonAsync<GetProjectResponse>($"project/{id}", options);
+
+            return res!.Project;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
     public async Task<bool> AddProject(ProjectItem newProjectItem)
     {

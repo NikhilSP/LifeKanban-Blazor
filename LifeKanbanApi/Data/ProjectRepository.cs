@@ -8,7 +8,39 @@ public class ProjectRepository : IProjectRepository
     [
         new Project() { Id = Guid.NewGuid(), Name = "Project 1" },
         new Project() { Id = Guid.NewGuid(), Name = "Project 2" },
-        new Project() { Id = Guid.NewGuid(), Name = "Project 3" }
+        new Project()
+        {
+            Id = Guid.NewGuid(),
+            Name = "Project 3",
+            Tasks =
+            [
+                new ProjectTask()
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Task 1",
+                    Description = "Description",
+                    Status = "Status",
+                    Milestone = new Milestone()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Milestone 1"
+                    }
+                },
+                new ProjectTask()
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Task 2",
+                    Description = "Description 2",
+                    Status = "Status 2",
+                    Milestone = new Milestone()
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = "Milestone 2"
+                    }
+                }
+                
+            ]
+        }
     ];
 
     public async Task<List<Project>> GetProjects(CancellationToken cancellationToken = default)
@@ -16,9 +48,9 @@ public class ProjectRepository : IProjectRepository
         return _projects;
     }
 
-    public Task<Project> GetProject(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Project> GetProject(Guid id, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        return _projects.Where(x => x.Id == id).First();
     }
 
     public async Task<bool> AddProject(Project project, CancellationToken cancellationToken = default)
