@@ -7,3 +7,5 @@ public record CreateProjectResponse(bool IsSuccess);
 public record DeleteProjectResponse(bool IsSuccess);
 
 public record GetProjectResponse(ProjectItem Project);
+
+public record AddTaskResponse(bool IsSuccess);

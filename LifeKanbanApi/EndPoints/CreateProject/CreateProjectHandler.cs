@@ -5,8 +5,7 @@ using LifeKanbanApi.Model;
 
 namespace LifeKanbanApi.EndPoints.CreateProject;
 
-public record CreateProjectCommand(Project Project)
-    : ICommand<CreateProjectResult>;
+public record CreateProjectCommand(Project Project) : ICommand<CreateProjectResult>;
 
 public record CreateProjectResult(bool IsSuccess);
 

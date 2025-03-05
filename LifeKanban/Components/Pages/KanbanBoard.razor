@@ -2,6 +2,7 @@
 @inject ProjectsClient Client
 @page "/kanbanboard/{projectId:guid}"
 @using LifeKanban.Client
+@using LifeKanban.Model
 
 <div class="container-fluid mt-4">
     <h3>Kanban Board</h3>
@@ -13,7 +14,7 @@
                 <div class="card">
                     <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
                         <h5 class="card-title mb-0">@column.Title</h5>
-                        <button type="button" class="btn btn-link">
+                        <button type="button" class="btn btn-link" @onclick="OpenTaskDialogOnClick">
                             <span class="bi bi-plus"></span>
                         </button>
                     </div>
@@ -47,6 +48,14 @@
         }
     </div>
 </div>
+@if (OpenAddTaskDialog)
+{
+    <AddTaskDialog ProjectGuid="@projectId"
+                   OnClose="@OnOpenAddTaskDialogClose"
+                   OnItemSelected="@HandelOnAddTask"
+                   DialogType="AddTaskDialog.ModalDialogType.DeleteCancel">
+    </AddTaskDialog>
+}
 
 <style>
     .kanban-column {
@@ -68,7 +77,22 @@
 
 @code {
 
-    [Parameter] public Guid projectId { get; set; } 
+    public bool OpenAddTaskDialog { get; set; }
+
+    private async Task OnOpenAddTaskDialogClose()
+    {
+        OpenAddTaskDialog = false;
+        StateHasChanged();
+    }
+
+    private void OpenTaskDialogOnClick()
+    {
+        OpenAddTaskDialog = true;
+        StateHasChanged();
+    }
+
+    [Parameter] public Guid projectId { get; set; }
+
     private List<KanbanColumn> columns = new()
     {
         new KanbanColumn { Id = 1, Title = "To Do" },
@@ -79,21 +103,27 @@
 
     private List<KanbanTask> tasks = new();
     private KanbanTask draggedTask;
-    
+
     protected override async Task OnInitializedAsync()
+    {
+        await RefreshTask();
+    }
+
+    private async Task RefreshTask()
     {
         var project = await Client.GetProjectById(projectId);
 
         if (project is not null)
         {
+            tasks.Clear();
             foreach (var task in project.tasks)
             {
                 tasks.Add(new KanbanTask()
                 {
                     Id = task.id,
-                    Title =task.title,
-                    Description =task.description,
-                    ColumnId =1,
+                    Title = task.title,
+                    Description = task.description,
+                    ColumnId = 1,
                     Priority = "High",
                     AssignedTo = "Me"
                 });
@@ -140,5 +170,12 @@
         public string Priority { get; set; }
         public string AssignedTo { get; set; }
     }
+
+    public async Task HandelOnAddTask(ProjectTaskItem task)
+    {
+        await RefreshTask();
+    }
+
+}
 
 }

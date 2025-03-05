@@ -50,12 +50,19 @@ public class ProjectRepository : IProjectRepository
 
     public async Task<Project> GetProject(Guid id, CancellationToken cancellationToken = default)
     {
-        return _projects.Where(x => x.Id == id).First();
+        return _projects.First(x => x.Id == id);
     }
 
     public async Task<bool> AddProject(Project project, CancellationToken cancellationToken = default)
     {
         _projects.Add(project);
+        return true;
+    }
+    
+    public async Task<bool> AddTask(ProjectTask projectTask,Guid projectGuid, CancellationToken cancellationToken = default)
+    {
+        var project = await GetProject(projectGuid,cancellationToken);
+        project.Tasks.Add(projectTask);
         return true;
     }
 
