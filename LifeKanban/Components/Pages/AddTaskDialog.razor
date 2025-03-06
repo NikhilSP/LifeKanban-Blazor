@@ -10,6 +10,7 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
+                <!-- Form without validation until we fix the issue -->
                 <EditForm Model="@ProjectTaskItem" FormName="AddProject">
                     <div class="mb-3 mt-3">
                         <label for="taskName" class="form-label">Title</label>
@@ -19,22 +20,41 @@
                         <label for="Description" class="form-label">Description</label>
                         <InputText id="Description" class="form-control" @bind-Value="ProjectTaskItem.description"/>
                     </div>
+                    <div class="mb-3 mt-3">
+                        <label for="milestone" class="form-label">Milestone</label>
+                        <!-- Switch to a regular select for debugging -->
+                        <select id="milestone" class="form-control" @onchange="HandleMilestoneChange">
+                            <option value="">-- Select Milestone --</option>
+                            @foreach (var milestone in ProjectItem.milestones)
+                            {
+                            <option value="@milestone.id">@milestone.name</option>
+                            }
+                        </select>
+                    </div>
                 </EditForm>
+
+                <!-- Debug area - will help us see what's happening -->
+                @if (!string.IsNullOrEmpty(debugMessage))
+                {
+                <div class="alert alert-info mt-3">
+                    @debugMessage
+                </div>
+                }
             </div>
             <div class="modal-footer">
                 @switch (DialogType)
                 {
-                    case ModalDialogType.Ok:
-                        <button type="button" class="btn btn-primary" @onclick=@ModalOk>Add Task</button>
-                        break;
-                    case ModalDialogType.OkCancel:
-                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick=@ModalOk>Add Task</button>
-                        break;
-                    case ModalDialogType.DeleteCancel:
-                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-danger" @onclick=@ModalOk>Add Task</button>
-                        break;
+                case ModalDialogType.Ok:
+                <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Add Task</button>
+                break;
+                case ModalDialogType.OkCancel:
+                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Add Task</button>
+                break;
+                case ModalDialogType.DeleteCancel:
+                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                <button type="button" class="btn btn-danger" @onclick="SafeModalOk">Add Task</button>
+                break;
                 }
             </div>
         </div>
@@ -42,13 +62,57 @@
 </div>
 
 @code {
+    
+    private string debugMessage;
+    
+    // A safer handler for milestone changes 
+    private void HandleMilestoneChange(ChangeEventArgs e)
+    {
+        try
+        {
+            var selectedId = e.Value.ToString();
+            debugMessage = $"Selected milestone ID: {selectedId}";
+            
+            // Store just the ID string instead of the complex object
+            ProjectTaskItem.milestone = ProjectItem.milestones.First(x=>x.id.ToString()==selectedId);
+            
+            // If you need the full object too, store it separately
+            // var milestoneObj = ProjectItem.milestones.FirstOrDefault(m => m.id == selectedId);
+            // ProjectTaskItem.milestoneObject = milestoneObj;
+            
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"Error: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+    
+    // A wrapper for the ModalOk method with error handling
+    private void SafeModalOk()
+    {
+        try
+        {
+            debugMessage = "Add Task button clicked";
+            StateHasChanged();
+            
+            // Call your original method
+            ModalOk();
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"Error in ModalOk: {ex.Message}";
+            StateHasChanged();
+        }
+    }
     [SupplyParameterFromForm] private ProjectTaskItem ProjectTaskItem { get; set; } = new ProjectTaskItem() { id = Guid.NewGuid() };
 
     [Parameter] public string Title { get; set; } = "Add Task Details";
 
     [Parameter] public string Text { get; set; }
 
-    [Parameter] public Guid ProjectGuid { get; set; }
+    [Parameter] public ProjectItem ProjectItem { get; set; }
 
     [Parameter] public EventCallback<bool> OnClose { get; set; }
 
@@ -64,7 +128,7 @@
 
     private async Task<Task> ModalOk()
     {
-        var result = await Client.AddTask(ProjectTaskItem, ProjectGuid);
+        var result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
 
         if (result)
         {
@@ -73,7 +137,7 @@
         
         return OnClose.InvokeAsync(true);
     }
-
+    
     public enum ModalDialogType
     {
         Ok,

@@ -82,6 +82,29 @@ public class ProjectsClient(HttpClient httpClient)
         }
     }
     
+    public async Task<bool> AddMilestone(MilestoneItem newProjectItem,Guid projectId)
+    {
+        try
+        {
+            var request = new AddMilestoneRequest(newProjectItem,projectId);
+        
+            var response = await httpClient.PostAsJsonAsync("/addMilestone", request);
+        
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<AddMilestoneResponse>();
+                return result?.IsSuccess ?? false;
+            }
+        
+            return false;
+        }
+        catch (Exception)
+        {
+            // Consider logging the exception
+            return false;
+        }
+    }
+    
     public async Task<bool> DeleteProjects(Guid id)
     {
         try

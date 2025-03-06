@@ -9,4 +9,6 @@ public class ProjectItem
     public string name { get; set; } = string.Empty;
     
     public List<ProjectTaskItem> tasks { get; set; } = new();
+    
+    public List<MilestoneItem> milestones { get; set; } = new();
 }

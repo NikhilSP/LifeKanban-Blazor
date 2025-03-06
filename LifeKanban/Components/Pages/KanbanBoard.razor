@@ -4,6 +4,19 @@
 @using LifeKanban.Client
 @using LifeKanban.Model
 
+<h3>Add Milestone</h3>
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="@MilestoneItem" FormName="AddProject" OnValidSubmit=@OnAddMilestone>
+            <div class="mb-3 mt-3">
+                <label for="projectName" class="form-label">Milestone</label>
+                <InputText id="projectName" class="form-control" @bind-Value="MilestoneItem.name"/>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </EditForm>
+    </div>
+</div>
+
 <div class="container-fluid mt-4">
     <h3>Kanban Board</h3>
 
@@ -50,7 +63,7 @@
 </div>
 @if (OpenAddTaskDialog)
 {
-    <AddTaskDialog ProjectGuid="@projectId"
+    <AddTaskDialog ProjectItem="@_projectItem"
                    OnClose="@OnOpenAddTaskDialogClose"
                    OnItemSelected="@HandelOnAddTask"
                    DialogType="AddTaskDialog.ModalDialogType.DeleteCancel">
@@ -76,6 +89,19 @@
 </style>
 
 @code {
+
+    [SupplyParameterFromForm] private MilestoneItem MilestoneItem { get; set; } = new MilestoneItem();
+
+    private async void OnAddMilestone()
+    {
+        var result = await Client.AddMilestone(MilestoneItem, projectId);
+        if (result)
+        {
+            _projectItem.milestones.Add(MilestoneItem);
+        }
+
+        MilestoneItem = new MilestoneItem();
+    }
 
     public bool OpenAddTaskDialog { get; set; }
 
@@ -104,6 +130,8 @@
     private List<KanbanTask> tasks = new();
     private KanbanTask draggedTask;
 
+    private ProjectItem _projectItem = new ProjectItem();
+
     protected override async Task OnInitializedAsync()
     {
         await RefreshTask();
@@ -111,23 +139,20 @@
 
     private async Task RefreshTask()
     {
-        var project = await Client.GetProjectById(projectId);
-
-        if (project is not null)
+        _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
+        
+        tasks.Clear();
+        foreach (var task in _projectItem.tasks)
         {
-            tasks.Clear();
-            foreach (var task in project.tasks)
+            tasks.Add(new KanbanTask()
             {
-                tasks.Add(new KanbanTask()
-                {
-                    Id = task.id,
-                    Title = task.title,
-                    Description = task.description,
-                    ColumnId = 1,
-                    Priority = "High",
-                    AssignedTo = "Me"
-                });
-            }
+                Id = task.id,
+                Title = task.title,
+                Description = task.description,
+                ColumnId = 1,
+                Priority = "High",
+                AssignedTo = "Me"
+            });
         }
     }
 

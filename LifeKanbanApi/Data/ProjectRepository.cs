@@ -65,6 +65,13 @@ public class ProjectRepository : IProjectRepository
         project.Tasks.Add(projectTask);
         return true;
     }
+    
+    public async Task<bool> AddMilestone(Milestone milestone,Guid projectGuid, CancellationToken cancellationToken = default)
+    {
+        var project = await GetProject(projectGuid,cancellationToken);
+        project.Milestones.Add(milestone);
+        return true;
+    }
 
     public Task<Project> UpdateProject(Project project, CancellationToken cancellationToken = default)
     {
