@@ -8,7 +8,7 @@ namespace LifeKanbanApi.EndPoints.AddTask;
 
 public record AddTaskRequest(ProjectTask Task, Guid ProjectGuid);
 
-public record AddTaskResponse(bool IsSuccess);
+public record AddTaskResponse(Guid Id);
 
 public class AddTaskEndPoint : ICarterModule
 {
@@ -24,10 +24,10 @@ public class AddTaskEndPoint : ICarterModule
 
                 return Results.Ok(response);
             })
-            .WithName("Add Task")
+            .WithName("AddTask")
             .Produces<AddTaskResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithSummary("Checkout Basket")
-            .WithDescription("Checkout Basket");
+            .WithSummary("Add Task")
+            .WithDescription("Add Task");
     }
 }

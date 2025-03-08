@@ -1,6 +1,7 @@
 using LifeKanbanApi.CQRS;
 using LifeKanbanApi.Data;
 using LifeKanbanApi.Model;
+using LifeKanbanApi.Repository;
 
 namespace LifeKanbanApi.EndPoints.GetProject;
 
@@ -13,6 +14,12 @@ public class GetProjectHandler(ProjectRepository projectRepository):ICommandHand
     public async Task<GetProjectResult> Handle(GetProjectCommand request, CancellationToken cancellationToken)
     {
         var project = await projectRepository.GetProject(request.Id, cancellationToken);
+       
+        if (project is null)
+        {
+            throw new Exception($"Project with Id {request.Id} Not found");
+        }
+        
         return new GetProjectResult( project);
     }
 }

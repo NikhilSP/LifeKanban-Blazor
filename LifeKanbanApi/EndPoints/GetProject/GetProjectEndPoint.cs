@@ -21,9 +21,9 @@ public class GetProjectEndPoint : ICarterModule
                 var response = result.Adapt<GetProjectResponse>();
                 return Results.Ok(response);
             }).WithName("GetProject")
-            .Produces<GetProjectResponse>(StatusCodes.Status201Created)
+            .Produces<GetProjectResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithSummary("Get Project")
-            .WithDescription("Get Project");
+            .WithSummary("Get Project By Id")
+            .WithDescription("Get Project By Id");
     }
 }

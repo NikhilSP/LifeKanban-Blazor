@@ -1,5 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace LifeKanbanApi.Model;
 
 public class ProjectTask
@@ -8,5 +6,16 @@ public class ProjectTask
     public string Title { get; set; }
     public string Description { get; set; }
     public string Status { get; set; }
-    public Milestone Milestone { get; set; }
+    public double ColumnPosition { get; set; }
+    // Foreign key property
+    public Guid? MilestoneId { get; set; }
+    
+    // Navigation property to Milestone
+    public Milestone? Milestone { get; set; }
+    
+    // Foreign key to Project
+    public Guid ProjectId { get; set; }
+    
+    // Navigation property back to parent Project
+    public Project Project { get; set; }
 }

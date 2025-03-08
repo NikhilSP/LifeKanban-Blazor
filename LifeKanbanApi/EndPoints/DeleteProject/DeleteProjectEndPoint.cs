@@ -4,7 +4,6 @@ using MediatR;
 
 namespace LifeKanbanApi.EndPoints.DeleteProject;
 
-public record DeleteProjectRequest(Guid Id);
 
 public record DeleteProjectResponse(bool IsSuccess);
 
@@ -14,14 +13,13 @@ public class DeleteProjectEndPoint : ICarterModule
     {
         app.MapDelete("/deleteProject/{id}", async (Guid id, ISender sender) =>
             {
-                var request = new DeleteProjectRequest(id);
-                var command = request.Adapt<DeleteProjectCommand>();
-                var result = await sender.Send(command);
+                var result = await sender.Send(new DeleteProjectCommand(id));
                 var response = result.Adapt<DeleteProjectResponse>();
                 return Results.Ok(response);
             }).WithName("DeleteProject")
-            .Produces<DeleteProjectResponse>(StatusCodes.Status201Created)
+            .Produces<DeleteProjectResponse>(StatusCodes.Status200OK)
             .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .WithSummary("Delete Project")
             .WithDescription("Delete Project");
     }

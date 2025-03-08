@@ -7,7 +7,7 @@ namespace LifeKanbanApi.EndPoints.CreateProject;
 
 public record CreateProjectRequest(Project Project);
 
-public record CreateProjectResponse(bool IsSuccess);
+public record CreateProjectResponse(Guid Id);
 
 public class CreateProjectEndPoint : ICarterModule
 {
@@ -26,7 +26,7 @@ public class CreateProjectEndPoint : ICarterModule
             .WithName("CreateProject")
             .Produces<CreateProjectResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithSummary("Checkout Basket")
-            .WithDescription("Checkout Basket");
+            .WithSummary("Checkout Project")
+            .WithDescription("Checkout Project");
     }
 }

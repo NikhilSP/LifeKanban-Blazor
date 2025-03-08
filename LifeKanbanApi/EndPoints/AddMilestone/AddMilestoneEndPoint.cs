@@ -9,7 +9,7 @@ namespace LifeKanbanApi.EndPoints.AddMilestone;
 
 public record AddMilestoneRequest(Milestone Milestone, Guid ProjectGuid);
 
-public record AddMilestoneResponse(bool IsSuccess);
+public record AddMilestoneResponse(Guid Id);
 
 public class AddMilestoneEndPoint : ICarterModule
 {
