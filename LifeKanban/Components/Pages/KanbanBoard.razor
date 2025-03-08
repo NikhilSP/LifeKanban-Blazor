@@ -134,10 +134,10 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await RefreshTask();
+        await RefreshTasks();
     }
 
-    private async Task RefreshTask()
+    private async Task RefreshTasks()
     {
         _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
         
@@ -198,7 +198,7 @@
 
     public async Task HandelOnAddTask(ProjectTaskItem task)
     {
-        await RefreshTask();
+        await RefreshTasks();
     }
 
 }

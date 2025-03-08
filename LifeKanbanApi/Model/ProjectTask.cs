@@ -4,9 +4,10 @@ public class ProjectTask
 {
     public Guid Id { get; set; }
     public string Title { get; set; }
-    public string Description { get; set; }
+    public string Description { get; set; } 
     public string Status { get; set; }
-    public double ColumnPosition { get; set; }
+
+    public double ColumnPosition { get; set; } = 0;
     // Foreign key property
     public Guid? MilestoneId { get; set; }
     

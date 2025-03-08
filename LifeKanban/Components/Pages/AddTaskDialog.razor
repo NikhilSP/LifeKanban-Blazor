@@ -106,7 +106,7 @@
             StateHasChanged();
         }
     }
-    [SupplyParameterFromForm] private ProjectTaskItem ProjectTaskItem { get; set; } = new ProjectTaskItem() { id = Guid.NewGuid() };
+    [SupplyParameterFromForm] private ProjectTaskItem ProjectTaskItem { get; set; } = new ProjectTaskItem();
 
     [Parameter] public string Title { get; set; } = "Add Task Details";
 

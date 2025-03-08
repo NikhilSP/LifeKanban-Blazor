@@ -41,6 +41,7 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         if (project is not null)
         {
             project.Tasks.Add(projectTask);
+            projectDbContext.Tasks.Add(projectTask);
             await projectDbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
@@ -48,14 +49,14 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         return false;
     }
 
-    public async Task<bool> AddMilestone(Milestone milestone, Guid projectGuid,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> AddMilestone(Milestone milestone, Guid projectGuid, CancellationToken cancellationToken = default)
     {
         var project = await GetProject(projectGuid, cancellationToken);
 
         if (project is not null)
         {
             project.Milestones.Add(milestone);
+            projectDbContext.Milestones.Add(milestone);
             await projectDbContext.SaveChangesAsync(cancellationToken);
             return true;
         }

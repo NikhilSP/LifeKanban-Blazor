@@ -1,6 +1,7 @@
 using Carter;
 using LifeKanbanApi.Data;
 using LifeKanbanApi.Repository;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 namespace LifeKanbanApi;
