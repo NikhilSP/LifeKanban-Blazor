@@ -20,14 +20,20 @@
 </div>
 
 @code {
-    [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new ProjectItem() { id = Guid.NewGuid(), name = string.Empty };
+    [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new () {name = string.Empty };
 
     private async void OnAddProject()
     {
         var result = await Client.AddProject(ProjectItem);
-        if (result)
-        {
-            ProjectStateService.NotifyStateChanged();
+        if (result is not null)
+        { 
+            var project = await Client.GetProjectById(result.Value);
+
+            if (project is not null)
+            {
+                ProjectItem = project;
+                ProjectStateService.NotifyStateChanged();
+            }
         }
     }
 

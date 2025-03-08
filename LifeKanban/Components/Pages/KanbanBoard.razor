@@ -95,7 +95,7 @@
     private async void OnAddMilestone()
     {
         var result = await Client.AddMilestone(MilestoneItem, projectId);
-        if (result)
+        if (result is not null)
         {
             _projectItem.milestones.Add(MilestoneItem);
         }

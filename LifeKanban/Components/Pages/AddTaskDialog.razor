@@ -130,7 +130,7 @@
     {
         var result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
 
-        if (result)
+        if (result is not null)
         {
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
         }
