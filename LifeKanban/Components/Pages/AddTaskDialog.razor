@@ -144,7 +144,7 @@
 
     private async Task<Task> ModalOk()
     {
-        var result = _inEditMode ? await Client.AddTask(ProjectTaskItem, ProjectItem.id) : await Client.AddTask(ProjectTaskItem, ProjectItem.id);
+        var result = _inEditMode ? await Client.UpdateTask(ProjectTaskItem, ProjectItem.id) : await Client.AddTask(ProjectTaskItem, ProjectItem.id);
 
         if (result is not null)
         {

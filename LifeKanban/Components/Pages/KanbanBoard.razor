@@ -42,7 +42,6 @@
                         {
                             <div class="card mb-2 task-card"
                                  draggable="true"
-                                 @onclick="() => EditTaskDialogOnClick(task)"
                                  @ondragstart="() => HandleDragStart(task)"
                                  @ondragend="HandleDragEnd"
                                  @key="task.Id">
@@ -54,6 +53,9 @@
                                         <small class="text-muted float-end">@task.AssignedTo</small>
                                         <button type="button" class="btn btn-link text-black" @onclick="() => DeleteTask(task.Id)">
                                             <span class="bi bi-trash"></span>
+                                        </button>
+                                        <button type="button" class="btn btn-link text-black" @onclick="() => EditTaskDialogOnClick(task)">
+                                            <span class="bi bi-pencil"></span>
                                         </button>
                                     </div>
 
@@ -120,6 +122,7 @@
 
     private void OpenTaskDialogOnClick()
     {
+        _projectTaskItem = null;
         OpenAddTaskDialog = true;
         StateHasChanged();
     }

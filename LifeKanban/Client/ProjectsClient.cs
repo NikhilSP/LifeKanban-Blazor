@@ -72,6 +72,28 @@ public class ProjectsClient(HttpClient httpClient)
             return null;
         }
     }
+    
+    public async Task<Guid?> UpdateTask(ProjectTaskItem taskItem, Guid projectId)
+    {
+        try
+        {
+            var request = new UpdateTaskRequest(taskItem, projectId);
+
+            var response = await httpClient.PostAsJsonAsync("/updateTask", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<AddTaskResponse>();
+                return result!.Id;
+            }
+
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
 
     public async Task<Guid?> AddMilestone(MilestoneItem newProjectItem, Guid projectId)
     {

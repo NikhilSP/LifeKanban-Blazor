@@ -11,3 +11,5 @@ public record GetProjectResponse(ProjectItem Project);
 
 public record AddTaskResponse(Guid Id);
 public record AddMilestoneResponse(Guid Id);
+
+public record UpdateTaskResponse(Guid Id);
