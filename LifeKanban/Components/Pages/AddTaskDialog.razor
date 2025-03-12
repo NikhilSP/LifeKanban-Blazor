@@ -27,7 +27,7 @@
                             <option value="">-- Select Milestone --</option>
                             @foreach (var milestone in ProjectItem.milestones)
                             {
-                            <option value="@milestone.id">@milestone.name</option>
+                                <option value="@milestone.id">@milestone.name</option>
                             }
                         </select>
                     </div>
@@ -36,25 +36,25 @@
                 <!-- Debug area - will help us see what's happening -->
                 @if (!string.IsNullOrEmpty(debugMessage))
                 {
-                <div class="alert alert-info mt-3">
-                    @debugMessage
-                </div>
+                    <div class="alert alert-info mt-3">
+                        @debugMessage
+                    </div>
                 }
             </div>
             <div class="modal-footer">
                 @switch (DialogType)
                 {
-                case ModalDialogType.Ok:
-                <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Add Task</button>
-                break;
-                case ModalDialogType.OkCancel:
-                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Add Task</button>
-                break;
-                case ModalDialogType.DeleteCancel:
-                <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                <button type="button" class="btn btn-danger" @onclick="SafeModalOk">Add Task</button>
-                break;
+                    case ModalDialogType.Ok:
+                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        break;
+                    case ModalDialogType.OkCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        break;
+                    case ModalDialogType.DeleteCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-danger" @onclick="SafeModalOk">@_actionButtonString</button>
+                        break;
                 }
             </div>
         </div>
@@ -62,9 +62,9 @@
 </div>
 
 @code {
-    
+
     private string debugMessage;
-    
+
     // A safer handler for milestone changes 
     private void HandleMilestoneChange(ChangeEventArgs e)
     {
@@ -72,14 +72,14 @@
         {
             var selectedId = e.Value.ToString();
             debugMessage = $"Selected milestone ID: {selectedId}";
-            
+
             // Store just the ID string instead of the complex object
-            ProjectTaskItem.milestone = ProjectItem.milestones.First(x=>x.id.ToString()==selectedId);
-            
+            ProjectTaskItem.milestone = ProjectItem.milestones.First(x => x.id.ToString() == selectedId);
+
             // If you need the full object too, store it separately
             // var milestoneObj = ProjectItem.milestones.FirstOrDefault(m => m.id == selectedId);
             // ProjectTaskItem.milestoneObject = milestoneObj;
-            
+
             StateHasChanged();
         }
         catch (Exception ex)
@@ -88,7 +88,7 @@
             StateHasChanged();
         }
     }
-    
+
     // A wrapper for the ModalOk method with error handling
     private void SafeModalOk()
     {
@@ -96,7 +96,7 @@
         {
             debugMessage = "Add Task button clicked";
             StateHasChanged();
-            
+
             // Call your original method
             ModalOk();
         }
@@ -106,7 +106,8 @@
             StateHasChanged();
         }
     }
-    [SupplyParameterFromForm] private ProjectTaskItem ProjectTaskItem { get; set; } = new ProjectTaskItem();
+
+    [SupplyParameterFromForm] private ProjectTaskItem ProjectTaskItem { get; set; } = new();
 
     [Parameter] public string Title { get; set; } = "Add Task Details";
 
@@ -114,12 +115,27 @@
 
     [Parameter] public ProjectItem ProjectItem { get; set; }
 
+    [Parameter] public ProjectTaskItem? CurrentTaskItem { get; set; }
+
     [Parameter] public EventCallback<bool> OnClose { get; set; }
 
     [Parameter] public ModalDialogType DialogType { get; set; }
-    
-    [Parameter]
-    public EventCallback<ProjectTaskItem> OnItemSelected { get; set; }
+
+    [Parameter] public EventCallback<ProjectTaskItem> OnItemSelected { get; set; }
+
+    private bool _inEditMode = false;
+    private string _actionButtonString = "Add Task";
+
+    protected override void OnInitialized()
+    {
+        if (CurrentTaskItem is not null)
+        {
+            _inEditMode = true;
+            Title = "Edit Task Details";
+            _actionButtonString = "Save Task";
+            ProjectTaskItem = CurrentTaskItem;
+        }
+    }
 
     private Task ModalCancel()
     {
@@ -128,16 +144,16 @@
 
     private async Task<Task> ModalOk()
     {
-        var result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
+        var result = _inEditMode ? await Client.AddTask(ProjectTaskItem, ProjectItem.id) : await Client.AddTask(ProjectTaskItem, ProjectItem.id);
 
         if (result is not null)
         {
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
         }
-        
+
         return OnClose.InvokeAsync(true);
     }
-    
+
     public enum ModalDialogType
     {
         Ok,

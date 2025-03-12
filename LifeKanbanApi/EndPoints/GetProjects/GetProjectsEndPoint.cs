@@ -1,4 +1,5 @@
 using Carter;
+using LifeKanbanApi.DTO;
 using LifeKanbanApi.Model;
 using Mapster;
 using MediatR;
@@ -8,7 +9,7 @@ namespace LifeKanbanApi.EndPoints.GetProjects;
 
 public record GetProjectsRequest();
 
-public record GetProjectsResponse(List<Project> Projects);
+public record GetProjectsResponse(List<ProjectDto> Projects);
 
 public class GetProjectsEndPoint : ICarterModule
 {

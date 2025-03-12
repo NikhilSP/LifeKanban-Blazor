@@ -42,6 +42,7 @@
                         {
                             <div class="card mb-2 task-card"
                                  draggable="true"
+                                 @onclick="() => EditTaskDialogOnClick(task)"
                                  @ondragstart="() => HandleDragStart(task)"
                                  @ondragend="HandleDragEnd"
                                  @key="task.Id">
@@ -51,7 +52,11 @@
                                     <div class="mt-2">
                                         <span class="badge bg-@task.Priority.ToLower()">@task.Priority</span>
                                         <small class="text-muted float-end">@task.AssignedTo</small>
+                                        <button type="button" class="btn btn-link text-black" @onclick="() => DeleteTask(task.Id)">
+                                            <span class="bi bi-trash"></span>
+                                        </button>
                                     </div>
+
                                 </div>
                             </div>
                         }
@@ -64,11 +69,13 @@
 @if (OpenAddTaskDialog)
 {
     <AddTaskDialog ProjectItem="@_projectItem"
+                   CurrentTaskItem="@_projectTaskItem"
                    OnClose="@OnOpenAddTaskDialogClose"
                    OnItemSelected="@HandelOnAddTask"
                    DialogType="AddTaskDialog.ModalDialogType.DeleteCancel">
     </AddTaskDialog>
 }
+
 
 <style>
     .kanban-column {
@@ -117,6 +124,13 @@
         StateHasChanged();
     }
 
+    private void EditTaskDialogOnClick(KanbanTask taskItem)
+    {
+        _projectTaskItem = taskItem.Task;
+        OpenAddTaskDialog = true;
+        StateHasChanged();
+    }
+
     [Parameter] public Guid projectId { get; set; }
 
     private List<KanbanColumn> columns = new()
@@ -131,6 +145,7 @@
     private KanbanTask draggedTask;
 
     private ProjectItem _projectItem = new ProjectItem();
+    private ProjectTaskItem? _projectTaskItem = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -140,7 +155,7 @@
     private async Task RefreshTasks()
     {
         _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
-        
+
         tasks.Clear();
         foreach (var task in _projectItem.tasks)
         {
@@ -151,9 +166,12 @@
                 Description = task.description,
                 ColumnId = 1,
                 Priority = "High",
-                AssignedTo = "Me"
+                AssignedTo = "Me",
+                Task = task
             });
         }
+
+        _projectTaskItem = null;
     }
 
 
@@ -194,13 +212,22 @@
         public int ColumnId { get; set; }
         public string Priority { get; set; }
         public string AssignedTo { get; set; }
+        public ProjectTaskItem Task { get; set; }
     }
 
     public async Task HandelOnAddTask(ProjectTaskItem task)
-    {
-        await RefreshTasks();
-    }
+        {
+            await RefreshTasks();
+        }
 
-}
+        private async void DeleteTask(Guid taskId)
+        {
+            var res = await Client.DeleteTask(taskId);
+            if (res)
+            {
+                await RefreshTasks();
+            }
+        }
+    }
 
 }

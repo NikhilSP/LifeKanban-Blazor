@@ -41,6 +41,9 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         if (project is not null)
         {
             project.Tasks.Add(projectTask);
+            
+            projectTask.Milestone = null;
+            
             projectDbContext.Tasks.Add(projectTask);
             await projectDbContext.SaveChangesAsync(cancellationToken);
             return true;

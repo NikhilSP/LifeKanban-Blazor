@@ -115,4 +115,25 @@ public class ProjectsClient(HttpClient httpClient)
             return false;
         }
     }
+    
+    public async Task<bool> DeleteTask(Guid taskId)
+    {
+        try
+        {
+            var response = await httpClient.DeleteAsync($"/deleteTask/{taskId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<DeleteTaskResponse>();
+                return result?.IsSuccess ?? false;
+            }
+
+            return false;
+        }
+        catch (Exception)
+        {
+            // Consider logging the exception
+            return false;
+        }
+    }
 }

@@ -1,4 +1,5 @@
 using Carter;
+using LifeKanbanApi.Config;
 using LifeKanbanApi.Data;
 using LifeKanbanApi.Repository;
 using Mapster;
@@ -19,7 +20,7 @@ public class Program
             options.UseSqlite(builder.Configuration.GetConnectionString("Database")));
 
         builder.Services.AddScoped<ProjectRepository>();
-
+        MapsterConfig.Configure();
         var app = builder.Build();
         app.MapCarter();
 
