@@ -9,7 +9,7 @@ public record UpdateTaskRequest(ProjectTask Task, Guid ProjectGuid);
 
 public record UpdateTaskResponse(Guid Id);
 
-public class AddTaskEndPoint : ICarterModule
+public class UpdateTaskEndPoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {

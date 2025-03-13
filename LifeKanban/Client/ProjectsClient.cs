@@ -9,7 +9,7 @@ public class ProjectsClient(HttpClient httpClient)
     {
         var options = new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true // This ignores case differences
+            PropertyNameCaseInsensitive = true 
         };
 
         var res = await httpClient.GetFromJsonAsync<GetProjectsResponse>("projects", options);
@@ -44,7 +44,22 @@ public class ProjectsClient(HttpClient httpClient)
 
         if (response.IsSuccessStatusCode)
         {
-            var result = await response.Content.ReadFromJsonAsync<CreateProjectResponse>();
+            var result = await response.Content.ReadFromJsonAsync<IdResponse>();
+            return result!.Id;
+        }
+
+        return null;
+    }
+    
+    public async Task<Guid?> UpdateProject(ProjectItem newProjectItem)
+    {
+        var request = new UpdateProjectRequest(newProjectItem);
+
+        var response = await httpClient.PostAsJsonAsync("/updateProject", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<IdResponse>();
             return result!.Id;
         }
 
@@ -61,7 +76,7 @@ public class ProjectsClient(HttpClient httpClient)
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<AddTaskResponse>();
+                var result = await response.Content.ReadFromJsonAsync<IdResponse>();
                 return result!.Id;
             }
 
@@ -83,7 +98,7 @@ public class ProjectsClient(HttpClient httpClient)
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<AddTaskResponse>();
+                var result = await response.Content.ReadFromJsonAsync<IdResponse>();
                 return result!.Id;
             }
 
@@ -105,7 +120,29 @@ public class ProjectsClient(HttpClient httpClient)
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<AddMilestoneResponse>();
+                var result = await response.Content.ReadFromJsonAsync<IdResponse>();
+                return result!.Id;
+            }
+
+            return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+    
+    public async Task<Guid?> UpdateMilestone(MilestoneItem milestoneItem, Guid projectId)
+    {
+        try
+        {
+            var request = new UpdateMilestoneRequest(milestoneItem, projectId);
+
+            var response = await httpClient.PostAsJsonAsync("/updateMilestone", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<IdResponse>();
                 return result!.Id;
             }
 
@@ -125,7 +162,7 @@ public class ProjectsClient(HttpClient httpClient)
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<DeleteProjectResponse>();
+                var result = await response.Content.ReadFromJsonAsync<BoolResponse>();
                 return result?.IsSuccess ?? false;
             }
 
@@ -146,7 +183,28 @@ public class ProjectsClient(HttpClient httpClient)
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<DeleteTaskResponse>();
+                var result = await response.Content.ReadFromJsonAsync<BoolResponse>();
+                return result?.IsSuccess ?? false;
+            }
+
+            return false;
+        }
+        catch (Exception)
+        {
+            // Consider logging the exception
+            return false;
+        }
+    }
+    
+    public async Task<bool> DeleteMilestone(Guid milestoneId)
+    {
+        try
+        {
+            var response = await httpClient.DeleteAsync($"/deleteMilestone/{milestoneId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<BoolResponse>();
                 return result?.IsSuccess ?? false;
             }
 

@@ -20,7 +20,7 @@ public class AddMilestoneHandler(ProjectRepository projectRepository)
         {
             Id = Guid.NewGuid(),
             Name = request.Milestone.Name,
-            ProjectId = request.Milestone.ProjectId,
+            ProjectId = request.ProjectGuid,
             Project = request.Milestone.Project,
             Tasks = request.Milestone.Tasks,
         };

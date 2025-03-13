@@ -1,0 +1,95 @@
+@using LifeKanban.Client
+@using LifeKanban.Model
+@inject ProjectsClient Client
+
+<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Edit Project</h4>
+                <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="@FormProjectItem" FormName="EditProjectMilestone">
+                    <div class="mb-3 mt-3">
+                        <label for="taskName" class="form-label">Title</label>
+                        <InputText id="taskName" class="form-control" @bind-Value="FormProjectItem.name"/>
+                    </div>
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                @switch (DialogType)
+                {
+                    case ModalDialogType.Ok:
+                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Update</button>
+                        break;
+                    case ModalDialogType.OkCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Update</button>
+                        break;
+                    case ModalDialogType.DeleteCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-danger" @onclick="SafeModalOk">Update</button>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+
+    // A wrapper for the ModalOk method with error handling
+    private void SafeModalOk()
+    {
+        try
+        {
+            StateHasChanged();
+            ModalOk();
+        }
+        catch (Exception ex)
+        {
+            StateHasChanged();
+        }
+    }
+
+    [SupplyParameterFromForm] private ProjectItem FormProjectItem { get; set; } = new();
+
+    [Parameter] public ProjectItem ProjectItem { get; set; }
+    
+    [Parameter] public EventCallback<bool> OnClose { get; set; }
+
+    [Parameter] public ModalDialogType DialogType { get; set; }
+
+    [Parameter] public EventCallback<ProjectItem> OnItemSelected { get; set; }
+
+    protected override void OnInitialized()
+    {
+        FormProjectItem = ProjectItem;
+    }
+
+    private Task ModalCancel()
+    {
+        return OnClose.InvokeAsync(false);
+    }
+
+    private async Task<Task> ModalOk()
+    {
+        var result = await Client.UpdateProject(FormProjectItem);
+
+        if (result is not null)
+        {
+            await OnItemSelected.InvokeAsync(FormProjectItem);
+        }
+
+        return OnClose.InvokeAsync(true);
+    }
+
+    public enum ModalDialogType
+    {
+        Ok,
+        OkCancel,
+        DeleteCancel
+    }
+
+}

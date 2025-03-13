@@ -67,8 +67,7 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         return false;
     }
 
-    // Implement your missing UpdateProject method
-    public async Task<bool> UpdateProject(Project project, CancellationToken cancellationToken = default)
+    public async Task<Guid?> UpdateProject(Project project, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -81,11 +80,11 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
             entry.Collection(p => p.Milestones).IsModified = false;
 
             await projectDbContext.SaveChangesAsync(cancellationToken);
-            return true;
+            return project.Id;
         }
         catch
         {
-            return false;
+            return null;
         }
     }
 

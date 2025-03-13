@@ -4,78 +4,127 @@
 @using LifeKanban.Client
 @using LifeKanban.Model
 
-<h3>Add Milestone</h3>
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="@MilestoneItem" FormName="AddProject" OnValidSubmit=@OnAddMilestone>
-            <div class="mb-3 mt-3">
-                <label for="projectName" class="form-label">Milestone</label>
-                <InputText id="projectName" class="form-control" @bind-Value="MilestoneItem.name"/>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </EditForm>
-    </div>
+<div style="display: flex; align-items: center;">
+    <h3 style="margin-right: 10px; margin-bottom: 0;">@_projectItem.name</h3>
+    <button type="button" class="btn btn-link text-black" @onclick="EditProjectDialogOnClick">
+        <span class="bi bi-pencil"></span>
+    </button>
 </div>
 
 <div class="container-fluid mt-4">
-    <h3>Kanban Board</h3>
-
     <div class="row">
-        @foreach (var column in columns)
+        @foreach (var column in _columns)
         {
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
-                        <h5 class="card-title mb-0">@column.Title</h5>
-                        <button type="button" class="btn btn-link" @onclick="OpenTaskDialogOnClick">
-                            <span class="bi bi-plus"></span>
-                        </button>
-                    </div>
-                    <div class="card-body kanban-column"
-                         dropzone="move"
-                         ondragover="event.preventDefault();"
-                         ondragenter="event.preventDefault();"
-                         ondrop="@(() => HandleDrop(column.Id))"
-                         style="min-height: 500px;">
+            if (column.Title == "Milestones")
+            {
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
+                            <h5 class="card-title mb-0">@column.Title</h5>
+                            <button type="button" class="btn btn-link" @onclick="AddMilestoneDialogOpen">
+                                <span class="bi bi-plus"></span>
+                            </button>
+                        </div>
+                        <div class="card-body kanban-column"
+                             dropzone="move"
+                             style="min-height: 500px;">
 
-                        @foreach (var task in tasks.Where(t => t.ColumnId == column.Id))
-                        {
-                            <div class="card mb-2 task-card"
-                                 draggable="true"
-                                 @ondragstart="() => HandleDragStart(task)"
-                                 @ondragend="HandleDragEnd"
-                                 @key="task.Id">
-                                <div class="card-body">
-                                    <h6 class="card-title">@task.Title</h6>
-                                    <p class="card-text small text-muted mb-0">@task.Description</p>
-                                    <div class="mt-2">
-                                        <span class="badge bg-@task.Priority.ToLower()">@task.Priority</span>
-                                        <small class="text-muted float-end">@task.AssignedTo</small>
-                                        <button type="button" class="btn btn-link text-black" @onclick="() => DeleteTask(task.Id)">
-                                            <span class="bi bi-trash"></span>
-                                        </button>
-                                        <button type="button" class="btn btn-link text-black" @onclick="() => EditTaskDialogOnClick(task)">
-                                            <span class="bi bi-pencil"></span>
-                                        </button>
+                            @foreach (var milestone in _milestones)
+                            {
+                                <div class="card mb-2 task-card"
+                                     draggable="true"
+                                     @key="milestone.Milestone.id">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@milestone.Milestone.name</h6>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-link text-black" @onclick="() => DeleteMilestone(milestone.Milestone.id)">
+                                                <span class="bi bi-trash"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-link text-black" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
+                                                <span class="bi bi-pencil"></span>
+                                            </button>
+                                        </div>
+
                                     </div>
-
                                 </div>
-                            </div>
-                        }
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
+            else
+            {
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
+                            <h5 class="card-title mb-0">@column.Title</h5>
+                            <button type="button" class="btn btn-link" @onclick="AddTaskDialogOpen">
+                                <span class="bi bi-plus"></span>
+                            </button>
+                        </div>
+                        <div class="card-body kanban-column"
+                             dropzone="move"
+                             ondragover="event.preventDefault();"
+                             ondragenter="event.preventDefault();"
+                             ondrop="@(() => HandleDrop(column.Id))"
+                             style="min-height: 500px;">
+
+                            @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
+                            {
+                                <div class="card mb-2 task-card"
+                                     draggable="true"
+                                     @ondragstart="() => HandleDragStart(task)"
+                                     @ondragend="HandleDragEnd"
+                                     @key="task.Task.id">
+                                    <div class="card-body">
+                                        <h6 class="card-title">@task.Task.title</h6>
+                                        <p class="card-text small text-muted mb-0">@task.Task.description</p>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-link text-black" @onclick="() => DeleteTask(task.Task.id)">
+                                                <span class="bi bi-trash"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-link text-black" @onclick="() => EditTaskDialogOnClick(task)">
+                                                <span class="bi bi-pencil"></span>
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
         }
     </div>
 </div>
-@if (OpenAddTaskDialog)
+@if (AddTaskDialogFlag)
 {
     <AddTaskDialog ProjectItem="@_projectItem"
                    CurrentTaskItem="@_projectTaskItem"
-                   OnClose="@OnOpenAddTaskDialogClose"
+                   OnClose="@AddTaskDialogClose"
                    OnItemSelected="@HandelOnAddTask"
                    DialogType="AddTaskDialog.ModalDialogType.DeleteCancel">
     </AddTaskDialog>
+}
+
+@if (AddMilestoneDialogFlag)
+{
+    <AddMilestoneDialog ProjectItem="@_projectItem"
+                        CurrentMilestoneItem="@_projectMilestoneItem"
+                        OnClose="@AddMilestoneDialogClose"
+                        OnItemSelected="@HandelOnAddMilestone"
+                        DialogType="AddMilestoneDialog.ModalDialogType.DeleteCancel">
+    </AddMilestoneDialog>
+}
+
+@if (EditProjectDialogFlag)
+{
+<EditProjectDialog  ProjectItem="@_projectItem"
+                    OnClose="@EditProjectDialogClose"
+                    OnItemSelected="@HandelOnEditProject"
+                    DialogType="EditProjectDialog.ModalDialogType.DeleteCancel">
+</EditProjectDialog>
 }
 
 
@@ -99,88 +148,73 @@
 
 @code {
 
-    [SupplyParameterFromForm] private MilestoneItem MilestoneItem { get; set; } = new MilestoneItem();
-
-    private async void OnAddMilestone()
-    {
-        var result = await Client.AddMilestone(MilestoneItem, projectId);
-        if (result is not null)
-        {
-            _projectItem.milestones.Add(MilestoneItem);
-        }
-
-        MilestoneItem = new MilestoneItem();
-    }
-
-    public bool OpenAddTaskDialog { get; set; }
-
-    private async Task OnOpenAddTaskDialogClose()
-    {
-        OpenAddTaskDialog = false;
-        StateHasChanged();
-    }
-
-    private void OpenTaskDialogOnClick()
-    {
-        _projectTaskItem = null;
-        OpenAddTaskDialog = true;
-        StateHasChanged();
-    }
-
-    private void EditTaskDialogOnClick(KanbanTask taskItem)
-    {
-        _projectTaskItem = taskItem.Task;
-        OpenAddTaskDialog = true;
-        StateHasChanged();
-    }
-
     [Parameter] public Guid projectId { get; set; }
 
-    private List<KanbanColumn> columns = new()
-    {
+    private List<KanbanColumn> _columns =
+    [
+        new KanbanColumn { Id = 0, Title = "Milestones" },
         new KanbanColumn { Id = 1, Title = "To Do" },
         new KanbanColumn { Id = 2, Title = "In Progress" },
-        new KanbanColumn { Id = 3, Title = "Review" },
         new KanbanColumn { Id = 4, Title = "Done" }
-    };
+    ];
 
-    private List<KanbanTask> tasks = new();
-    private KanbanTask draggedTask;
+    private List<KanbanTask> _tasks = [];
+    private List<KanbanMilestone> _milestones = [];
+    private KanbanTask? _draggedTask;
 
-    private ProjectItem _projectItem = new ProjectItem();
-    private ProjectTaskItem? _projectTaskItem = null;
+    private ProjectItem _projectItem = new();
+    private ProjectTaskItem? _projectTaskItem;
+    private MilestoneItem? _projectMilestoneItem;
+
+    private bool AddTaskDialogFlag { get; set; }
+
+    private bool AddMilestoneDialogFlag { get; set; }
+    
+    private bool EditProjectDialogFlag { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await RefreshTasks();
+        await RefreshMilestones();
     }
 
     private async Task RefreshTasks()
     {
         _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
 
-        tasks.Clear();
+        _tasks.Clear();
         foreach (var task in _projectItem.tasks)
         {
-            tasks.Add(new KanbanTask()
+            _tasks.Add(new KanbanTask()
             {
-                Id = task.id,
-                Title = task.title,
-                Description = task.description,
                 ColumnId = 1,
-                Priority = "High",
-                AssignedTo = "Me",
                 Task = task
             });
         }
 
         _projectTaskItem = null;
     }
+    
+    private async Task RefreshMilestones()
+    {
+        _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
 
+        _milestones.Clear();
+        foreach (var milestone in _projectItem.milestones)
+        {
+            _milestones.Add(new KanbanMilestone()
+            {
+                Milestone = milestone
+            });
+        }
+
+        _projectMilestoneItem = null;
+
+    }
 
     private void HandleDragStart(KanbanTask task)
     {
-        draggedTask = task;
+        _draggedTask = task;
         Console.WriteLine($"Started dragging");
     }
 
@@ -191,12 +225,12 @@
 
     private void HandleDrop(int newColumnId)
     {
-        if (draggedTask != null)
+        if (_draggedTask != null)
         {
             Console.WriteLine($"Dropping task ");
 
-            draggedTask.ColumnId = newColumnId;
-            draggedTask = null;
+            _draggedTask.ColumnId = newColumnId;
+            _draggedTask = null;
             StateHasChanged();
         }
     }
@@ -209,28 +243,98 @@
 
     public class KanbanTask
     {
-        public Guid Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
         public int ColumnId { get; set; }
-        public string Priority { get; set; }
-        public string AssignedTo { get; set; }
         public ProjectTaskItem Task { get; set; }
+    }
+    
+    public class KanbanMilestone
+    {
+        public MilestoneItem Milestone { get; set; }
+    }
+
+    private void AddTaskDialogOpen()
+    {
+        _projectTaskItem = null;
+        AddTaskDialogFlag = true;
+        StateHasChanged();
+    }
+
+    private async Task AddTaskDialogClose()
+    {
+        AddTaskDialogFlag = false;
+        StateHasChanged();
+    }
+
+    private void EditTaskDialogOnClick(KanbanTask taskItem)
+    {
+        _projectTaskItem = taskItem.Task;
+        AddTaskDialogFlag = true;
+        StateHasChanged();
     }
 
     public async Task HandelOnAddTask(ProjectTaskItem task)
+    {
+        await RefreshTasks();
+    }
+
+    private async void DeleteTask(Guid taskId)
+    {
+        var res = await Client.DeleteTask(taskId);
+        if (res)
         {
             await RefreshTasks();
         }
-
-        private async void DeleteTask(Guid taskId)
-        {
-            var res = await Client.DeleteTask(taskId);
-            if (res)
-            {
-                await RefreshTasks();
-            }
-        }
     }
 
+    private void AddMilestoneDialogOpen()
+    {
+        AddMilestoneDialogFlag = true;
+        StateHasChanged();
+    }
+
+    private async Task AddMilestoneDialogClose()
+    {
+        AddMilestoneDialogFlag = false;
+        StateHasChanged();
+    }
+
+    private void EditMilestoneDialogOnClick(MilestoneItem item)
+    {
+        _projectMilestoneItem = item;
+        AddMilestoneDialogFlag = true;
+        StateHasChanged();
+    }
+
+    private async void HandelOnAddMilestone(MilestoneItem item)
+    {
+        await RefreshMilestones();
+    }
+    
+    private async void HandelOnEditProject(ProjectItem item)
+    {
+        await RefreshTasks();
+        await RefreshMilestones();
+    }
+    
+    private async Task EditProjectDialogClose()
+    {
+        EditProjectDialogFlag = false;
+        StateHasChanged();
+    }
+
+    private async void DeleteMilestone(Guid milestoneId)
+    {
+        var res = await Client.DeleteMilestone(milestoneId);
+        if (res)
+        {
+            await RefreshMilestones();
+        }
+    }
+    
+    private void EditProjectDialogOnClick()
+    {
+        EditProjectDialogFlag = true;
+        StateHasChanged();
+    }
+}
 }

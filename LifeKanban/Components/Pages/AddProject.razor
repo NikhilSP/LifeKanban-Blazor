@@ -4,6 +4,7 @@
 @using LifeKanban.StateManagement
 @inject ProjectsClient Client
 @inject ProjectStateService ProjectStateService
+@inject NavigationManager NavigationManager
 
 <h3>Add Project</h3>
 
@@ -33,6 +34,7 @@
             {
                 ProjectItem = project;
                 ProjectStateService.NotifyStateChanged();
+                //NavigationManager.NavigateTo($"http://localhost:5119/kanbanboard/{project.id}");
             }
         }
     }

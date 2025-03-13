@@ -5,6 +5,7 @@
 @inject ProjectStateService ProjectStateService
 @implements IDisposable
 @rendermode InteractiveServer
+@inject NavigationManager NavigationManager
 
 
 <div class="top-row ps-3 navbar navbar-dark">
@@ -88,6 +89,7 @@
         if (res)
         {
             await RefreshProjects();
+            NavigationManager.NavigateTo("");
         }
     }
 }

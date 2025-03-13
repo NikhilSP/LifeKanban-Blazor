@@ -26,7 +26,7 @@ public class CreateProjectEndPoint : ICarterModule
             .WithName("CreateProject")
             .Produces<CreateProjectResponse>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest)
-            .WithSummary("Checkout Project")
-            .WithDescription("Checkout Project");
+            .WithSummary("Create Project")
+            .WithDescription("Create Project");
     }
 }
