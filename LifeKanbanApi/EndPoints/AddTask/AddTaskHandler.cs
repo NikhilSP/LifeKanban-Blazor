@@ -20,7 +20,7 @@ public class AddTaskHandler(ProjectRepository projectRepository)
             Title = request.Task.Title,
             Description = request.Task.Description,
             Status = request.Task.Status,
-            MilestoneId = request.Task.Milestone?.Id,
+            MilestoneId = request.Task.MilestoneId,
             Milestone = request.Task.Milestone,
             ProjectId = request.Task.ProjectId,
             Project = request.Task.Project,

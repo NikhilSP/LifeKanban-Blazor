@@ -31,11 +31,28 @@
 
                             @foreach (var milestone in _milestones)
                             {
+                                // Adjust these lines to match how tasks are stored in your milestone object
+                                var tasks = _tasks.Where(x => x.Task.milestoneId == milestone.Milestone.id).Select(x => x.Task).ToList();
+                                var totalTasks = tasks.Count;
+                                var completedTasks = tasks.Count(t => t.status=="");
+                                var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
+
                                 <div class="card mb-2 task-card"
-                                     draggable="true"
                                      @key="milestone.Milestone.id">
                                     <div class="card-body">
                                         <h6 class="card-title">@milestone.Milestone.name</h6>
+
+                                        <!-- Progress Bar -->
+                                        <div class="progress mt-2">
+                                            <div class="progress-bar" role="progressbar"
+                                                 style="width: @completionPercentage%;"
+                                                 aria-valuenow="@completionPercentage"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="100">
+                                                @completedTasks/@totalTasks
+                                            </div>
+                                        </div>
+
                                         <div class="mt-2">
                                             <button type="button" class="btn btn-link text-black" @onclick="() => DeleteMilestone(milestone.Milestone.id)">
                                                 <span class="bi bi-trash"></span>
@@ -120,11 +137,11 @@
 
 @if (EditProjectDialogFlag)
 {
-<EditProjectDialog  ProjectItem="@_projectItem"
-                    OnClose="@EditProjectDialogClose"
-                    OnItemSelected="@HandelOnEditProject"
-                    DialogType="EditProjectDialog.ModalDialogType.DeleteCancel">
-</EditProjectDialog>
+    <EditProjectDialog ProjectItem="@_projectItem"
+                       OnClose="@EditProjectDialogClose"
+                       OnItemSelected="@HandelOnEditProject"
+                       DialogType="EditProjectDialog.ModalDialogType.DeleteCancel">
+    </EditProjectDialog>
 }
 
 
@@ -169,7 +186,7 @@
     private bool AddTaskDialogFlag { get; set; }
 
     private bool AddMilestoneDialogFlag { get; set; }
-    
+
     private bool EditProjectDialogFlag { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -194,7 +211,7 @@
 
         _projectTaskItem = null;
     }
-    
+
     private async Task RefreshMilestones()
     {
         _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
@@ -209,7 +226,6 @@
         }
 
         _projectMilestoneItem = null;
-
     }
 
     private void HandleDragStart(KanbanTask task)
@@ -246,7 +262,7 @@
         public int ColumnId { get; set; }
         public ProjectTaskItem Task { get; set; }
     }
-    
+
     public class KanbanMilestone
     {
         public MilestoneItem Milestone { get; set; }
@@ -305,17 +321,17 @@
         StateHasChanged();
     }
 
-    private async void HandelOnAddMilestone(MilestoneItem item)
+    public async void HandelOnAddMilestone(MilestoneItem item)
     {
         await RefreshMilestones();
     }
-    
-    private async void HandelOnEditProject(ProjectItem item)
+
+    public async void HandelOnEditProject(ProjectItem item)
     {
         await RefreshTasks();
         await RefreshMilestones();
     }
-    
+
     private async Task EditProjectDialogClose()
     {
         EditProjectDialogFlag = false;
@@ -330,11 +346,13 @@
             await RefreshMilestones();
         }
     }
-    
+
     private void EditProjectDialogOnClick()
     {
         EditProjectDialogFlag = true;
         StateHasChanged();
     }
+
 }
+
 }

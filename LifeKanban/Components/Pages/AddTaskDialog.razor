@@ -74,7 +74,7 @@
             debugMessage = $"Selected milestone ID: {selectedId}";
 
             // Store just the ID string instead of the complex object
-            ProjectTaskItem.milestone = ProjectItem.milestones.First(x => x.id.ToString() == selectedId);
+            ProjectTaskItem.milestoneId = ProjectItem.milestones.First(x => x.id.ToString() == selectedId).id;
 
             // If you need the full object too, store it separately
             // var milestoneObj = ProjectItem.milestones.FirstOrDefault(m => m.id == selectedId);

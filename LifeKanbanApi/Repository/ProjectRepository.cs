@@ -33,8 +33,7 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         }
     }
 
-    public async Task<bool> AddTask(ProjectTask projectTask, Guid projectGuid,
-        CancellationToken cancellationToken = default)
+    public async Task<bool> AddTask(ProjectTask projectTask, Guid projectGuid, CancellationToken cancellationToken = default)
     {
         var project = await GetProject(projectGuid, cancellationToken);
 

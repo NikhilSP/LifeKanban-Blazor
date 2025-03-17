@@ -19,8 +19,8 @@ public class CreateProjectHandler(ProjectRepository projectRepository)
         {
             Id = Guid.NewGuid(),
             Name = request.Project.Name,
-            Tasks = request.Project.Tasks,
-            Milestones = request.Project.Milestones,
+            Tasks = [],
+            Milestones = [],
         };
 
         var result = await projectRepository.AddProject(project, cancellationToken);
