@@ -27,7 +27,14 @@
                             <option value="">-- Select Milestone --</option>
                             @foreach (var milestone in ProjectItem.milestones)
                             {
-                                <option value="@milestone.id">@milestone.name</option>
+                                @if (CurrentTaskItem?.milestone?.id == milestone.id)
+                                {
+                                    <option value="@milestone.id" selected>@milestone.name</option>
+                                }
+                                else
+                                {
+                                    <option value="@milestone.id">@milestone.name</option>
+                                }
                             }
                         </select>
                     </div>
