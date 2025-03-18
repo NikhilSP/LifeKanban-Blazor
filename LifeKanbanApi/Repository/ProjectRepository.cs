@@ -120,6 +120,7 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
     {
         try
         {
+            task.Milestone = null;
             projectDbContext.Tasks.Update(task);
             await projectDbContext.SaveChangesAsync(cancellationToken);
             return true;

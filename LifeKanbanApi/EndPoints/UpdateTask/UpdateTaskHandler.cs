@@ -17,6 +17,8 @@ public class UpdateTaskHandler(ProjectRepository projectRepository)
     {
         request.Task.ProjectId = request.ProjectGuid;
         
+        request.Task.MilestoneId = request.Task.Milestone?.Id;
+        
         var result = await projectRepository.UpdateTask(request.Task, cancellationToken);
 
         if (!result)

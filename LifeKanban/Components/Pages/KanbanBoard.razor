@@ -32,7 +32,7 @@
                             @foreach (var milestone in _milestones)
                             {
                                 // Adjust these lines to match how tasks are stored in your milestone object
-                                var tasks = _tasks.Where(x => x.Task.milestone.id == milestone.Milestone.id).Select(x => x.Task).ToList();
+                                var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
                                 var totalTasks = tasks.Count;
                                 var completedTasks = tasks.Count(t => t.status=="");
                                 var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
@@ -97,6 +97,7 @@
                                         <h6 class="card-title">@task.Task.title</h6>
                                         <p class="card-text small text-muted mb-0">@task.Task.description</p>
                                         <div class="mt-2">
+                                            <p class="card-text small text-muted mb-0">@task.Task.milestone?.name</p>
                                             <button type="button" class="btn btn-link text-black" @onclick="() => DeleteTask(task.Task.id)">
                                                 <span class="bi bi-trash"></span>
                                             </button>
@@ -321,7 +322,7 @@
         StateHasChanged();
     }
 
-    public async void HandelOnAddMilestone(MilestoneItem item)
+    public async Task HandelOnAddMilestone(MilestoneItem item)
     {
         await RefreshMilestones();
     }
