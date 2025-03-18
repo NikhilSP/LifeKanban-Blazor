@@ -32,7 +32,7 @@
                             @foreach (var milestone in _milestones)
                             {
                                 // Adjust these lines to match how tasks are stored in your milestone object
-                                var tasks = _tasks.Where(x => x.Task.milestoneId == milestone.Milestone.id).Select(x => x.Task).ToList();
+                                var tasks = _tasks.Where(x => x.Task.milestone.id == milestone.Milestone.id).Select(x => x.Task).ToList();
                                 var totalTasks = tasks.Count;
                                 var completedTasks = tasks.Count(t => t.status=="");
                                 var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;

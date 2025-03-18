@@ -8,5 +8,5 @@ public class ProjectTaskDto
     public string Status { get; set; } = string.Empty;
     public double ColumnPosition { get; set; } = 0;
     public Guid ProjectId { get; set; }
-    public Guid? MilestoneId { get; set; }
+    public MilestoneDto? Milestone { get; set; } 
 }
