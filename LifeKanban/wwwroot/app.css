@@ -58,3 +58,286 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+:root {
+    /* GitLab dark theme colors */
+    --gl-background-color: #1f1e24;
+    --gl-card-background: #28272d;
+    --gl-card-hover: #3a393f;
+    --gl-text-color: #e9e9eb;
+    --gl-text-secondary: #89888d;
+    --gl-border-color: #3c3b40;
+    --gl-border-color-strong: #5c5a63;
+
+    /* Column header colors */
+    --column-open-color: #28272d;
+    --column-ready-color: #009966;
+    --column-doing-color: #ed9121;
+    --column-review-color: #330066;
+    --column-qa-color: #cc338b;
+}
+
+/* Main kanban board container */
+.kanban-board {
+    display: flex;
+    gap: 16px;
+    padding: 1rem;
+    overflow-x: auto;
+    background-color: var(--gl-background-color);
+    min-height: calc(100vh - 60px);
+}
+
+/* Column styling */
+.kanban-column {
+    min-width: 280px;
+    width: 280px;
+    background-color: var(--gl-card-background);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+}
+
+/* Column header styling */
+.column-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 4px solid;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-top: -2px;
+}
+
+/* Column header color variations */
+.column-open .column-header {
+    border-top-color: var(--column-open-color);
+}
+
+.column-ready .column-header {
+    border-top-color: var(--column-ready-color);
+}
+
+.column-doing .column-header {
+    border-top-color: var(--column-doing-color);
+}
+
+.column-review .column-header {
+    border-top-color: var(--column-review-color);
+}
+
+.column-qa .column-header {
+    border-top-color: var(--column-qa-color);
+}
+
+/* Column title */
+.column-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gl-text-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Column count badge */
+.column-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--gl-text-secondary);
+    font-size: 12px;
+}
+
+.column-count svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Column actions */
+.column-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.column-actions button {
+    background: transparent;
+    border: none;
+    color: var(--gl-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.column-actions button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Cards container */
+.cards-container {
+    padding: 8px 12px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Card styling */
+.kanban-card {
+    background-color: var(--gl-card-background);
+    border: 1px solid var(--gl-border-color);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.kanban-card:hover {
+    background-color: var(--gl-card-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Card title */
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.kanban-board .kanban-column .kanban-card .card-title {
+    color: #ffffff !important;
+}
+
+.card-title a {
+    color: var(--gl-text-color);
+    text-decoration: none;
+}
+
+.card-title a:hover {
+    text-decoration: underline;
+}
+
+/* Labels container */
+.card-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+/* Label styling */
+.card-label {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+/* Label variations */
+.label-bug {
+    background-color: #9400d3;
+    color: white;
+}
+
+.label-severity {
+    background-color: #808080;
+    color: white;
+}
+
+.label-priority {
+    background-color: #808080;
+    color: white;
+}
+
+.label-priority.priority-2 {
+    background-color: #ed9121;
+    color: white;
+}
+
+.label-client {
+    background-color: #808080;
+    color: white;
+}
+
+.label-client.client-affected {
+    background-color: #ed9121;
+    color: white;
+}
+
+/* Card footer */
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 12px;
+}
+
+/* Card metadata */
+.card-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--gl-text-secondary);
+}
+
+.card-id {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.card-milestone {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 150px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Card actions */
+.card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Avatar */
+.card-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.card-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Add button at the end of board */
+.add-column-button {
+    background-color: transparent;
+    border: 1px dashed var(--gl-border-color);
+    color: var(--gl-text-color);
+    border-radius: 8px;
+    width: 280px;
+    min-width: 280px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-top: 42px;
+}
+
+.add-column-button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}

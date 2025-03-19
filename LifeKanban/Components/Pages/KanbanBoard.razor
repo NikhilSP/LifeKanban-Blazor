@@ -1,121 +1,162 @@
 @rendermode InteractiveServer
 @inject ProjectsClient Client
+@inject IJSRuntime JSRuntime
 @page "/kanbanboard/{projectId:guid}"
 @using LifeKanban.Client
 @using LifeKanban.Model
+@using Microsoft.JSInterop
 
-<div style="display: flex; align-items: center;">
-    <h3 style="margin-right: 10px; margin-bottom: 0;">@_projectItem.name</h3>
-    <button type="button" class="btn btn-link text-black" @onclick="EditProjectDialogOnClick">
+<div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
+    <h3 class="me-2 mb-0">@_projectItem.name</h3>
+    <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="EditProjectDialogOnClick">
         <span class="bi bi-pencil"></span>
     </button>
 </div>
 
-<div class="container-fluid mt-4">
-    <div class="row">
-        @foreach (var column in _columns)
+<div class="kanban-board">
+    @foreach (var column in _columns)
+    {
+        var columnClass = $"kanban-column column-{column.Title.ToLower().Replace(" ", "")}";
+        
+        @if (column.Title == "Milestones")
         {
-            if (column.Title == "Milestones")
-            {
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
-                            <h5 class="card-title mb-0">@column.Title</h5>
-                            <button type="button" class="btn btn-link" @onclick="AddMilestoneDialogOpen">
-                                <span class="bi bi-plus"></span>
-                            </button>
-                        </div>
-                        <div class="card-body kanban-column"
-                             dropzone="move"
-                             style="min-height: 500px;">
-
-                            @foreach (var milestone in _milestones)
-                            {
-                                // Adjust these lines to match how tasks are stored in your milestone object
-                                var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
-                                var totalTasks = tasks.Count;
-                                var completedTasks = tasks.Count(t => t.status=="");
-                                var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
-
-                                <div class="card mb-2 task-card"
-                                     @key="milestone.Milestone.id">
-                                    <div class="card-body">
-                                        <h6 class="card-title">@milestone.Milestone.name</h6>
-
-                                        <!-- Progress Bar -->
-                                        <div class="progress mt-2">
-                                            <div class="progress-bar" role="progressbar"
-                                                 style="width: @completionPercentage%;"
-                                                 aria-valuenow="@completionPercentage"
-                                                 aria-valuemin="0"
-                                                 aria-valuemax="100">
-                                                @completedTasks/@totalTasks
-                                            </div>
-                                        </div>
-
-                                        <div class="mt-2">
-                                            <button type="button" class="btn btn-link text-black" @onclick="() => DeleteMilestone(milestone.Milestone.id)">
-                                                <span class="bi bi-trash"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-link text-black" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
-                                                <span class="bi bi-pencil"></span>
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            }
+            <div class="@columnClass">
+                <div class="column-header">
+                    <div class="column-title">
+                        @column.Title
+                        <div class="column-count">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
+                            </svg>
+                            @_milestones.Count
                         </div>
                     </div>
-                </div>
-            }
-            else
-            {
-                <div class="col-md-3">
-                    <div class="card">
-                        <div class="card-header bg-light d-flex align-items-center justify-content-between px-3">
-                            <h5 class="card-title mb-0">@column.Title</h5>
-                            <button type="button" class="btn btn-link" @onclick="AddTaskDialogOpen">
-                                <span class="bi bi-plus"></span>
-                            </button>
-                        </div>
-                        <div class="card-body kanban-column"
-                             dropzone="move"
-                             ondragover="event.preventDefault();"
-                             ondragenter="event.preventDefault();"
-                             ondrop="@(() => HandleDrop(column.Id))"
-                             style="min-height: 500px;">
-
-                            @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
-                            {
-                                <div class="card mb-2 task-card"
-                                     draggable="true"
-                                     @ondragstart="() => HandleDragStart(task)"
-                                     @ondragend="HandleDragEnd"
-                                     @key="task.Task.id">
-                                    <div class="card-body">
-                                        <h6 class="card-title">@task.Task.title</h6>
-                                        <p class="card-text small text-muted mb-0">@task.Task.description</p>
-                                        <div class="mt-2">
-                                            <p class="card-text small text-muted mb-0">@task.Task.milestone?.name</p>
-                                            <button type="button" class="btn btn-link text-black" @onclick="() => DeleteTask(task.Task.id)">
-                                                <span class="bi bi-trash"></span>
-                                            </button>
-                                            <button type="button" class="btn btn-link text-black" @onclick="() => EditTaskDialogOnClick(task)">
-                                                <span class="bi bi-pencil"></span>
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            }
-                        </div>
+                    <div class="column-actions">
+                        <button type="button" @onclick="AddMilestoneDialogOpen">
+                            <span class="bi bi-plus"></span>
+                        </button>
                     </div>
                 </div>
-            }
+                <div class="cards-container"
+                     dropzone="move">
+
+                    @foreach (var milestone in _milestones)
+                    {
+                        var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
+                        var totalTasks = tasks.Count;
+                        var completedTasks = tasks.Count(t => t.status=="");
+                        var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
+
+                        <div class="kanban-card" @key="milestone.Milestone.id">
+                            <div class="card-title">@milestone.Milestone.name</div>
+                            <div style="height: 4px; width: 100%; background-color: var(--gl-border-color);">
+                                <div style="height: 100%; width: @completionPercentage%; background-color: var(--column-ready-color);"></div>
+                            </div>
+                            <div class="text-end small mt-1" style="color: var(--gl-text-secondary);">
+                                @completedTasks/@totalTasks
+                            </div>
+
+                            <div class="card-footer">
+                                <div class="card-metadata">
+                                    <div class="card-id">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                                            <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                                        </svg>
+                                        Milestone-@milestone.Milestone.id.ToString().Substring(0, 4)
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
+                                        <span class="bi bi-pencil"></span>
+                                    </button>
+                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => DeleteMilestone(milestone.Milestone.id)">
+                                        <span class="bi bi-trash"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
         }
-    </div>
+        else
+        {
+            <div class="@columnClass">
+                <div class="column-header">
+                    <div class="column-title">
+                        @column.Title
+                        <div class="column-count">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
+                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
+                            </svg>
+                            @_tasks.Count(t => t.ColumnId == column.Id)
+                        </div>
+                    </div>
+                    <div class="column-actions">
+                        <button type="button" @onclick="AddTaskDialogOpen">
+                            <span class="bi bi-plus"></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="cards-container"
+                     dropzone="move"
+                     ondragover="event.preventDefault();"
+                     ondragenter="event.preventDefault();"
+                     ondrop="@(() => HandleDrop(column.Id))">
+
+                    @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
+                    {
+                        <div class="kanban-card"
+                             draggable="true"
+                             @ondragstart="() => HandleDragStart(task)"
+                             @ondragend="HandleDragEnd"
+                             @key="task.Task.id">
+                            <div class="card-title">@task.Task.title</div>
+                            
+                            @if(!string.IsNullOrEmpty(task.Task.description))
+                            {
+                                <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
+                            }
+                            
+                            @if(task.Task.milestone != null)
+                            {
+                                <div class="card-labels">
+                                    <span class="card-label" style="background-color: var(--column-ready-color);">
+                                        @task.Task.milestone?.name
+                                    </span>
+                                </div>
+                            }
+
+                            <div class="card-footer">
+                                <div class="card-metadata">
+                                    <div class="card-id">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                                            <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+                                        </svg>
+                                        Task-@task.Task.id.ToString().Substring(0, 4)
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => EditTaskDialogOnClick(task)">
+                                        <span class="bi bi-pencil"></span>
+                                    </button>
+                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => DeleteTask(task.Task.id)">
+                                        <span class="bi bi-trash"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
 </div>
+
 @if (AddTaskDialogFlag)
 {
     <AddTaskDialog ProjectItem="@_projectItem"
@@ -145,27 +186,7 @@
     </EditProjectDialog>
 }
 
-
-<style>
-    .kanban-column {
-        background-color: #f8f9fa;
-        border-radius: 4px;
-        padding: 10px;
-    }
-    
-    .task-card {
-        cursor: grab;
-        transition: all 0.2s ease;
-    }
-    
-    .task-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-</style>
-
 @code {
-
     [Parameter] public Guid projectId { get; set; }
 
     private List<KanbanColumn> _columns =
@@ -175,6 +196,21 @@
         new KanbanColumn { Id = 2, Title = "In Progress" },
         new KanbanColumn { Id = 4, Title = "Done" }
     ];
+
+    // Required to force dark theme to match GitLab style
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+         //  // Apply dark theme to the page
+         //  var doc = typeof(JSInterop.IJSInProcessRuntime).Assembly
+         //      .GetType("Microsoft.JSInterop.JSRuntime")
+         //      .GetMethod("InvokeJS", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+         //  doc?.Invoke(JSRuntime, new object[] { "document.body.style.background = 'var(--gl-background-color)'", new[] { } });
+         //  doc?.Invoke(JSRuntime, new object[] { "document.body.style.color = 'var(--gl-text-color)'", new[] { } });
+        }
+    }
 
     private List<KanbanTask> _tasks = [];
     private List<KanbanMilestone> _milestones = [];
@@ -353,5 +389,4 @@
         EditProjectDialogFlag = true;
         StateHasChanged();
     }
-
 }
