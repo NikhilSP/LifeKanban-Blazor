@@ -1,10 +1,8 @@
 @rendermode InteractiveServer
 @inject ProjectsClient Client
-@inject IJSRuntime JSRuntime
 @page "/kanbanboard/{projectId:guid}"
 @using LifeKanban.Client
 @using LifeKanban.Model
-@using Microsoft.JSInterop
 
 <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
     <h3 class="me-2 mb-0">@_projectItem.name</h3>

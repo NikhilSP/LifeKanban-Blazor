@@ -1,3 +1,4 @@
+/* Original app.css styles */
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -13,7 +14,7 @@ a, .btn-link {
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
 .content {
@@ -42,9 +43,9 @@ h1:focus {
     color: white;
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
 
 .darker-border-checkbox.form-check-input {
     border-color: #929292;
@@ -59,6 +60,7 @@ h1:focus {
     text-align: start;
 }
 
+/* Kanban board styles */
 :root {
     /* GitLab dark theme colors */
     --gl-background-color: #1f1e24;
@@ -196,6 +198,101 @@ h1:focus {
     background-color: var(--gl-card-hover);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
+}
+
+/* Enhanced sidebar navigation styling */
+.sidebar {
+    background-color: var(--gl-background-color);
+    width: 220px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    overflow-y: auto;
+    border-right: 1px solid var(--gl-border-color);
+}
+
+.sidebar-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gl-border-color);
+    display: flex;
+    align-items: center;
+}
+
+.navbar-brand {
+    color: var(--gl-text-color);
+    font-size: 18px;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.navbar-brand:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.nav-scrollable {
+    padding: 8px 0;
+    height: calc(100vh - 3.5rem);
+    overflow-y: auto;
+}
+
+.nav-item {
+    padding: 8px 16px;
+    color: var(--gl-text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.2s;
+}
+
+.nav-item:hover {
+    background-color: var(--gl-card-hover);
+}
+
+.nav-link {
+    color: var(--gl-text-secondary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.nav-link:hover {
+    color: white;
+    text-decoration: none;
+}
+
+.nav-link.active {
+    color: white;
+}
+
+.nav-item .btn-link {
+    background: transparent;
+    border: none;
+    color: var(--gl-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    visibility: hidden;
+}
+
+.nav-item:hover .btn-link {
+    visibility: visible;
+}
+
+.btn-link:hover {
+    color: white;
+}
+
+.content-wrapper {
+    margin-left: 220px;
+    padding: 20px;
+    min-height: 100vh;
+    background-color: var(--gl-background-color);
 }
 
 /* Card title */

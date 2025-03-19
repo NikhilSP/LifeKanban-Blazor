@@ -7,43 +7,40 @@
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
 
-
-<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Life Kanban</a>
-    </div>
+<div class="sidebar-header">
+    <a class="navbar-brand" href="">
+        <span class="bi bi-kanban" aria-hidden="true"></span>
+        Life Kanban
+    </a>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler"/>
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="nav-scrollable">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door" aria-hidden="true"></span> Home
             </NavLink>
         </div>
 
         @foreach (var project in Projects)
         {
-            <div class="nav-item d-flex align-items-center justify-content-between px-3">
+            <div class="nav-item">
                 <NavLink class="nav-link" href="@($"/kanbanboard/{project.id}")">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> @project.name
+                    <span class="bi bi-kanban" aria-hidden="true"></span> @project.name
                 </NavLink>
-                <button type="button" class="btn btn-link text-white" @onclick="() => DeleteProject(project.id)">
+                <button type="button" class="btn-link" @onclick="() => DeleteProject(project.id)">
                     <span class="bi bi-trash"></span>
                 </button>
             </div>
         }
 
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="AddProject">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Add Project
+                <span class="bi bi-plus-circle" aria-hidden="true"></span> Add Project
             </NavLink>
         </div>
     </nav>
 </div>
-
 
 @code
 {
@@ -70,8 +67,8 @@
     {
         Projects = await Client.GetProjects();
 
-        // Only call StateHasChanged if already initialized
-        // This prevents issues during component initialization
+// Only call StateHasChanged if already initialized
+// This prevents issues during component initialization
         if (_isInitialized)
         {
             StateHasChanged();
