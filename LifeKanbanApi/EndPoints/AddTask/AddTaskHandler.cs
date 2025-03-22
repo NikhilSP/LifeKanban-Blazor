@@ -24,6 +24,7 @@ public class AddTaskHandler(ProjectRepository projectRepository)
             Milestone = request.Task.Milestone,
             ProjectId = request.Task.ProjectId,
             Project = request.Task.Project,
+            ColumnPosition = request.Task.ColumnPosition
         };
 
         var result = await projectRepository.AddTask(task, request.ProjectGuid, cancellationToken);

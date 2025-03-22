@@ -333,6 +333,7 @@
             await Client.UpdateTask(_draggedTask.Task, _projectItem.id);
 
             _draggedTask = null;
+            await  RefreshTasks();
             StateHasChanged();
         }
     }

@@ -145,7 +145,24 @@
 
     private async Task<Task> ModalOk()
     {
-        var result = _inEditMode ? await Client.UpdateTask(ProjectTaskItem, ProjectItem.id) : await Client.AddTask(ProjectTaskItem, ProjectItem.id);
+        Guid? result;
+
+        if (_inEditMode)
+        {
+            result = await Client.UpdateTask(ProjectTaskItem, ProjectItem.id);
+        }
+        else
+        {
+            var columnPositions = ProjectItem.tasks.Select(x => x.columnPosition).ToList();
+
+           if (columnPositions.Any())
+           {
+               var newColumnPosition = columnPositions.Max();
+               ProjectTaskItem.columnPosition = newColumnPosition+10;
+           }
+           
+            result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
+        }
 
         if (result is not null)
         {
