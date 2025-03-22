@@ -4,11 +4,15 @@
 @using LifeKanban.Client
 @using LifeKanban.Model
 @inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
 
 <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
     <h3 class="me-2 mb-0">@_projectItem.name</h3>
     <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="EditProjectDialogOnClick">
         <span class="bi bi-pencil"></span>
+    </button>
+    <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="ConfirmDeleteProject">
+        <span class="bi bi-trash"></span>
     </button>
 </div>
 
@@ -71,7 +75,7 @@
                                     <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
                                         <span class="bi bi-pencil"></span>
                                     </button>
-                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => DeleteMilestone(milestone.Milestone.id)">
+                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => ConfirmDeleteMilestone(milestone.Milestone.id)">
                                         <span class="bi bi-trash"></span>
                                     </button>
                                 </div>
@@ -150,7 +154,7 @@
                                     <button type="button" class="card-btn" title="Edit" @onclick="() => EditTaskDialogOnClick(task)">
                                         <span class="bi bi-pencil"></span>
                                     </button>
-                                    <button type="button" class="card-btn" title="Delete" @onclick="() => DeleteTask(task.Task.id)">
+                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => ConfirmDeleteTask(task.Task.id)">
                                         <span class="bi bi-trash"></span>
                                     </button>
                                 </div>
@@ -190,6 +194,33 @@
                        OnItemSelected="@HandelOnEditProject"
                        DialogType="EditProjectDialog.ModalDialogType.DeleteCancel">
     </EditProjectDialog>
+}
+
+@if (ShowDeleteProjectConfirmation)
+{
+    <ConfirmationDialog
+        Title="Delete Project"
+        Message=@GetProjectMessage()
+        OnConfirm="DeleteProjectConfirmed"
+        OnCancel="CancelDeleteProject"/>
+}
+
+@if (ShowDeleteMilestoneConfirmation)
+{
+    <ConfirmationDialog
+        Title="Delete Milestone"
+        Message="Are you sure you want to delete this milestone?\n  This action cannot be undone."
+        OnConfirm="DeleteMilestoneConfirmed"
+        OnCancel="CancelDeleteMilestone"/>
+}
+
+@if (ShowDeleteTaskConfirmation)
+{
+    <ConfirmationDialog
+        Title="Delete Task"
+        Message="Are you sure you want to delete this task? This action cannot be undone."
+        OnConfirm="DeleteTaskConfirmed"
+        OnCancel="CancelDeleteTask"/>
 }
 
 @code {
@@ -237,6 +268,12 @@
         await RefreshTasks();
         await RefreshMilestones();
     }
+
+    private string GetProjectMessage()
+    {
+        return $"Are you sure you want to delete the project {_projectItem.name}?\n This action cannot be undone.";
+    }
+
 
     private async Task RefreshTasks()
     {
@@ -594,6 +631,97 @@
     private void EditProjectDialogOnClick()
     {
         EditProjectDialogFlag = true;
+        StateHasChanged();
+    }
+
+
+    private bool ShowDeleteProjectConfirmation { get; set; }
+    private bool ShowDeleteMilestoneConfirmation { get; set; }
+    private bool ShowDeleteTaskConfirmation { get; set; }
+
+    private Guid? ItemToDeleteId { get; set; }
+
+    private void ConfirmDeleteProject()
+    {
+        ShowDeleteProjectConfirmation = true;
+        StateHasChanged();
+    }
+
+    private async Task DeleteProjectConfirmed()
+    {
+        var res = await Client.DeleteProjects(_projectItem.id);
+        if (res)
+        {
+            // Navigate back to home after deletion
+            NavigationManager.NavigateTo("");
+        }
+
+        ShowDeleteProjectConfirmation = false;
+    }
+
+    private void CancelDeleteProject()
+    {
+        ShowDeleteProjectConfirmation = false;
+        StateHasChanged();
+    }
+
+    // Update the milestone delete method
+    private void ConfirmDeleteMilestone(Guid milestoneId)
+    {
+        ItemToDeleteId = milestoneId;
+        ShowDeleteMilestoneConfirmation = true;
+        StateHasChanged();
+    }
+
+    private async Task DeleteMilestoneConfirmed()
+    {
+        if (ItemToDeleteId.HasValue)
+        {
+            var res = await Client.DeleteMilestone(ItemToDeleteId.Value);
+            if (res)
+            {
+                await RefreshMilestones();
+            }
+        }
+
+        ShowDeleteMilestoneConfirmation = false;
+        ItemToDeleteId = null;
+    }
+
+    private void CancelDeleteMilestone()
+    {
+        ShowDeleteMilestoneConfirmation = false;
+        ItemToDeleteId = null;
+        StateHasChanged();
+    }
+
+    // Update the task delete method
+    private void ConfirmDeleteTask(Guid taskId)
+    {
+        ItemToDeleteId = taskId;
+        ShowDeleteTaskConfirmation = true;
+        StateHasChanged();
+    }
+
+    private async Task DeleteTaskConfirmed()
+    {
+        if (ItemToDeleteId.HasValue)
+        {
+            var res = await Client.DeleteTask(ItemToDeleteId.Value);
+            if (res)
+            {
+                await RefreshTasks();
+            }
+        }
+
+        ShowDeleteTaskConfirmation = false;
+        ItemToDeleteId = null;
+    }
+
+    private void CancelDeleteTask()
+    {
+        ShowDeleteTaskConfirmation = false;
+        ItemToDeleteId = null;
         StateHasChanged();
     }
 
