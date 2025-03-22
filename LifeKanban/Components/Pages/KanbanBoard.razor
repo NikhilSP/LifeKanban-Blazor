@@ -103,7 +103,7 @@
                 <div class="cards-container"
                      dropzone="move"
                      ondragenter="event.preventDefault();"
-                     @ondragover="(e) => HandleDragOver(e, column.Id)"
+                     ondragover="return window.kanbanInterop.handleDragOver(event, @column.Id)"
                      @ondrop="async () => await HandleDrop(column.Id)">
 
                     @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
@@ -291,6 +291,13 @@
         // Since it's static, we need to implement this logic in the HandleDrop method instead
         return Task.FromResult(0.0);
     }
+    
+    [JSInvokable]
+    public void OnInsertIndexChanged(int index)
+    {
+        _insertIndex = index;
+        StateHasChanged();
+    }
 
     private void HandleDragStart(KanbanTask task)
     {
@@ -307,11 +314,22 @@
     private async Task HandleDragOver(DragEventArgs e, int columnId)
     {
         if (_draggedTask == null) return;
-
-        // Call JavaScript to show insertion indicator and get the insertion index
-        _insertIndex = await JSRuntime.InvokeAsync<int>("kanbanInterop.showInsertionLine", columnId, e.ClientY);
-
-        Console.WriteLine($"Dragging over column {columnId}, insert at index {_insertIndex}");
+    
+        try {
+            Console.WriteLine($"Dragging over column {columnId}");
+        
+            // Call JS function with proper error handling
+            var result = await JSRuntime.InvokeAsync<int>(
+                "kanbanInterop.showInsertionLine", 
+                columnId, e.ClientY);
+            
+            _insertIndex = result;
+            Console.WriteLine($"Got insert index: {_insertIndex}");
+        }
+        catch (Exception ex) {
+            Console.WriteLine($"JS Error: {ex.Message}");
+            _insertIndex = -1;
+        }
     }
 
     // Inside your code block:
