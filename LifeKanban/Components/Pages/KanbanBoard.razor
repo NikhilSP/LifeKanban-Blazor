@@ -3,6 +3,7 @@
 @page "/kanbanboard/{projectId:guid}"
 @using LifeKanban.Client
 @using LifeKanban.Model
+@inject IJSRuntime JSRuntime
 
 <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
     <h3 class="me-2 mb-0">@_projectItem.name</h3>
@@ -101,8 +102,8 @@
                 </div>
                 <div class="cards-container"
                      dropzone="move"
-                     ondragover="event.preventDefault();"
                      ondragenter="event.preventDefault();"
+                     @ondragover="(e) => HandleDragOver(e, column.Id)"
                      @ondrop="async () => await HandleDrop(column.Id)">
 
                     @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
@@ -281,6 +282,15 @@
     private double _lastPosition = 0;
     private int _dropIndex = -1;
     private KanbanTask _taskBeingDroppedOn;
+    private int _insertIndex = -1;
+
+    [JSInvokable]
+    public static Task<double> CalculatePositionValue(int columnId, int insertIndex)
+    {
+        // This method will be called from JS to get the position value
+        // Since it's static, we need to implement this logic in the HandleDrop method instead
+        return Task.FromResult(0.0);
+    }
 
     private void HandleDragStart(KanbanTask task)
     {
@@ -288,9 +298,20 @@
         Console.WriteLine($"Started dragging");
     }
 
-    private void HandleDragEnd()
+    private async Task HandleDragEnd()
     {
+        await JSRuntime.InvokeVoidAsync("kanbanInterop.removeInsertionLine");
         Console.WriteLine("Drag ended");
+    }
+
+    private async Task HandleDragOver(DragEventArgs e, int columnId)
+    {
+        if (_draggedTask == null) return;
+
+        // Call JavaScript to show insertion indicator and get the insertion index
+        _insertIndex = await JSRuntime.InvokeAsync<int>("kanbanInterop.showInsertionLine", columnId, e.ClientY);
+
+        Console.WriteLine($"Dragging over column {columnId}, insert at index {_insertIndex}");
     }
 
     // Inside your code block:
@@ -299,13 +320,13 @@
     {
         if (_draggedTask != null)
         {
-            // Store original column
-            var originalColumnId = _draggedTask.ColumnId;
+            // Remove the insertion indicator
+            await JSRuntime.InvokeVoidAsync("kanbanInterop.removeInsertionLine");
 
-            // Update column ID
+            var originColumnId = _draggedTask.ColumnId;
             _draggedTask.ColumnId = newColumnId;
 
-            // Map column ID to status
+            // Map column ID to status text
             string newStatus = newColumnId switch
             {
                 1 => "To Do",
@@ -316,25 +337,45 @@
 
             _draggedTask.Task.status = newStatus;
 
-            // Reposition task based on column change
-            if (originalColumnId != newColumnId)
-            {
-                // Moving to a new column - put at the bottom
-                var columnTasks = _tasks
-                    .Where(t => t.ColumnId == newColumnId && t.Task.id != _draggedTask.Task.id)
-                    .Select(t => t.Task.columnPosition)
-                    .DefaultIfEmpty(0)
-                    .Max();
+            // Get tasks in the target column
+            var columnTasks = _tasks
+                .Where(t => t.ColumnId == newColumnId && t.Task.id != _draggedTask.Task.id)
+                .OrderBy(t => t.Task.columnPosition)
+                .ToList();
 
-                _draggedTask.Task.columnPosition = columnTasks + 10;
+            // Calculate the new position based on the insertion index
+            if (columnTasks.Count == 0)
+            {
+                // Empty column - use a default position
+                _draggedTask.Task.columnPosition = 1000;
+            }
+            else if (_insertIndex <= 0)
+            {
+                // Insert at the beginning - position before the first task
+                _draggedTask.Task.columnPosition = columnTasks.First().Task.columnPosition - 10;
+            }
+            else if (_insertIndex >= columnTasks.Count)
+            {
+                // Insert at the end - position after the last task
+                _draggedTask.Task.columnPosition = columnTasks.Last().Task.columnPosition + 10;
+            }
+            else
+            {
+                // Insert between tasks - calculate the midpoint position
+                var positionBefore = columnTasks[_insertIndex - 1].Task.columnPosition;
+                var positionAfter = columnTasks[_insertIndex].Task.columnPosition;
+                _draggedTask.Task.columnPosition = (positionBefore + positionAfter) / 2;
             }
 
-            // Save to database
+            // Persist to database
             await Client.UpdateTask(_draggedTask.Task, _projectItem.id);
 
+            // Reset state
             _draggedTask = null;
-            await  RefreshTasks();
-            StateHasChanged();
+            _insertIndex = -1;
+
+            // Refresh the tasks to ensure correct order
+            await RefreshTasks();
         }
     }
 
@@ -386,6 +427,7 @@
         await RefreshTasks();
     }
 
+    /*
     private void HandleDragOver(DragEventArgs e, int columnId)
     {
         if (_draggedTask == null) return;
@@ -411,6 +453,7 @@
 
         Console.WriteLine($"Dragging over column {columnId}, position {mouseY}");
     }
+    */
 
     public class KanbanColumn
     {
