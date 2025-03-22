@@ -452,7 +452,6 @@ h1:focus {
     color: #ffffff !important;
 }
 
-/* GitLab-style modal dialog */
 .gitlab-modal .modal-content {
     background-color: var(--gl-card-background);
     color: var(--gl-text-color);
@@ -463,6 +462,9 @@ h1:focus {
 .gitlab-modal .modal-header {
     border-bottom: 1px solid var(--gl-border-color);
     padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .gitlab-modal .modal-body {
