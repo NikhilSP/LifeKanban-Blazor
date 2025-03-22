@@ -3,8 +3,10 @@
 @page "/kanbanboard/{projectId:guid}"
 @using LifeKanban.Client
 @using LifeKanban.Model
+@using LifeKanban.StateManagement
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
+@inject ProjectStateService ProjectStateService
 
 <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
     <h3 class="me-2 mb-0">@_projectItem.name</h3>
@@ -613,6 +615,7 @@ This action cannot be undone."
     {
         await RefreshTasks();
         await RefreshMilestones();
+        ProjectStateService.NotifyStateChanged();
     }
 
     private async Task EditProjectDialogClose()
@@ -654,6 +657,7 @@ This action cannot be undone."
         var res = await Client.DeleteProjects(_projectItem.id);
         if (res)
         {
+            ProjectStateService.NotifyStateChanged();
             // Navigate back to home after deletion
             NavigationManager.NavigateTo("");
         }

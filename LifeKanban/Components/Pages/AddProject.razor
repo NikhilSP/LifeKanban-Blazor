@@ -24,7 +24,7 @@
 @code {
     [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new() { name = string.Empty };
 
-    private async void OnAddProject()
+    private async Task  OnAddProject()
     {
         var result = await Client.AddProject(ProjectItem);
         if (result is not null)
@@ -35,7 +35,7 @@
             {
                 ProjectItem = project;
                 ProjectStateService.NotifyStateChanged();
-//NavigationManager.NavigateTo($"http://localhost:5119/kanbanboard/{project.id}");
+                NavigationManager.NavigateTo($"/kanbanboard/{project.id}");
             }
         }
     }
