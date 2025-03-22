@@ -19,7 +19,7 @@
 
         @if (column.Title == "Milestones")
         {
-            <div class="@columnClass">
+            <div class="@columnClass" data-column-id="@column.Id">
                 <div class="column-header">
                     <div class="column-title">
                         @column.Title
@@ -82,7 +82,7 @@
         }
         else
         {
-            <div class="@columnClass">
+            <div class="@columnClass" data-column-id="@column.Id">
                 <div class="column-header">
                     <div class="column-title">
                         @column.Title
@@ -291,7 +291,7 @@
         // Since it's static, we need to implement this logic in the HandleDrop method instead
         return Task.FromResult(0.0);
     }
-    
+
     [JSInvokable]
     public void OnInsertIndexChanged(int index)
     {
@@ -314,19 +314,21 @@
     private async Task HandleDragOver(DragEventArgs e, int columnId)
     {
         if (_draggedTask == null) return;
-    
-        try {
+
+        try
+        {
             Console.WriteLine($"Dragging over column {columnId}");
-        
+
             // Call JS function with proper error handling
             var result = await JSRuntime.InvokeAsync<int>(
-                "kanbanInterop.showInsertionLine", 
+                "kanbanInterop.showInsertionLine",
                 columnId, e.ClientY);
-            
+
             _insertIndex = result;
             Console.WriteLine($"Got insert index: {_insertIndex}");
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             Console.WriteLine($"JS Error: {ex.Message}");
             _insertIndex = -1;
         }

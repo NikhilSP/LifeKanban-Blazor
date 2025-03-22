@@ -20,12 +20,20 @@ window.kanbanInterop = {
     // Original function for showing insertion line
     showInsertionLine: function(columnId, mouseY) {
         try {
-            // Remove existing indicators
+            console.log(`DEBUG: showInsertionLine called with column ${columnId}, mouseY ${mouseY}`);
+
+            // Remove existing indicator
             this.removeInsertionLine();
 
             // Find column container
-            const column = document.querySelector(`.column-${columnId} .cards-container`);
-            if (!column) return -1;
+            const column = document.querySelector(`[data-column-id="${columnId}"] .cards-container`);
+
+            if (!column) {
+                console.error(`Column not found for ID ${columnId}`);
+                return -1;
+            }
+
+            console.log("Column found, getting cards");
 
             // Find all cards in the column
             const cards = column.querySelectorAll('.kanban-card');
