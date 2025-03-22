@@ -92,7 +92,7 @@ h1:focus {
 /* Column styling */
 .kanban-column {
     min-width: 280px;
-    width: 280px;
+    width: 400px;
     background-color: var(--gl-card-background);
     border-radius: 8px;
     display: flex;
@@ -202,25 +202,34 @@ h1:focus {
 
 /* Enhanced sidebar navigation styling */
 .sidebar {
-    background-color: var(--gl-background-color);
+    background-color: #0b1e64;
     width: 220px;
     height: 100vh;
     position: fixed;
     left: 0;
     top: 0;
     overflow-y: auto;
-    border-right: 1px solid var(--gl-border-color);
 }
 
 .sidebar-header {
     padding: 12px 16px;
-    border-bottom: 1px solid var(--gl-border-color);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
+    background-color: #333; /* Set desired header background color */
+}
+
+.sidebar-header .navbar-brand {
+    color: white;
+}
+
+.sidebar-header .navbar-brand:hover {
+    color: white;
+    text-decoration: none;
 }
 
 .navbar-brand {
-    color: var(--gl-text-color);
+    color: #ffffff;
     font-size: 18px;
     font-weight: 600;
     text-decoration: none;
@@ -229,83 +238,75 @@ h1:focus {
     gap: 10px;
 }
 
-.navbar-brand:hover {
-    color: white;
-    text-decoration: none;
-}
+
 
 .nav-scrollable {
     padding: 8px 0;
     height: calc(100vh - 3.5rem);
     overflow-y: auto;
+    background-color: #222; /* Set desired scrollable background color */
 }
 
 .nav-item {
     padding: 8px 16px;
-    color: var(--gl-text-secondary);
+    color: rgba(255, 255, 255, 0.8);
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: background-color 0.2s;
 }
 
-.nav-item:hover {
-    background-color: var(--gl-card-hover);
-}
-
 .nav-link {
-    color: var(--gl-text-secondary);
+    color: rgba(255, 255, 255, 0.8);
     text-decoration: none;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     font-size: 14px;
+    width: 100%;
+    padding: 5px 8px;
 }
 
-.nav-link:hover {
-    color: white;
-    text-decoration: none;
-}
 
 .nav-link.active {
     color: white;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
 }
 
 .nav-item .btn-link {
     background: transparent;
     border: none;
-    color: var(--gl-text-secondary);
+    color: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     padding: 4px;
     visibility: hidden;
 }
 
-.nav-item:hover .btn-link {
-    visibility: visible;
-}
-
-.btn-link:hover {
-    color: white;
-}
-
 .content-wrapper {
-    margin-left: 220px;
     padding: 20px;
     min-height: 100vh;
+    width: 100%;
+    padding-top: 60px;
     background-color: var(--gl-background-color);
 }
 
-/* Card title */
-.card-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 8px;
-    word-break: break-word;
+.page {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
 }
 
-.kanban-board .kanban-column .kanban-card .card-title {
-    color: #ffffff !important;
+
+/* Project icon alignment */
+.nav-link .bi {
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    min-width: 16px;
 }
 
 .card-title a {
@@ -437,4 +438,16 @@ h1:focus {
 
 .add-column-button:hover {
     background-color: rgba(255, 255, 255, 0.05);
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.kanban-board .kanban-column .kanban-card .card-title {
+    color: #ffffff !important;
 }

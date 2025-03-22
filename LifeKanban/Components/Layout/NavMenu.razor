@@ -9,7 +9,7 @@
 
 <div class="sidebar-header">
     <a class="navbar-brand" href="">
-        <span class="bi bi-kanban" aria-hidden="true"></span>
+        <span  aria-hidden="true"></span>
         Life Kanban
     </a>
 </div>
@@ -28,9 +28,6 @@
                 <NavLink class="nav-link" href="@($"/kanbanboard/{project.id}")">
                     <span class="bi bi-kanban" aria-hidden="true"></span> @project.name
                 </NavLink>
-                <button type="button" class="btn-link" @onclick="() => DeleteProject(project.id)">
-                    <span class="bi bi-trash"></span>
-                </button>
             </div>
         }
 
