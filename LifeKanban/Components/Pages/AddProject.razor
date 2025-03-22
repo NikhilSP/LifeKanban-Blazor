@@ -6,35 +6,36 @@
 @inject ProjectStateService ProjectStateService
 @inject NavigationManager NavigationManager
 
-<h3>Add Project</h3>
+<h3>Create New Project</h3>
 
-<div class="row">
-    <div class="col-md-4">
-        <EditForm Model="@ProjectItem" FormName="AddProject" OnValidSubmit=@OnAddProject>
-            <div class="mb-3 mt-3">
-                <label for="projectName" class="form-label">Project Name</label>
-                <InputText id="projectName" class="form-control" @bind-Value="ProjectItem.name"/>
-            </div>
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </EditForm>
-    </div>
+<div class="add-project-form">
+    <EditForm Model="@ProjectItem" FormName="AddProject" OnValidSubmit=@OnAddProject>
+        <div class="mb-4">
+            <label for="projectName" class="form-label">Project Name</label>
+            <InputText id="projectName" class="form-control" @bind-Value="ProjectItem.name" placeholder="Enter project name"/>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Create Project</button>
+            <a href="/" class="btn btn-link">Cancel</a>
+        </div>
+    </EditForm>
 </div>
 
 @code {
-    [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new () {name = string.Empty };
+    [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new() { name = string.Empty };
 
     private async void OnAddProject()
     {
         var result = await Client.AddProject(ProjectItem);
         if (result is not null)
-        { 
+        {
             var project = await Client.GetProjectById(result.Value);
 
             if (project is not null)
             {
                 ProjectItem = project;
                 ProjectStateService.NotifyStateChanged();
-                //NavigationManager.NavigateTo($"http://localhost:5119/kanbanboard/{project.id}");
+//NavigationManager.NavigateTo($"http://localhost:5119/kanbanboard/{project.id}");
             }
         }
     }

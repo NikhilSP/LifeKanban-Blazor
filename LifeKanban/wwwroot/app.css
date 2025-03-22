@@ -536,3 +536,63 @@ h1:focus {
     border: 1px solid var(--gl-border-color);
     font-size: 0.85rem;
 }
+
+/* Dashboard styles */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.dashboard-header {
+    margin-bottom: 24px;
+}
+
+.intro-card {
+    background-color: var(--gl-card-background);
+    border: 1px solid var(--gl-border-color);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 30px;
+}
+
+.intro-card p {
+    color: var(--gl-text-color);
+    margin-bottom: 20px;
+}
+
+/* Add Project Page */
+.add-project-form {
+    max-width: 600px;
+    padding: 20px 0;
+}
+
+.add-project-form .form-label {
+    color: var(--gl-text-color);
+    font-weight: 500;
+}
+
+.add-project-form .form-control {
+    background-color: var(--gl-background-color);
+    color: var(--gl-text-color);
+    border: 1px solid var(--gl-border-color);
+}
+
+.add-project-form .form-control:focus {
+    border-color: var(--gl-border-color-strong);
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+}
+
+.add-project-form .btn-link {
+    color: var(--gl-text-color);
+}
+
+/* Fix for overall dark theme */
+.page {
+    background-color: var(--gl-background-color);
+    color: var(--gl-text-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--gl-text-color);
+}
