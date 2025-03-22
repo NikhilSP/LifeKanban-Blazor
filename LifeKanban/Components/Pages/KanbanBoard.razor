@@ -283,6 +283,18 @@
     private int _dropIndex = -1;
     private KanbanTask _taskBeingDroppedOn;
     private int _insertIndex = -1;
+    
+    private DotNetObjectReference<KanbanBoard> _dotNetRef;
+
+// Initialize in OnAfterRender
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("kanbanInterop.setDotNetReference", _dotNetRef);
+        }
+    }
 
     [JSInvokable]
     public static Task<double> CalculatePositionValue(int columnId, int insertIndex)
@@ -297,6 +309,13 @@
     {
         _insertIndex = index;
         StateHasChanged();
+    }
+    
+    [JSInvokable]
+    public void UpdateInsertIndex(int insertIndex)
+    {
+        _insertIndex = insertIndex;
+        Console.WriteLine($"Insert index updated to {_insertIndex}");
     }
 
     private void HandleDragStart(KanbanTask task)

@@ -1,24 +1,53 @@
 window.kanbanInterop = {
+
+    setDotNetReference: function (dotNetRef) {
+        this._dotNetRef = dotNetRef;
+        console.log("DotNet reference set");
+    },
+
     // Handle both prevent default and insertion line in one function
-    handleDragOver: function(event, columnId, dotNetHelper) {
-        // Prevent default browser behavior
+    handleDragOver: function (event, columnId) {
         event.preventDefault();
 
-        console.log(`Handling drag over column ${columnId}`);
+        // Get card positions
+        const column = document.querySelector(`[data-column-id="${columnId}"] .cards-container`);
+        if (!column) return false;
 
-        // Show insertion line and get index
-        const insertIndex = this.showInsertionLine(columnId, event.clientY);
+        // Find all cards
+        const cards = Array.from(column.querySelectorAll('.kanban-card'));
+        let insertIndex = cards.length;
 
-        // Notify Blazor of the index (optional)
-        if (dotNetHelper) {
-            dotNetHelper.invokeMethodAsync('OnInsertIndexChanged', insertIndex);
+        // Remove existing indicator
+        this.removeInsertionLine();
+
+        // Find insertion point
+        for (let i = 0; i < cards.length; i++) {
+            const rect = cards[i].getBoundingClientRect();
+            const middle = rect.top + rect.height / 2;
+
+            if (event.clientY < middle) {
+                // Insert before this card
+                this.createIndicator(column, false, cards[i]);
+                insertIndex = i;
+                break;
+            }
         }
 
-        return false; // Prevent default
+        // If no insertion point found, append at end
+        if (insertIndex === cards.length) {
+            this.createIndicator(column, false);
+        }
+
+        // Tell Blazor about the insertion index
+        if (this._dotNetRef) {
+            this._dotNetRef.invokeMethodAsync('UpdateInsertIndex', insertIndex);
+        }
+
+        return false;
     },
 
     // Original function for showing insertion line
-    showInsertionLine: function(columnId, mouseY) {
+    showInsertionLine: function (columnId, mouseY) {
         try {
             console.log(`DEBUG: showInsertionLine called with column ${columnId}, mouseY ${mouseY}`);
 
@@ -69,12 +98,12 @@ window.kanbanInterop = {
         }
     },
 
-    removeInsertionLine: function() {
+    removeInsertionLine: function () {
         const indicator = document.getElementById('insertion-indicator');
         if (indicator) indicator.remove();
     },
 
-    createIndicator: function(container, isEmpty, beforeElement = null) {
+    createIndicator: function (container, isEmpty, beforeElement = null) {
         const indicator = document.createElement('div');
         indicator.id = 'insertion-indicator';
         indicator.style.height = '4px';
