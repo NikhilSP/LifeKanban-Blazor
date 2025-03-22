@@ -2,7 +2,7 @@
 @using LifeKanban.Model
 @inject ProjectsClient Client
 
-<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+<div class="modal fade show gitlab-modal" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -10,19 +10,17 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
-                <!-- Form without validation until we fix the issue -->
                 <EditForm Model="@ProjectTaskItem" FormName="AddProject">
-                    <div class="mb-3 mt-3">
+                    <div class="mb-3">
                         <label for="taskName" class="form-label">Title</label>
                         <InputText id="taskName" class="form-control" @bind-Value="ProjectTaskItem.title"/>
                     </div>
-                    <div class="mb-3 mt-3">
+                    <div class="mb-3">
                         <label for="Description" class="form-label">Description</label>
-                        <InputText id="Description" class="form-control" @bind-Value="ProjectTaskItem.description"/>
+                        <InputTextArea id="Description" class="form-control" @bind-Value="ProjectTaskItem.description" rows="3"/>
                     </div>
-                    <div class="mb-3 mt-3">
+                    <div class="mb-3">
                         <label for="milestone" class="form-label">Milestone</label>
-                        <!-- Switch to a regular select for debugging -->
                         <select id="milestone" class="form-control" @onchange="HandleMilestoneChange">
                             <option value="">-- Select Milestone --</option>
                             @foreach (var milestone in ProjectItem.milestones)
@@ -40,10 +38,9 @@
                     </div>
                 </EditForm>
 
-                <!-- Debug area - will help us see what's happening -->
                 @if (!string.IsNullOrEmpty(debugMessage))
                 {
-                    <div class="alert alert-info mt-3">
+                    <div class="alert mt-3">
                         @debugMessage
                     </div>
                 }
@@ -69,10 +66,8 @@
 </div>
 
 @code {
-
     private string debugMessage;
 
-    // A safer handler for milestone changes 
     private void HandleMilestoneChange(ChangeEventArgs e)
     {
         try
@@ -80,13 +75,14 @@
             var selectedId = e.Value.ToString();
             debugMessage = $"Selected milestone ID: {selectedId}";
 
-            // Store just the ID string instead of the complex object
+            if (string.IsNullOrEmpty(selectedId))
+            {
+                ProjectTaskItem.milestone = null;
+                return;
+            }
+
             var milestone = ProjectItem.milestones.First(x => x.id.ToString() == selectedId);
             ProjectTaskItem.milestone = milestone;
-
-            // If you need the full object too, store it separately
-            // var milestoneObj = ProjectItem.milestones.FirstOrDefault(m => m.id == selectedId);
-            // ProjectTaskItem.milestoneObject = milestoneObj;
 
             StateHasChanged();
         }
@@ -97,15 +93,12 @@
         }
     }
 
-    // A wrapper for the ModalOk method with error handling
     private void SafeModalOk()
     {
         try
         {
             debugMessage = "Add Task button clicked";
             StateHasChanged();
-
-            // Call your original method
             ModalOk();
         }
         catch (Exception ex)

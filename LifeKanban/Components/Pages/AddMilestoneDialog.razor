@@ -2,7 +2,7 @@
 @using LifeKanban.Model
 @inject ProjectsClient Client
 
-<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+<div class="modal fade show gitlab-modal" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -11,7 +11,7 @@
             </div>
             <div class="modal-body">
                 <EditForm Model="@MilestoneItem" FormName="AddMilestone">
-                    <div class="mb-3 mt-3">
+                    <div class="mb-3">
                         <label for="taskName" class="form-label">Title</label>
                         <InputText id="taskName" class="form-control" @bind-Value="MilestoneItem.name"/>
                     </div>
@@ -39,7 +39,7 @@
 
 @code {
 
-    // A wrapper for the ModalOk method with error handling
+// A wrapper for the ModalOk method with error handling
     private void SafeModalOk()
     {
         try
@@ -88,8 +88,7 @@
 
     private async Task<Task> ModalOk()
     {
-        var result = _inEditMode ? await Client.UpdateMilestone(MilestoneItem, ProjectItem.id) :
-            await Client.AddMilestone(MilestoneItem, ProjectItem.id);
+        var result = _inEditMode ? await Client.UpdateMilestone(MilestoneItem, ProjectItem.id) : await Client.AddMilestone(MilestoneItem, ProjectItem.id);
 
         if (result is not null)
         {

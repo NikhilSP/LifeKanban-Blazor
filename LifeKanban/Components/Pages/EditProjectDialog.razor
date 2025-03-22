@@ -2,7 +2,7 @@
 @using LifeKanban.Model
 @inject ProjectsClient Client
 
-<div class="modal fade show" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+<div class="modal fade show gitlab-modal" id="myModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -11,7 +11,7 @@
             </div>
             <div class="modal-body">
                 <EditForm Model="@FormProjectItem" FormName="EditProjectMilestone">
-                    <div class="mb-3 mt-3">
+                    <div class="mb-3">
                         <label for="taskName" class="form-label">Title</label>
                         <InputText id="taskName" class="form-control" @bind-Value="FormProjectItem.name"/>
                     </div>
@@ -38,8 +38,6 @@
 </div>
 
 @code {
-
-    // A wrapper for the ModalOk method with error handling
     private void SafeModalOk()
     {
         try
@@ -91,5 +89,4 @@
         OkCancel,
         DeleteCancel
     }
-
 }

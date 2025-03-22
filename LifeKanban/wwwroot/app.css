@@ -451,3 +451,86 @@ h1:focus {
 .kanban-board .kanban-column .kanban-card .card-title {
     color: #ffffff !important;
 }
+
+/* GitLab-style modal dialog */
+.gitlab-modal .modal-content {
+    background-color: var(--gl-card-background);
+    color: var(--gl-text-color);
+    border: 1px solid var(--gl-border-color);
+    border-radius: 8px;
+}
+
+.gitlab-modal .modal-header {
+    border-bottom: 1px solid var(--gl-border-color);
+    padding: 16px;
+}
+
+.gitlab-modal .modal-body {
+    padding: 16px;
+}
+
+.gitlab-modal .modal-footer {
+    border-top: 1px solid var(--gl-border-color);
+    padding: 16px;
+    gap: 8px;
+}
+
+.gitlab-modal .close {
+    color: var(--gl-text-color);
+    background: transparent;
+    border: none;
+    opacity: 0.7;
+    font-size: 1.5rem;
+    padding: 0;
+    margin: 0;
+}
+
+.gitlab-modal .close:hover {
+    opacity: 1;
+}
+
+.gitlab-modal .form-control {
+    background-color: var(--gl-background-color);
+    color: var(--gl-text-color);
+    border: 1px solid var(--gl-border-color);
+}
+
+.gitlab-modal .form-control:focus {
+    border-color: var(--gl-border-color-strong);
+    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
+}
+
+.gitlab-modal .form-label {
+    color: var(--gl-text-color);
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.gitlab-modal .btn-primary {
+    background-color: var(--column-ready-color);
+    border-color: var(--column-ready-color);
+}
+
+.gitlab-modal .btn-danger {
+    background-color: #e24329; /* GitLab red color */
+    border-color: #e24329;
+}
+
+.gitlab-modal .btn-secondary,
+.gitlab-modal .btn-default,
+.gitlab-modal .btn {
+    color: var(--gl-text-color);
+    background-color: transparent;
+    border: 1px solid var(--gl-border-color);
+}
+
+.gitlab-modal .btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.gitlab-modal .alert {
+    background-color: var(--gl-background-color);
+    color: var(--gl-text-secondary);
+    border: 1px solid var(--gl-border-color);
+    font-size: 0.85rem;
+}
