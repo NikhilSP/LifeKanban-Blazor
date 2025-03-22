@@ -77,6 +77,11 @@ h1:focus {
     --column-doing-color: #ed9121;
     --column-review-color: #330066;
     --column-qa-color: #cc338b;
+
+    --column-milestones-color: transparent;
+    --column-todo-color: #1068bf;      /* GitLab blue */
+    --column-inprogress-color: #fd7e14; /* GitLab orange */
+    --column-done-color: #6610f2;
 }
 
 /* Main kanban board container */
@@ -110,6 +115,23 @@ h1:focus {
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
     margin-top: -2px;
+}
+
+/* Specific column colors */
+.column-milestones .column-header {
+    border-top-color: var(--column-milestones-color);
+}
+
+.column-todo .column-header {
+    border-top-color: var(--column-todo-color);
+}
+
+.column-inprogress .column-header {
+    border-top-color: var(--column-inprogress-color);
+}
+
+.column-done .column-header {
+    border-top-color: var(--column-done-color);
 }
 
 /* Column header color variations */

@@ -15,7 +15,8 @@
 <div class="kanban-board">
     @foreach (var column in _columns)
     {
-        var columnClass = $"kanban-column column-{column.Title.ToLower().Replace(" ", "")}";
+        string cssName = column.Title.ToLower().Replace(" ", "");
+        var columnClass = $"kanban-column column-{cssName}";
 
         @if (column.Title == "Milestones")
         {
@@ -283,7 +284,7 @@
     private int _dropIndex = -1;
     private KanbanTask _taskBeingDroppedOn;
     private int _insertIndex = -1;
-    
+
     private DotNetObjectReference<KanbanBoard> _dotNetRef;
 
 // Initialize in OnAfterRender
@@ -310,7 +311,7 @@
         _insertIndex = index;
         StateHasChanged();
     }
-    
+
     [JSInvokable]
     public void UpdateInsertIndex(int insertIndex)
     {
