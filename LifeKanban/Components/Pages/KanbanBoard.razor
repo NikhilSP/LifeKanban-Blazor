@@ -15,7 +15,7 @@
     @foreach (var column in _columns)
     {
         var columnClass = $"kanban-column column-{column.Title.ToLower().Replace(" ", "")}";
-        
+
         @if (column.Title == "Milestones")
         {
             <div class="@columnClass">
@@ -24,8 +24,8 @@
                         @column.Title
                         <div class="column-count">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
+                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
                             </svg>
                             @_milestones.Count
                         </div>
@@ -43,7 +43,7 @@
                     {
                         var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
                         var totalTasks = tasks.Count;
-                        var completedTasks = tasks.Count(t => t.status=="");
+                        var completedTasks = tasks.Count(t => t.status == "");
                         var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
 
                         <div class="kanban-card" @key="milestone.Milestone.id">
@@ -87,8 +87,8 @@
                         @column.Title
                         <div class="column-count">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
-                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z" />
+                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
                             </svg>
                             @_tasks.Count(t => t.ColumnId == column.Id)
                         </div>
@@ -103,7 +103,7 @@
                      dropzone="move"
                      ondragover="event.preventDefault();"
                      ondragenter="event.preventDefault();"
-                     ondrop="@(() => HandleDrop(column.Id))">
+                     @ondrop="async () => await HandleDrop(column.Id)">
 
                     @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
                     {
@@ -113,13 +113,13 @@
                              @ondragend="HandleDragEnd"
                              @key="task.Task.id">
                             <div class="card-title">@task.Task.title</div>
-                            
-                            @if(!string.IsNullOrEmpty(task.Task.description))
+
+                            @if (!string.IsNullOrEmpty(task.Task.description))
                             {
                                 <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
                             }
-                            
-                            @if(task.Task.milestone != null)
+
+                            @if (task.Task.milestone != null)
                             {
                                 <div class="card-labels">
                                     <span class="card-label" style="background-color: var(--column-ready-color);">
@@ -139,10 +139,16 @@
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => EditTaskDialogOnClick(task)">
+                                    <button type="button" class="card-btn" title="Move up" @onclick="() => MoveTaskUp(task)">
+                                        <span class="bi bi-arrow-up"></span>
+                                    </button>
+                                    <button type="button" class="card-btn" title="Move down" @onclick="() => MoveTaskDown(task)">
+                                        <span class="bi bi-arrow-down"></span>
+                                    </button>
+                                    <button type="button" class="card-btn" title="Edit" @onclick="() => EditTaskDialogOnClick(task)">
                                         <span class="bi bi-pencil"></span>
                                     </button>
-                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => DeleteTask(task.Task.id)">
+                                    <button type="button" class="card-btn" title="Delete" @onclick="() => DeleteTask(task.Task.id)">
                                         <span class="bi bi-trash"></span>
                                     </button>
                                 </div>
@@ -200,13 +206,13 @@
     {
         if (firstRender)
         {
-         //  // Apply dark theme to the page
-         //  var doc = typeof(JSInterop.IJSInProcessRuntime).Assembly
-         //      .GetType("Microsoft.JSInterop.JSRuntime")
-         //      .GetMethod("InvokeJS", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            //  // Apply dark theme to the page
+            //  var doc = typeof(JSInterop.IJSInProcessRuntime).Assembly
+            //      .GetType("Microsoft.JSInterop.JSRuntime")
+            //      .GetMethod("InvokeJS", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-         //  doc?.Invoke(JSRuntime, new object[] { "document.body.style.background = 'var(--gl-background-color)'", new[] { } });
-         //  doc?.Invoke(JSRuntime, new object[] { "document.body.style.color = 'var(--gl-text-color)'", new[] { } });
+            //  doc?.Invoke(JSRuntime, new object[] { "document.body.style.background = 'var(--gl-background-color)'", new[] { } });
+            //  doc?.Invoke(JSRuntime, new object[] { "document.body.style.color = 'var(--gl-text-color)'", new[] { } });
         }
     }
 
@@ -235,11 +241,20 @@
         _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
 
         _tasks.Clear();
-        foreach (var task in _projectItem.tasks)
+        foreach (var task in _projectItem.tasks.OrderBy(t => t.columnPosition))
         {
+            // Map status to column ID
+            int columnId = task.status switch
+            {
+                "To Do" => 1,
+                "In Progress" => 2,
+                "Done" => 4,
+                _ => 1 // Default to "To Do"
+            };
+
             _tasks.Add(new KanbanTask()
             {
-                ColumnId = 1,
+                ColumnId = columnId,
                 Task = task
             });
         }
@@ -263,6 +278,10 @@
         _projectMilestoneItem = null;
     }
 
+    private double _lastPosition = 0;
+    private int _dropIndex = -1;
+    private KanbanTask _taskBeingDroppedOn;
+
     private void HandleDragStart(KanbanTask task)
     {
         _draggedTask = task;
@@ -274,16 +293,122 @@
         Console.WriteLine("Drag ended");
     }
 
-    private void HandleDrop(int newColumnId)
+    // Inside your code block:
+
+    private async Task HandleDrop(int newColumnId)
     {
         if (_draggedTask != null)
         {
-            Console.WriteLine($"Dropping task ");
+            // Store original column
+            var originalColumnId = _draggedTask.ColumnId;
 
+            // Update column ID
             _draggedTask.ColumnId = newColumnId;
+
+            // Map column ID to status
+            string newStatus = newColumnId switch
+            {
+                1 => "To Do",
+                2 => "In Progress",
+                4 => "Done",
+                _ => ""
+            };
+
+            _draggedTask.Task.status = newStatus;
+
+            // Reposition task based on column change
+            if (originalColumnId != newColumnId)
+            {
+                // Moving to a new column - put at the bottom
+                var columnTasks = _tasks
+                    .Where(t => t.ColumnId == newColumnId && t.Task.id != _draggedTask.Task.id)
+                    .Select(t => t.Task.columnPosition)
+                    .DefaultIfEmpty(0)
+                    .Max();
+
+                _draggedTask.Task.columnPosition = columnTasks + 10;
+            }
+
+            // Save to database
+            await Client.UpdateTask(_draggedTask.Task, _projectItem.id);
+
             _draggedTask = null;
             StateHasChanged();
         }
+    }
+
+// Add these new methods for manual reordering
+
+// Move a task up in its column
+    private async Task MoveTaskUp(KanbanTask task)
+    {
+        var columnTasks = _tasks
+            .Where(t => t.ColumnId == task.ColumnId)
+            .OrderBy(t => t.Task.columnPosition)
+            .ToList();
+
+        int index = columnTasks.IndexOf(task);
+        if (index <= 0) return; // Already at the top
+
+        var taskAbove = columnTasks[index - 1];
+
+        // Swap positions
+        (task.Task.columnPosition, taskAbove.Task.columnPosition) = (taskAbove.Task.columnPosition, task.Task.columnPosition);
+
+        // Save both tasks
+        await Client.UpdateTask(task.Task, _projectItem.id);
+        await Client.UpdateTask(taskAbove.Task, _projectItem.id);
+
+        await RefreshTasks();
+    }
+
+// Move a task down in its column
+    private async Task MoveTaskDown(KanbanTask task)
+    {
+        var columnTasks = _tasks
+            .Where(t => t.ColumnId == task.ColumnId)
+            .OrderBy(t => t.Task.columnPosition)
+            .ToList();
+
+        int index = columnTasks.IndexOf(task);
+        if (index >= columnTasks.Count - 1) return; // Already at the bottom
+
+        var taskBelow = columnTasks[index + 1];
+
+        // Swap positions
+        (task.Task.columnPosition, taskBelow.Task.columnPosition) = (taskBelow.Task.columnPosition, task.Task.columnPosition);
+
+        // Save both tasks
+        await Client.UpdateTask(task.Task, _projectItem.id);
+        await Client.UpdateTask(taskBelow.Task, _projectItem.id);
+
+        await RefreshTasks();
+    }
+
+    private void HandleDragOver(DragEventArgs e, int columnId)
+    {
+        if (_draggedTask == null) return;
+
+        // Ensure this is for the correct column
+        if (_draggedTask.ColumnId != columnId) return;
+
+        // Find the Y position of the drag
+        var mouseY = e.ClientY;
+
+        // Get all task cards in the column
+        var columnTasks = _tasks
+            .Where(t => t.ColumnId == columnId)
+            .OrderBy(t => t.Task.columnPosition)
+            .ToList();
+
+        // Skip if empty column or we're dragging the only task
+        if (columnTasks.Count <= 1) return;
+
+        // Find closest task based on screen position
+        // This would require JavaScript interop in a real implementation
+        // For a simplified version, we can use the task index position
+
+        Console.WriteLine($"Dragging over column {columnId}, position {mouseY}");
     }
 
     public class KanbanColumn
@@ -387,4 +512,5 @@
         EditProjectDialogFlag = true;
         StateHasChanged();
     }
+
 }
