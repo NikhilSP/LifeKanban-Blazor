@@ -22,8 +22,16 @@ public class Program
         builder.Services.AddScoped<ProjectRepository>();
         MapsterConfig.Configure();
         var app = builder.Build();
+       
+        
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            var repository = services.GetRequiredService<ProjectRepository>();
+            repository.InitializeProjectPositions().GetAwaiter().GetResult();
+        }
+        
         app.MapCarter();
-
         app.Run();
     }
 }

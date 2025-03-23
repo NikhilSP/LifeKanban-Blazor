@@ -130,24 +130,24 @@
         _isInitialized = true;
     }
 
+    // In NavMenu.razor, modify the RefreshProjects method
     private async Task RefreshProjects()
     {
         Projects = await Client.GetProjects();
-        
-        // Ensure all projects have a position value (in case this is a new field)
+    
+        // Ensure all projects have a position value
         bool needsPositionUpdate = false;
         for (int i = 0; i < Projects.Count; i++)
         {
-            if (Projects[i].position == 0 && i > 0)
+            if (Projects[i].position == 0)
             {
-                Projects[i].position = i * 10; // Create some space between positions
+                Projects[i].position = (i + 1) * 10; // Create spacing between positions
                 await Client.UpdateProjectPosition(Projects[i].id, Projects[i].position);
                 needsPositionUpdate = true;
             }
         }
-
+    
         // Only call StateHasChanged if already initialized
-        // This prevents issues during component initialization
         if (_isInitialized)
         {
             StateHasChanged();

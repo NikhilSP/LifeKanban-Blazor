@@ -32,6 +32,28 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
             return null;
         }
     }
+    
+    public async Task InitializeProjectPositions(CancellationToken cancellationToken = default)
+    {
+        var projects = await projectDbContext.Projects.ToListAsync(cancellationToken);
+    
+        // Check if we need to initialize positions
+        bool needsUpdate = projects.Any(p => p.Position == 0);
+    
+        if (needsUpdate)
+        {
+            // Sort projects by Id or another property to maintain some order
+            var orderedProjects = projects.OrderBy(p => p.Id).ToList();
+        
+            // Assign incremental positions
+            for (int i = 0; i < orderedProjects.Count; i++)
+            {
+                orderedProjects[i].Position = (i + 1) * 10; // Use spacing for easier reordering later
+            }
+        
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
 
     public async Task<int> GetMaxProjectPosition(CancellationToken cancellationToken = default)
     {

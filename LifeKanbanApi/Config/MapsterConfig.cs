@@ -11,7 +11,8 @@ namespace LifeKanbanApi.Config;
         {
             TypeAdapterConfig<Project, ProjectDto>.NewConfig()
                 .Map(dest => dest.Tasks, src => src.Tasks)
-                .Map(dest => dest.Milestones, src => src.Milestones);
+                .Map(dest => dest.Milestones, src => src.Milestones)
+                .Map(dest => dest.Position, src => src.Position);
                 
             TypeAdapterConfig<ProjectTask, ProjectTaskDto>.NewConfig()
                 .Map(dest => dest.ProjectId, src => src.ProjectId)

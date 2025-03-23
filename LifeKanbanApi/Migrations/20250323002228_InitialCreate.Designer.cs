@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LifeKanbanApi.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20250308161412_InitialCreate")]
+    [Migration("20250323002228_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -49,6 +49,9 @@ namespace LifeKanbanApi.Migrations
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("Position")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

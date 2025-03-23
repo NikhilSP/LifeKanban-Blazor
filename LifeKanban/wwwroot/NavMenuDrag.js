@@ -45,11 +45,15 @@ window.navMenuDrag = {
     },
 
     handleDragOver: function (e) {
-        if (!e.target.closest('.project-item')) return;
-
-        // Prevent default to allow drop
-        e.preventDefault();
+        // The current implementation only prevents default when hovering over a project item
+        // We need to prevent default for the entire projects-list area
+        e.preventDefault(); // Always prevent default to indicate dropping is allowed
         e.dataTransfer.dropEffect = 'move';
+
+        // The rest of the logic can stay the same
+        if (e.target.closest('.project-item')) {
+            // Logic for when hovering over a specific project item
+        }
     },
 
     handleDragEnter: function (e) {
