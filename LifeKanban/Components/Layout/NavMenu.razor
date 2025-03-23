@@ -27,7 +27,7 @@
         </div>
 
         <div class="projects-list">
-        @foreach (var project in Projects)
+        @foreach (var project in Projects.OrderBy(p => p.position))
         {
         <div class="nav-item project-item" draggable="true" data-id="@project.id" @key="project.id">
                 <NavLink class="nav-link d-flex align-items-center" href="@($"/kanbanboard/{project.id}")">
@@ -99,8 +99,7 @@
             // Moving down: items between source and target move up
             for (int i = sourceIndex; i < targetIndex; i++)
             {
-                orderedProjects[i].position = orderedProjects[i + 1].position;
-                await Client.UpdateProjectPosition(orderedProjects[i].id, orderedProjects[i].position);
+                await Client.UpdateProjectPosition(orderedProjects[i+1].id, orderedProjects[i].position);
             }
         }
         else
@@ -108,8 +107,7 @@
             // Moving up: items between target and source move down
             for (int i = sourceIndex; i > targetIndex; i--)
             {
-                orderedProjects[i].position = orderedProjects[i - 1].position;
-                await Client.UpdateProjectPosition(orderedProjects[i].id, orderedProjects[i].position);
+                await Client.UpdateProjectPosition(orderedProjects[i-1].id, orderedProjects[i].position);
             }
         }
         
