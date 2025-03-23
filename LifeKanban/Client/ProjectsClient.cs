@@ -88,6 +88,27 @@ public class ProjectsClient(HttpClient httpClient)
         }
     }
     
+    public async Task<bool> UpdateProjectPosition(Guid projectId, int newPosition)
+    {
+        try
+        {
+            var request = new { ProjectId = projectId, NewPosition = newPosition };
+            var response = await httpClient.PostAsJsonAsync("/updateProjectPosition", request);
+        
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<BoolResponse>();
+                return result?.IsSuccess ?? false;
+            }
+        
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
     public async Task<Guid?> UpdateTask(ProjectTaskItem taskItem, Guid projectId)
     {
         try

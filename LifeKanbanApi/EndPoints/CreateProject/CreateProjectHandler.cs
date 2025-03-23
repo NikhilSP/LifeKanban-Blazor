@@ -15,10 +15,13 @@ public class CreateProjectHandler(ProjectRepository projectRepository)
 {
     public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken)
     {
+        var maxPosition = await projectRepository.GetMaxProjectPosition(cancellationToken);
+    
         var project = new Project()
         {
             Id = Guid.NewGuid(),
             Name = request.Project.Name,
+            Position = maxPosition + 10, // Position it after the last project
             Tasks = [],
             Milestones = [],
         };
@@ -29,7 +32,7 @@ public class CreateProjectHandler(ProjectRepository projectRepository)
         {
             throw new Exception($"New project was not created");
         }
-        
+    
         return new CreateProjectResult(result.Value);
     }
 }

@@ -6,6 +6,7 @@
 @implements IDisposable
 @rendermode InteractiveServer
 @inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
 
 <div class="sidebar-header">
     <a class="navbar-brand" href="">
@@ -27,7 +28,7 @@
 
         @foreach (var project in Projects)
         {
-            <div class="nav-item">
+        <div class="nav-item project-item" draggable="true" data-id="@project.id" @key="project.id">
                 <NavLink class="nav-link d-flex align-items-center" href="@($"/kanbanboard/{project.id}")">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" fill="white" height="16" class="me-2" viewBox="0 0 16 16">
                         <path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h11zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2h-11z"/>
@@ -54,10 +55,68 @@
 {
     List<ProjectItem> Projects = [];
     private bool _isInitialized = false;
+    private DotNetObjectReference<NavMenu>? _dotNetRef;
 
     protected override void OnInitialized()
     {
         ProjectStateService.ProjectsChanged += OnProjectsChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("navMenuDrag.setup", _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task HandleProjectDrop(string sourceId, int targetIndex)
+    {
+        if (!Guid.TryParse(sourceId, out Guid projectId))
+            return;
+
+        var sourceProject = Projects.FirstOrDefault(p => p.id == projectId);
+        if (sourceProject == null)
+            return;
+
+        // Get projects ordered by current position
+        var orderedProjects = Projects.OrderBy(p => p.position).ToList();
+        
+        // Get the current index of the source project
+        int sourceIndex = orderedProjects.IndexOf(sourceProject);
+        
+        // If dropping in the same place, do nothing
+        if (sourceIndex == targetIndex)
+            return;
+
+        // Update positions of affected projects
+        if (sourceIndex < targetIndex)
+        {
+            // Moving down: items between source and target move up
+            for (int i = sourceIndex; i < targetIndex; i++)
+            {
+                orderedProjects[i].position = orderedProjects[i + 1].position;
+                await Client.UpdateProjectPosition(orderedProjects[i].id, orderedProjects[i].position);
+            }
+        }
+        else
+        {
+            // Moving up: items between target and source move down
+            for (int i = sourceIndex; i > targetIndex; i--)
+            {
+                orderedProjects[i].position = orderedProjects[i - 1].position;
+                await Client.UpdateProjectPosition(orderedProjects[i].id, orderedProjects[i].position);
+            }
+        }
+        
+        // Position the dragged project at the target position
+        sourceProject.position = orderedProjects[targetIndex].position;
+        await Client.UpdateProjectPosition(sourceProject.id, sourceProject.position);
+
+        // Refresh the projects list
+        await RefreshProjects();
     }
 
     private async void OnProjectsChanged()
@@ -74,9 +133,21 @@
     private async Task RefreshProjects()
     {
         Projects = await Client.GetProjects();
+        
+        // Ensure all projects have a position value (in case this is a new field)
+        bool needsPositionUpdate = false;
+        for (int i = 0; i < Projects.Count; i++)
+        {
+            if (Projects[i].position == 0 && i > 0)
+            {
+                Projects[i].position = i * 10; // Create some space between positions
+                await Client.UpdateProjectPosition(Projects[i].id, Projects[i].position);
+                needsPositionUpdate = true;
+            }
+        }
 
-// Only call StateHasChanged if already initialized
-// This prevents issues during component initialization
+        // Only call StateHasChanged if already initialized
+        // This prevents issues during component initialization
         if (_isInitialized)
         {
             StateHasChanged();
@@ -86,15 +157,6 @@
     public void Dispose()
     {
         ProjectStateService.ProjectsChanged -= OnProjectsChanged;
-    }
-
-    private async void DeleteProject(Guid projectId)
-    {
-        var res = await Client.DeleteProjects(projectId);
-        if (res)
-        {
-            await RefreshProjects();
-            NavigationManager.NavigateTo("");
-        }
+        _dotNetRef?.Dispose();
     }
 }

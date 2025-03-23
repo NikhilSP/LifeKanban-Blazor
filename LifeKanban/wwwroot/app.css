@@ -638,3 +638,22 @@ h1, h2, h3, h4, h5, h6 {
     background-color: rgba(255, 255, 255, 0.1);
     color: var(--gl-text-color);
 }
+
+.project-item {
+    cursor: grab;
+}
+
+.project-item.dragging {
+    opacity: 0.5;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.project-item.drag-over {
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.projects-list {
+    margin-bottom: 8px;
+}

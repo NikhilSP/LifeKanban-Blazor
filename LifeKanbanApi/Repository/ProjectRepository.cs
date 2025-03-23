@@ -33,6 +33,15 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         }
     }
 
+    public async Task<int> GetMaxProjectPosition(CancellationToken cancellationToken = default)
+    {
+        if (!await projectDbContext.Projects.AnyAsync(cancellationToken))
+            return 0;
+        
+        return await projectDbContext.Projects
+            .MaxAsync(p => p.Position, cancellationToken);
+    }
+    
     public async Task<bool> AddTask(ProjectTask projectTask, Guid projectGuid, CancellationToken cancellationToken = default)
     {
         var project = await GetProject(projectGuid, cancellationToken);
@@ -48,6 +57,20 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
             return true;
         }
 
+        return false;
+    }
+    
+    public async Task<bool> UpdateProjectPosition(Guid projectId, int newPosition, CancellationToken cancellationToken = default)
+    {
+        var project = await GetProject(projectId, cancellationToken);
+    
+        if (project != null)
+        {
+            project.Position = newPosition;
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+    
         return false;
     }
 
