@@ -641,10 +641,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .project-item {
     cursor: grab;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    position: relative;
 }
 
 .project-item.dragging {
-    opacity: 0.5;
+    opacity: 0.6;
     background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -652,8 +654,26 @@ h1, h2, h3, h4, h5, h6 {
     border: 2px dashed rgba(255, 255, 255, 0.5);
     padding-top: 6px;
     padding-bottom: 6px;
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-.projects-list {
-    margin-bottom: 8px;
+/* Animation classes */
+.project-item.move-up {
+    animation: moveUp 0.3s forwards;
+}
+
+.project-item.move-down {
+    animation: moveDown 0.3s forwards;
+}
+
+@keyframes moveUp {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes moveDown {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
+    100% { transform: translateY(0); }
 }

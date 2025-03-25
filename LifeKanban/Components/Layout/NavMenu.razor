@@ -10,7 +10,7 @@
 
 <div class="sidebar-header">
     <a class="navbar-brand" href="">
-        <span  aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
         Life Kanban
     </a>
 </div>
@@ -27,18 +27,18 @@
         </div>
 
         <div class="projects-list">
-        @foreach (var project in Projects.OrderBy(p => p.position))
-        {
-        <div class="nav-item project-item" draggable="true" data-id="@project.id" @key="project.id">
-                <NavLink class="nav-link d-flex align-items-center" href="@($"/kanbanboard/{project.id}")">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" fill="white" height="16" class="me-2" viewBox="0 0 16 16">
-                        <path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h11zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2h-11z"/>
-                        <path d="M6.5 3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3zm-4 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3zm8 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3z"/>
-                    </svg>
-                    <span>@project.name</span>
-                </NavLink>
-            </div>
-        }
+            @foreach (var project in Projects.OrderBy(p => p.position))
+            {
+                <div class="nav-item project-item" draggable="true" data-id="@project.id.ToString()" @key="project.id">
+                    <NavLink class="nav-link d-flex align-items-center" href="@($"/kanbanboard/{project.id}")">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" fill="white" height="16" class="me-2" viewBox="0 0 16 16">
+                            <path d="M13.5 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h11zm-11-1a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2h-11z"/>
+                            <path d="M6.5 3a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3zm-4 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3zm8 0a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V3z"/>
+                        </svg>
+                        <span>@project.name</span>
+                    </NavLink>
+                </div>
+            }
         </div>
 
         <div class="nav-item px-3">
@@ -76,47 +76,78 @@
     [JSInvokable]
     public async Task HandleProjectDrop(string sourceId, int targetIndex)
     {
-        if (!Guid.TryParse(sourceId, out Guid projectId))
-            return;
+        Console.WriteLine($"HandleProjectDrop called with sourceId: {sourceId}, targetIndex: {targetIndex}");
 
+        // Validate the input parameters
+        if (!Guid.TryParse(sourceId, out Guid projectId))
+        {
+            Console.WriteLine("Failed to parse project ID");
+            return;
+        }
+
+        // Find the source project that's being moved
         var sourceProject = Projects.FirstOrDefault(p => p.id == projectId);
         if (sourceProject == null)
-            return;
-
-        // Get projects ordered by current position
-        var orderedProjects = Projects.OrderBy(p => p.position).ToList();
-        
-        // Get the current index of the source project
-        int sourceIndex = orderedProjects.IndexOf(sourceProject);
-        
-        // If dropping in the same place, do nothing
-        if (sourceIndex == targetIndex)
-            return;
-
-        // Update positions of affected projects
-        if (sourceIndex < targetIndex)
         {
-            // Moving down: items between source and target move up
-            for (int i = sourceIndex; i < targetIndex; i++)
-            {
-                await Client.UpdateProjectPosition(orderedProjects[i+1].id, orderedProjects[i].position);
-            }
+            Console.WriteLine("Source project not found");
+            return;
         }
-        else
-        {
-            // Moving up: items between target and source move down
-            for (int i = sourceIndex; i > targetIndex; i--)
-            {
-                await Client.UpdateProjectPosition(orderedProjects[i-1].id, orderedProjects[i].position);
-            }
-        }
-        
-        // Position the dragged project at the target position
-        sourceProject.position = orderedProjects[targetIndex].position;
-        await Client.UpdateProjectPosition(sourceProject.id, sourceProject.position);
 
-        // Refresh the projects list
-        await RefreshProjects();
+        try
+        {
+            // Get projects ordered by current position
+            var orderedProjects = Projects.OrderBy(p => p.position).ToList();
+
+            // Get the current index of the source project
+            int sourceIndex = orderedProjects.IndexOf(sourceProject);
+            Console.WriteLine($"Source index: {sourceIndex}, Target index: {targetIndex}");
+
+            // If dropping in the same place, do nothing
+            if (sourceIndex == targetIndex)
+            {
+                Console.WriteLine("Source and target are the same, no change needed");
+                return;
+            }
+
+            // Create a new list with the reordered projects
+            List<ProjectItem> reorderedProjects = new List<ProjectItem>(orderedProjects);
+
+            // Remove the source project and insert it at the target position
+            reorderedProjects.RemoveAt(sourceIndex);
+
+            // When moving down, we need to adjust the target index since we removed an item
+            if (sourceIndex < targetIndex)
+            {
+                targetIndex--; // Adjust for the removed item
+            }
+
+            reorderedProjects.Insert(targetIndex, sourceProject);
+
+            // Reassign positions with gaps for future insertions (spacing of 10)
+            int position = 10;
+            foreach (var project in reorderedProjects)
+            {
+                project.position = position;
+                position += 10;
+
+                // Update in database
+                await Client.UpdateProjectPosition(project.id, project.position);
+                Console.WriteLine($"Updated project {project.id} to position {project.position}");
+            }
+
+            // Force UI update immediately
+            StateHasChanged();
+
+            // Refresh the projects list from the database to ensure consistency
+            await RefreshProjects();
+            Console.WriteLine("Projects refreshed after reordering");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in HandleProjectDrop: {ex.Message}");
+            // Optionally, refresh projects to restore the original order in case of error
+            await RefreshProjects();
+        }
     }
 
     private async void OnProjectsChanged()
@@ -134,7 +165,7 @@
     private async Task RefreshProjects()
     {
         Projects = await Client.GetProjects();
-    
+
         // Ensure all projects have a position value
         bool needsPositionUpdate = false;
         for (int i = 0; i < Projects.Count; i++)
@@ -146,7 +177,7 @@
                 needsPositionUpdate = true;
             }
         }
-    
+
         // Only call StateHasChanged if already initialized
         if (_isInitialized)
         {
