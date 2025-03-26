@@ -727,3 +727,64 @@ h1, h2, h3, h4, h5, h6 {
 .subtask-item .form-check-label {
     transition: text-decoration 0.2s, opacity 0.2s;
 }
+
+.column-collapsed {
+    width: 50px !important;
+    min-width: 50px !important;
+    transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+.column-collapsed .cards-container {
+    display: none;
+}
+
+.column-collapsed .column-title {
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: auto;
+    padding: 10px 0;
+}
+
+.column-collapsed .column-count {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    writing-mode: vertical-lr;
+    margin-top: 10px;
+}
+
+.column-collapsed .column-count svg {
+    transform: rotate(180deg); /* Counter-rotate the icon to make it right-side up */
+    margin-bottom: 5px;
+}
+
+
+.column-collapsed .column-actions {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+}
+
+.column-collapsed .column-actions button:last-child {
+    display: none;
+}
+.kanban-column {
+    transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+/* Adjust column actions for collapsed state */
+.column-collapsed .column-header {
+    position: relative;
+    height: 100%;
+    padding-top: 50px; /* Make space for the toggle button */
+    padding-bottom: 50px; /* Make space for the add button */
+}
+
+.column-collapsed .column-actions button {
+    margin-bottom: 5px;
+}

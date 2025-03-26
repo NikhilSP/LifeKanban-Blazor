@@ -26,7 +26,7 @@
 
         @if (column.Title == "Milestones")
         {
-            <div class="@columnClass" data-column-id="@column.Id">
+            <div class="@columnClass @(_isMilestoneColumnCollapsed ? "column-collapsed" : "")" data-column-id="@column.Id">
                 <div class="column-header">
                     <div class="column-title">
                         @column.Title
@@ -39,6 +39,10 @@
                         </div>
                     </div>
                     <div class="column-actions">
+                        <!-- Add this button for collapsing/expanding -->
+                        <button type="button" @onclick="ToggleMilestoneColumn" title="@(_isMilestoneColumnCollapsed ? "Expand" : "Collapse")">
+                            <span class="bi @(_isMilestoneColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                        </button>
                         <button type="button" @onclick="AddMilestoneDialogOpen">
                             <span class="bi bi-plus"></span>
                         </button>
@@ -129,20 +133,20 @@
 
                             @if (task.Task.subtasks.Any())
                             {
-                            <div class="subtasks-list">
-                                @foreach (var subtask in task.Task.subtasks)
-                                {
-                                <div class="subtask-item">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
-                                               @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)">
-                                        <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
-                                            @subtask.title
-                                        </label>
-                                    </div>
+                                <div class="subtasks-list">
+                                    @foreach (var subtask in task.Task.subtasks)
+                                    {
+                                        <div class="subtask-item">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
+                                                       @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)">
+                                                <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
+                                                    @subtask.title
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
-                                }
-                            </div>
                             }
 
                             @if (task.Task.milestone != null)
@@ -353,6 +357,14 @@ This action cannot be undone."
         {
             _dotNetRef = DotNetObjectReference.Create(this);
             await JSRuntime.InvokeVoidAsync("kanbanInterop.setDotNetReference", _dotNetRef);
+
+            // Load collapsed state from localStorage
+            var storedState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "milestonesCollapsed");
+            if (storedState == "true")
+            {
+                _isMilestoneColumnCollapsed = true;
+                StateHasChanged();
+            }
         }
     }
 
@@ -641,7 +653,7 @@ This action cannot be undone."
         EditProjectDialogFlag = false;
         StateHasChanged();
     }
-    
+
 
     private void EditProjectDialogOnClick()
     {
@@ -741,14 +753,24 @@ This action cannot be undone."
         ItemToDeleteId = null;
         StateHasChanged();
     }
-    
+
     private async Task ToggleSubtaskCompletion(ProjectTaskItem taskItem, SubTaskItem subtask)
     {
         // Toggle the completion status
         subtask.isCompleted = !subtask.isCompleted;
-    
+
         // Update the task on the server
         await Client.UpdateTask(taskItem, _projectItem.id);
+    }
+
+    private bool _isMilestoneColumnCollapsed = false;
+
+    private async Task ToggleMilestoneColumn()
+    {
+        _isMilestoneColumnCollapsed = !_isMilestoneColumnCollapsed;
+
+        // Save state to localStorage
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "milestonesCollapsed", _isMilestoneColumnCollapsed.ToString().ToLower());
     }
 
 }
