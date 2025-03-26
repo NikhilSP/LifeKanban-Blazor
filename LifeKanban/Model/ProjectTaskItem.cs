@@ -8,5 +8,6 @@ public class ProjectTaskItem
     public string status { get; set; }  = string.Empty;
     public double columnPosition { get; set; } = 0;
     public MilestoneItem? milestone { get; set; }
+    public List<SubTaskItem> subtasks { get; set; } = new();
 }
 

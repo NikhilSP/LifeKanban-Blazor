@@ -127,6 +127,24 @@
                                 <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
                             }
 
+                            @if (task.Task.subtasks.Any())
+                            {
+                            <div class="subtasks-list">
+                                @foreach (var subtask in task.Task.subtasks)
+                                {
+                                <div class="subtask-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
+                                               @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)">
+                                        <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
+                                            @subtask.title
+                                        </label>
+                                    </div>
+                                </div>
+                                }
+                            </div>
+                            }
+
                             @if (task.Task.milestone != null)
                             {
                                 <div class="card-labels">
@@ -729,6 +747,15 @@ This action cannot be undone."
         ShowDeleteTaskConfirmation = false;
         ItemToDeleteId = null;
         StateHasChanged();
+    }
+    
+    private async Task ToggleSubtaskCompletion(ProjectTaskItem taskItem, SubTaskItem subtask)
+    {
+        // Toggle the completion status
+        subtask.isCompleted = !subtask.isCompleted;
+    
+        // Update the task on the server
+        await Client.UpdateTask(taskItem, _projectItem.id);
     }
 
 }

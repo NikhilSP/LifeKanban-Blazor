@@ -8,6 +8,7 @@ public sealed class ProjectDbContext(DbContextOptions<ProjectDbContext> options)
     public DbSet<Project> Projects { get; set; }
     public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Milestone> Milestones { get; set; }
+    public DbSet<SubTask> SubTasks { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,5 +32,12 @@ public sealed class ProjectDbContext(DbContextOptions<ProjectDbContext> options)
             .WithMany(m => m.Tasks)
             .HasForeignKey(t => t.MilestoneId)
             .IsRequired(false); // A task may not have a milestone
+            
+        // Configure one-to-many relationship between ProjectTask and SubTasks
+        modelBuilder.Entity<SubTask>()
+            .HasOne(s => s.ProjectTask)
+            .WithMany(t => t.SubTasks)
+            .HasForeignKey(s => s.ProjectTaskId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

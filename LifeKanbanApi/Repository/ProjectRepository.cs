@@ -15,6 +15,9 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
     {
         return await projectDbContext.Projects
             .Include(p => p.Tasks)
+            .ThenInclude(t => t.Milestone)
+            .Include(p => p.Tasks)
+            .ThenInclude(t => t.SubTasks)
             .Include(p => p.Milestones)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -158,20 +161,39 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
     {
         return await projectDbContext.Tasks
             .Include(t => t.Milestone)
+            .Include(t => t.SubTasks)
             .FirstOrDefaultAsync(t => t.Id == taskId, cancellationToken);
     }
 
-    public async Task<bool> UpdateTask(ProjectTask task, CancellationToken cancellationToken = default)
+    public async Task<bool> UpdateTask(ProjectTask updatedTask, CancellationToken cancellationToken = default)
     {
         try
         {
-            task.Milestone = null;
-            projectDbContext.Tasks.Update(task);
+            // Get the existing task that's already being tracked
+            var existingTask = await projectDbContext.Tasks
+                .Include(t => t.SubTasks)
+                .FirstOrDefaultAsync(t => t.Id == updatedTask.Id, cancellationToken);
+            
+            if (existingTask == null)
+            {
+                return false;
+            }
+        
+            // Update the properties of the tracked entity
+            existingTask.Title = updatedTask.Title;
+            existingTask.Description = updatedTask.Description;
+            existingTask.Status = updatedTask.Status;
+            existingTask.ColumnPosition = updatedTask.ColumnPosition;
+            existingTask.MilestoneId = updatedTask.MilestoneId;
+        
+            // Don't use Update() on the entity - just save changes to the tracked entity
+            projectDbContext.Tasks.Update(existingTask);
             await projectDbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"Error updating task: {ex.Message}");
             return false;
         }
     }
@@ -328,6 +350,8 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         return await projectDbContext.Projects
             .Include(p => p.Tasks)
             .ThenInclude(t => t.Milestone)
+            .Include(p => p.Tasks)
+            .ThenInclude(t => t.SubTasks)
             .Include(p => p.Milestones)
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
@@ -396,5 +420,74 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
                         (t.Title.Contains(searchTerm) || t.Description.Contains(searchTerm)))
             .Include(t => t.Milestone)
             .ToListAsync(cancellationToken);
+    }
+    
+    public async Task<bool> AddSubTask(SubTask subtask, Guid taskId, CancellationToken cancellationToken = default)
+    {
+        var task = await GetTaskById(taskId, cancellationToken);
+    
+        if (task is not null)
+        {
+            subtask.ProjectTaskId = taskId;
+            task.SubTasks.Add(subtask);
+            projectDbContext.SubTasks.Add(subtask);
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+    
+        return false;
+    }
+
+// Update a subtask
+    public async Task<bool> UpdateSubTask(SubTask subtask, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            projectDbContext.SubTasks.Update(subtask);
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+// Delete a subtask
+    public async Task<bool> DeleteSubTask(Guid subtaskId, CancellationToken cancellationToken = default)
+    {
+        var subtask = await projectDbContext.SubTasks.FindAsync([subtaskId], cancellationToken);
+    
+        if (subtask is not null)
+        {
+            projectDbContext.SubTasks.Remove(subtask);
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+    
+        return false;
+    }
+
+// Get all subtasks for a task
+    public async Task<List<SubTask>> GetSubTasksByTask(Guid taskId, CancellationToken cancellationToken = default)
+    {
+        return await projectDbContext.SubTasks
+            .Where(s => s.ProjectTaskId == taskId)
+            .ToListAsync(cancellationToken);
+    }
+
+// Toggle subtask completion status
+    public async Task<bool> ToggleSubTaskCompletion(Guid subtaskId, CancellationToken cancellationToken = default)
+    {
+        var subtask = await projectDbContext.SubTasks.FindAsync([subtaskId], cancellationToken);
+    
+        if (subtask is not null)
+        {
+            subtask.IsCompleted = !subtask.IsCompleted;
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+    
+        return false;
     }
 }

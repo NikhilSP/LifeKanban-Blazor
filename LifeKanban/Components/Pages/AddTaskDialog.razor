@@ -36,6 +36,36 @@
                             }
                         </select>
                     </div>
+                    
+                    <!-- New subtasks section -->
+                    <div class="mb-3">
+                        <label class="form-label">Subtasks</label>
+                        <div class="subtasks-container">
+                            @foreach (var subtask in ProjectTaskItem.subtasks)
+                            {
+                                <div class="subtask-item d-flex align-items-center mb-2">
+                                    <div class="form-check d-flex align-items-center flex-grow-1">
+                                        <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted" 
+                                               @onchange="e => subtask.isCompleted = (bool)e.Value" />
+                                        <input class="form-control form-control-sm ms-2" value="@subtask.title" 
+                                               @onchange="e => subtask.title = e.Value.ToString()" />
+                                    </div>
+                                    <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);" 
+                                            @onclick="() => RemoveSubtask(subtask)">
+                                        <span class="bi bi-trash"></span>
+                                    </button>
+                                </div>
+                            }
+
+                            <div class="d-flex mt-2">
+                                <input class="form-control form-control-sm" @bind="newSubtaskTitle" 
+                                       placeholder="New subtask..." @onkeydown="@HandleSubtaskKeyDown" />
+                                <button type="button" class="btn btn-sm ms-2" @onclick="AddNewSubtask">
+                                    <span class="bi bi-plus"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </EditForm>
 
                 @if (!string.IsNullOrEmpty(debugMessage))
@@ -67,6 +97,7 @@
 
 @code {
     private string debugMessage;
+    private string newSubtaskTitle = string.Empty;
 
     private void HandleMilestoneChange(ChangeEventArgs e)
     {
@@ -90,6 +121,35 @@
         {
             debugMessage = $"Error: {ex.Message}";
             StateHasChanged();
+        }
+    }
+
+    private void AddNewSubtask()
+    {
+        if (!string.IsNullOrWhiteSpace(newSubtaskTitle))
+        {
+            ProjectTaskItem.subtasks.Add(new SubTaskItem
+            {
+                id = Guid.NewGuid(),
+                title = newSubtaskTitle,
+                isCompleted = false
+            });
+            newSubtaskTitle = string.Empty;
+            StateHasChanged();
+        }
+    }
+
+    private void RemoveSubtask(SubTaskItem subtask)
+    {
+        ProjectTaskItem.subtasks.Remove(subtask);
+        StateHasChanged();
+    }
+    
+    private void HandleSubtaskKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            AddNewSubtask();
         }
     }
 
@@ -178,5 +238,4 @@
         OkCancel,
         DeleteCancel
     }
-
 }

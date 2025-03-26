@@ -19,4 +19,6 @@ public class ProjectTask
     
     // Navigation property back to parent Project
     public Project Project { get; set; }
+    
+    public List<SubTask> SubTasks { get; set; } = new();
 }

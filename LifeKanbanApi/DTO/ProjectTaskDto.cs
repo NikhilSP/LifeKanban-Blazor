@@ -9,4 +9,5 @@ public class ProjectTaskDto
     public double ColumnPosition { get; set; } = 0;
     public Guid ProjectId { get; set; }
     public MilestoneDto? Milestone { get; set; } 
+    public List<SubTaskDto> SubTasks { get; set; } = new();
 }

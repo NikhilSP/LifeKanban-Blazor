@@ -24,8 +24,21 @@ public class AddTaskHandler(ProjectRepository projectRepository)
             Milestone = request.Task.Milestone,
             ProjectId = request.Task.ProjectId,
             Project = request.Task.Project,
-            ColumnPosition = request.Task.ColumnPosition
+            ColumnPosition = request.Task.ColumnPosition,
+            SubTasks = new List<SubTask>()
         };
+
+        // Add subtasks if there are any
+        foreach (var subtask in request.Task.SubTasks)
+        {
+            task.SubTasks.Add(new SubTask
+            {
+                Id = Guid.NewGuid(),
+                Title = subtask.Title,
+                IsCompleted = subtask.IsCompleted,
+                ProjectTaskId = task.Id
+            });
+        }
 
         var result = await projectRepository.AddTask(task, request.ProjectGuid, cancellationToken);
 
