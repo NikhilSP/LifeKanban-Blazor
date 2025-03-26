@@ -51,7 +51,7 @@
                     {
                         var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
                         var totalTasks = tasks.Count;
-                        var completedTasks = tasks.Count(t => t.status == "");
+                        var completedTasks = tasks.Count(t => t.status == "Done");
                         var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
 
                         <div class="kanban-card" @key="milestone.Milestone.id">
@@ -641,15 +641,7 @@ This action cannot be undone."
         EditProjectDialogFlag = false;
         StateHasChanged();
     }
-
-    private async void DeleteMilestone(Guid milestoneId)
-    {
-        var res = await Client.DeleteMilestone(milestoneId);
-        if (res)
-        {
-            await RefreshMilestones();
-        }
-    }
+    
 
     private void EditProjectDialogOnClick()
     {
@@ -705,6 +697,7 @@ This action cannot be undone."
             if (res)
             {
                 await RefreshMilestones();
+                await RefreshTasks();
             }
         }
 
