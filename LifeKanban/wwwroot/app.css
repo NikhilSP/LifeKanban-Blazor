@@ -1210,3 +1210,18 @@ html, body {
     color: #89888d !important;
     opacity: 0.7 !important;
 }
+
+.kanban-board {
+    padding-top: 10px;
+}
+
+/* Move the project title container to align with columns */
+.d-flex.align-items-center.mb-3 {
+    padding-left: 12px; /* Match the left padding of columns */
+    margin-left: 0;
+}
+
+/* If needed, apply a more specific fix to just the project title */
+h3.me-2.mb-0 {
+    margin-left: 4px; /* Fine-tune alignment if needed */
+}
