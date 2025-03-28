@@ -1,236 +1,106 @@
-/* Original app.css styles */
+/* ===== CUSTOMIZABLE VARIABLES ===== */
+:root {
+    /* Main Theme Colors */
+    --primary-color: #009966;          /* Primary buttons, links */
+    --primary-hover: #00b27a;          /* Hover state for primary buttons */
+    --sidebar-bg: #0b1e64;             /* Sidebar background */
+    --sidebar-header-bg: #333;         /* Sidebar header background */
+    --nav-bg: #222;                    /* Navigation background */
+
+    /* Dark Theme Colors */
+    --dark-bg: #1f1e24;                /* Main background */
+    --dark-card-bg: #28272d;           /* Card background */
+    --dark-card-hover: #3a393f;        /* Card hover state */
+    --dark-border: #3c3b40;            /* Border color */
+    --dark-border-strong: #5c5a63;     /* Strong border color */
+    --dark-text: #e9e9eb;              /* Main text color */
+    --dark-text-secondary: #89888d;    /* Secondary text color */
+
+    /* Column Colors */
+    --column-todo-color: #1068bf;      /* To Do column */
+    --column-inprogress-color: #fd7e14; /* In Progress column */
+    --column-done-color: #6610f2;      /* Done column */
+    --status-ready-color: #009966;     /* Ready status */
+    --status-review-color: #330066;    /* Review status */
+    --status-qa-color: #cc338b;        /* QA status */
+
+    /* Component Dimensions */
+    --sidebar-width: 250px;            /* Width of sidebar */
+    
+    
+    --gl-border-color: #3c3b40;
+    --column-ready-color: #009966;
+    --gl-text-secondary: #89888d;
+}
+
+/* ===== GLOBAL STYLES ===== */
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--dark-text);
 }
 
 a, .btn-link {
-    color: #006bb7;
+    color: var(--primary-color);
 }
 
 .btn-primary {
     color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
 }
 
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
     box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
 
-.content {
-    padding-top: 1.1rem;
-}
-
-h1:focus {
-    outline: none;
-}
-
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
-}
-
-.invalid {
-    outline: 1px solid #e50000;
-}
-
-.validation-message {
-    color: #e50000;
-}
-
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
-}
-
-.blazor-error-boundary::after {
-    content: "An error has occurred."
-}
-
-.darker-border-checkbox.form-check-input {
-    border-color: #929292;
-}
-
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-    color: var(--bs-secondary-color);
-    text-align: end;
-}
-
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-    text-align: start;
-}
-
-/* Kanban board styles */
-:root {
-    /* GitLab dark theme colors */
-    --gl-background-color: #1f1e24;
-    --gl-card-background: #28272d;
-    --gl-card-hover: #3a393f;
-    --gl-text-color: #e9e9eb;
-    --gl-text-secondary: #89888d;
-    --gl-border-color: #3c3b40;
-    --gl-border-color-strong: #5c5a63;
-
-    /* Column header colors */
-    --column-open-color: #28272d;
-    --column-ready-color: #009966;
-    --column-doing-color: #ed9121;
-    --column-review-color: #330066;
-    --column-qa-color: #cc338b;
-
-    --column-milestones-color: transparent;
-    --column-todo-color: #1068bf;      /* GitLab blue */
-    --column-inprogress-color: #fd7e14; /* GitLab orange */
-    --column-done-color: #6610f2;
-}
-
-/* Main kanban board container */
-.kanban-board {
-    display: flex;
-    gap: 16px;
-    padding: 1rem;
-    overflow-x: auto;
-    background-color: var(--gl-background-color);
-    min-height: calc(100vh - 60px);
-}
-
-/* Column styling */
-.kanban-column {
-    min-width: 280px;
-    width: 400px;
-    background-color: var(--gl-card-background);
-    border-radius: 8px;
+/* ===== LAYOUT COMPONENTS ===== */
+.page {
+    position: relative;
     display: flex;
     flex-direction: column;
-    max-height: 100%;
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
 }
 
-/* Column header styling */
-.column-header {
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 4px solid;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    margin-top: -2px;
+.content-wrapper {
+    padding: 20px;
+    min-height: 100vh;
+    width: 100%;
+    padding-top: 60px;
+    background-color: var(--dark-bg);
 }
 
-/* Specific column colors */
-.column-milestones .column-header {
-    border-top-color: var(--column-milestones-color);
+/* Move the project title container to align with columns */
+.d-flex.align-items-center.mb-3 {
+    padding-left: 12px; /* Match the left padding of columns */
+    margin-left: 0;
 }
 
-.column-todo .column-header {
-    border-top-color: var(--column-todo-color);
+/* If needed, apply a more specific fix to just the project title */
+h3.me-2.mb-0 {
+    margin-left: 4px; /* Fine-tune alignment if needed */
 }
 
-.column-inprogress .column-header {
-    border-top-color: var(--column-inprogress-color);
-}
-
-.column-done .column-header {
-    border-top-color: var(--column-done-color);
-}
-
-/* Column header color variations */
-.column-open .column-header {
-    border-top-color: var(--column-open-color);
-}
-
-.column-ready .column-header {
-    border-top-color: var(--column-ready-color);
-}
-
-.column-doing .column-header {
-    border-top-color: var(--column-doing-color);
-}
-
-.column-review .column-header {
-    border-top-color: var(--column-review-color);
-}
-
-.column-qa .column-header {
-    border-top-color: var(--column-qa-color);
-}
-
-/* Column title */
-.column-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--gl-text-color);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* Column count badge */
-.column-count {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: var(--gl-text-secondary);
-    font-size: 12px;
-}
-
-.column-count svg {
-    width: 14px;
-    height: 14px;
-}
-
-/* Column actions */
-.column-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.column-actions button {
-    background: transparent;
-    border: none;
-    color: var(--gl-text-secondary);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-}
-
-.column-actions button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Cards container */
-.cards-container {
-    padding: 8px 12px;
-    overflow-y: auto;
-    flex-grow: 1;
-}
-
-/* Card styling */
-.kanban-card {
-    background-color: var(--gl-card-background);
-    border: 1px solid var(--gl-border-color);
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 12px;
-    cursor: grab;
-    transition: all 0.2s ease;
-}
-
-.kanban-card:hover {
-    background-color: var(--gl-card-hover);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-}
-
-/* Enhanced sidebar navigation styling */
+/* ===== SIDEBAR STYLES ===== */
 .sidebar {
-    background-color: #0b1e64;
-    width: 220px;
+    background-color: var(--sidebar-bg);
+    width: var(--sidebar-width);
     height: 100vh;
     position: fixed;
     left: 0;
     top: 0;
     overflow-y: auto;
+    z-index: 10;
 }
 
 .sidebar-header {
@@ -238,21 +108,13 @@ h1:focus {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     align-items: center;
-    background-color: #333; /* Set desired header background color */
-}
-
-.sidebar-header .navbar-brand {
-    color: white;
-}
-
-.sidebar-header .navbar-brand:hover {
-    color: white;
-    text-decoration: none;
+    background-color: var(--sidebar-header-bg);
+    height: 3.5rem;
 }
 
 .navbar-brand {
     color: #ffffff;
-    font-size: 18px;
+    font-size: 1.1rem;
     font-weight: 600;
     text-decoration: none;
     display: flex;
@@ -260,13 +122,11 @@ h1:focus {
     gap: 10px;
 }
 
-
-
 .nav-scrollable {
     padding: 8px 0;
     height: calc(100vh - 3.5rem);
     overflow-y: auto;
-    background-color: #222; /* Set desired scrollable background color */
+    background-color: var(--nav-bg);
 }
 
 .nav-item {
@@ -276,6 +136,38 @@ h1:focus {
     align-items: center;
     justify-content: space-between;
     transition: background-color 0.2s;
+    font-size: 0.9rem;
+    padding-bottom: 0.5rem;
+}
+
+.nav-item:first-of-type {
+    padding-top: 1rem;
+}
+
+.nav-item:last-of-type {
+    padding-bottom: 1rem;
+}
+
+.nav-item ::deep .nav-link {
+    color: #d7d7d7;
+    background: none;
+    border: none;
+    border-radius: 4px;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    line-height: 3rem;
+    width: 100%;
+}
+
+.nav-item ::deep a.active {
+    background-color: rgba(255,255,255,0.37);
+    color: white;
+}
+
+.nav-item ::deep .nav-link:hover {
+    background-color: rgba(255,255,255,0.1);
+    color: white;
 }
 
 .nav-link {
@@ -289,368 +181,7 @@ h1:focus {
     padding: 5px 8px;
 }
 
-
-.nav-link.active {
-    color: white;
-    background-color: rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-}
-
-.nav-item .btn-link {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.6);
-    cursor: pointer;
-    padding: 4px;
-    visibility: hidden;
-}
-
-.content-wrapper {
-    padding: 20px;
-    min-height: 100vh;
-    width: 100%;
-    padding-top: 60px;
-    background-color: var(--gl-background-color);
-}
-
-.page {
-    display: flex;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;
-}
-
-
-/* Project icon alignment */
-.nav-link .bi {
-    font-size: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    min-width: 16px;
-}
-
-.card-title a {
-    color: var(--gl-text-color);
-    text-decoration: none;
-}
-
-.card-title a:hover {
-    text-decoration: underline;
-}
-
-/* Labels container */
-.card-labels {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
-}
-
-/* Label styling */
-.card-label {
-    font-size: 12px;
-    padding: 2px 8px;
-    border-radius: 100px;
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-}
-
-/* Label variations */
-.label-bug {
-    background-color: #9400d3;
-    color: white;
-}
-
-.label-severity {
-    background-color: #808080;
-    color: white;
-}
-
-.label-priority {
-    background-color: #808080;
-    color: white;
-}
-
-.label-priority.priority-2 {
-    background-color: #ed9121;
-    color: white;
-}
-
-.label-client {
-    background-color: #808080;
-    color: white;
-}
-
-.label-client.client-affected {
-    background-color: #ed9121;
-    color: white;
-}
-
-/* Card footer */
-.card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-top: 12px;
-}
-
-/* Card metadata */
-.card-metadata {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    font-size: 12px;
-    color: var(--gl-text-secondary);
-}
-
-.card-id {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.bottom-labels {
-    margin-bottom: 0;
-    margin-top: 0;
-}
-
-.bottom-labels .card-label {
-    font-size: 12px;
-    padding: 1px 10px;
-    color: white;
-}
-
-
-.card-milestone {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    max-width: 150px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Card actions */
-.card-actions {
-    display: flex;
-    gap: 8px;
-}
-
-/* Avatar */
-.card-avatar {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    overflow: hidden;
-}
-
-.card-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Add button at the end of board */
-.add-column-button {
-    background-color: transparent;
-    border: 1px dashed var(--gl-border-color);
-    color: var(--gl-text-color);
-    border-radius: 8px;
-    width: 280px;
-    min-width: 280px;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    margin-top: 42px;
-}
-
-.add-column-button:hover {
-    background-color: rgba(255, 255, 255, 0.05);
-}
-
-.card-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 8px;
-    word-break: break-word;
-}
-
-.kanban-board .kanban-column .kanban-card .card-title {
-    color: #ffffff !important;
-}
-
-.gitlab-modal .modal-content {
-    background-color: var(--gl-card-background);
-    color: var(--gl-text-color);
-    border: 1px solid var(--gl-border-color);
-    border-radius: 8px;
-}
-
-.gitlab-modal .modal-header {
-    border-bottom: 1px solid var(--gl-border-color);
-    padding: 16px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.gitlab-modal .modal-body {
-    padding: 16px;
-}
-
-.gitlab-modal .modal-footer {
-    border-top: 1px solid var(--gl-border-color);
-    padding: 16px;
-    gap: 8px;
-}
-
-.gitlab-modal .close {
-    color: var(--gl-text-color);
-    background: transparent;
-    border: none;
-    opacity: 0.7;
-    font-size: 1.5rem;
-    padding: 0;
-    margin: 0;
-}
-
-.gitlab-modal .close:hover {
-    opacity: 1;
-}
-
-.gitlab-modal .form-control {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
-    border: 1px solid var(--gl-border-color);
-}
-
-.gitlab-modal .form-control:focus {
-    border-color: var(--gl-border-color-strong);
-    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
-}
-
-.gitlab-modal .form-label {
-    color: var(--gl-text-color);
-    font-weight: 500;
-    margin-bottom: 6px;
-}
-
-.gitlab-modal .btn-primary {
-    background-color: var(--column-ready-color);
-    border-color: var(--column-ready-color);
-}
-
-.gitlab-modal .btn-danger {
-    background-color: #e24329; /* GitLab red color */
-    border-color: #e24329;
-}
-
-.gitlab-modal .btn-secondary,
-.gitlab-modal .btn-default,
-.gitlab-modal .btn {
-    color: var(--gl-text-color);
-    background-color: transparent;
-    border: 1px solid var(--gl-border-color);
-}
-
-.gitlab-modal .btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.gitlab-modal .alert {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-secondary);
-    border: 1px solid var(--gl-border-color);
-    font-size: 0.85rem;
-}
-
-/* Dashboard styles */
-.dashboard-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.dashboard-header {
-    margin-bottom: 24px;
-}
-
-.intro-card {
-    background-color: var(--gl-card-background);
-    border: 1px solid var(--gl-border-color);
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 30px;
-}
-
-.intro-card p {
-    color: var(--gl-text-color);
-    margin-bottom: 20px;
-}
-
-/* Add Project Page */
-.add-project-form {
-    max-width: 600px;
-    padding: 20px 0;
-}
-
-.add-project-form .form-label {
-    color: var(--gl-text-color);
-    font-weight: 500;
-}
-
-.add-project-form .form-control {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
-    border: 1px solid var(--gl-border-color);
-}
-
-.add-project-form .form-control:focus {
-    border-color: var(--gl-border-color-strong);
-    box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.1);
-}
-
-.add-project-form .btn-link {
-    color: var(--gl-text-color);
-}
-
-/* Fix for overall dark theme */
-.page {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
-}
-
-h1, h2, h3, h4, h5, h6 {
-    color: var(--gl-text-color);
-}
-
-.card-actions {
-    display: flex;
-    gap: 4px;
-}
-
-.card-btn {
-    background: transparent;
-    border: none;
-    color: var(--gl-text-secondary);
-    cursor: pointer;
-    padding: 4px;
-    border-radius: 4px;
-    line-height: 1;
-}
-
-.card-btn:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: var(--gl-text-color);
-}
-
+/* Project Drag and Drop styles */
 .project-item {
     cursor: grab;
     transition: transform 0.3s ease, opacity 0.3s ease;
@@ -669,7 +200,7 @@ h1, h2, h3, h4, h5, h6 {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Animation classes */
+/* Project drag animation classes */
 .project-item.move-up {
     animation: moveUp 0.3s forwards;
 }
@@ -690,56 +221,257 @@ h1, h2, h3, h4, h5, h6 {
     100% { transform: translateY(0); }
 }
 
-/* Subtasks styling */
-.subtasks-list {
-    margin-bottom: 12px;
+/* ===== KANBAN BOARD STYLES ===== */
+.kanban-board {
+    display: flex;
+    gap: 16px;
+    padding: 1rem;
+    padding-top: 10px;
+    overflow-x: auto;
+    background-color: var(--dark-bg);
+    min-height: calc(100vh - 60px);
 }
 
-.subtask-item {
+/* Column styling */
+.kanban-column {
+    min-width: 280px;
+    width: 400px;
+    background-color: var(--dark-card-bg);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    max-height: 100%;
+    transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+/* Column header styling */
+.column-header {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 4px solid;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-top: -2px;
+}
+
+/* Column header color variations */
+.column-milestones .column-header {
+    border-top-color: transparent;
+}
+
+.column-todo .column-header {
+    border-top-color: var(--column-todo-color);
+}
+
+.column-inprogress .column-header {
+    border-top-color: var(--column-inprogress-color);
+}
+
+.column-done .column-header {
+    border-top-color: var(--column-done-color);
+}
+
+.column-open .column-header {
+    border-top-color: var(--dark-card-bg);
+}
+
+.column-ready .column-header {
+    border-top-color: var(--status-ready-color);
+}
+
+.column-doing .column-header {
+    border-top-color: var(--column-inprogress-color);
+}
+
+.column-review .column-header {
+    border-top-color: var(--status-review-color);
+}
+
+.column-qa .column-header {
+    border-top-color: var(--status-qa-color);
+}
+
+/* Column title */
+.column-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark-text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Column count badge */
+.column-count {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--dark-text-secondary);
+    font-size: 12px;
+}
+
+.column-count svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Column actions */
+.column-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.column-actions button {
+    background: transparent;
+    border: none;
+    color: var(--dark-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.column-actions button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Cards container */
+.cards-container {
+    padding: 8px 12px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* Card styling */
+.kanban-card {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.kanban-card:hover {
+    background-color: var(--dark-card-hover);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.kanban-card div[style*="height: 4px; width: 100%"] {
+    height: 4px !important;
+    width: 100% !important;
+    background-color: var(--gl-border-color) !important;
+    margin-top: 8px;
     margin-bottom: 4px;
 }
 
-.subtask-item .form-check {
-    margin-bottom: 0;
+.kanban-card div[style*="height: 4px; width: 100%"] > div {
+    height: 100% !important;
+    background-color: var(--column-ready-color) !important;
+}
+
+.kanban-card .text-end.small.mt-1 {
+    color: var(--gl-text-secondary) !important;
+    margin-top: 4px !important;
+}
+
+.card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.kanban-board .kanban-column .kanban-card .card-title {
+    color: #ffffff !important;
+}
+
+.card-title a {
+    color: var(--dark-text);
+    text-decoration: none;
+}
+
+.card-title a:hover {
+    text-decoration: underline;
+}
+
+/* Card footer */
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 12px;
+}
+
+/* Card metadata */
+.card-metadata {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--dark-text-secondary);
+}
+
+.card-id {
     display: flex;
     align-items: center;
+    gap: 4px;
 }
 
-.subtask-item .form-check-input {
+/* Card labels */
+.card-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.bottom-labels {
+    margin-bottom: 0;
     margin-top: 0;
-    cursor: pointer;
 }
 
-.subtask-item .form-check-label {
+.card-label {
     font-size: 12px;
-    color: var(--gl-text-secondary);
-    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
 }
 
-.text-decoration-line-through {
-    text-decoration: line-through;
-    opacity: 0.7;
+.bottom-labels .card-label {
+    font-size: 12px;
+    padding: 1px 10px;
+    color: white;
 }
 
-.subtasks-container .form-control-sm {
-    height: calc(1.5em + 0.5rem + 2px);
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+/* Card actions */
+.card-actions {
+    display: flex;
+    gap: 4px;
 }
 
-.subtasks-container .btn-sm {
-    padding: 0.25rem 0.5rem;
+.card-btn {
+    background: transparent;
+    border: none;
+    color: var(--dark-text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    line-height: 1;
 }
 
-/* Subtask transitions */
-.subtask-item {
-    transition: opacity 0.3s;
+.card-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--dark-text);
 }
 
-.subtask-item .form-check-label {
-    transition: text-decoration 0.2s, opacity 0.2s;
-}
-
+/* ===== COLLAPSED COLUMN STYLES ===== */
 .column-collapsed {
     width: 50px !important;
     min-width: 50px !important;
@@ -769,10 +501,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .column-collapsed .column-count svg {
-    transform: rotate(180deg); /* Counter-rotate the icon to make it right-side up */
+    transform: rotate(180deg);
     margin-bottom: 5px;
 }
-
 
 .column-collapsed .column-actions {
     position: absolute;
@@ -785,36 +516,142 @@ h1, h2, h3, h4, h5, h6 {
 .column-collapsed .column-actions button:last-child {
     display: none;
 }
-.kanban-column {
-    transition: width 0.3s ease, min-width 0.3s ease;
-}
 
-/* Adjust column actions for collapsed state */
 .column-collapsed .column-header {
     position: relative;
     height: 100%;
-    padding-top: 50px; /* Make space for the toggle button */
-    padding-bottom: 50px; /* Make space for the add button */
+    padding-top: 50px;
+    padding-bottom: 50px;
 }
 
 .column-collapsed .column-actions button {
     margin-bottom: 5px;
 }
 
-/* Add these styles to your app.css file */
+/* ===== SUBTASKS STYLES ===== */
+.subtasks-list {
+    margin-bottom: 12px;
+}
 
-/* Validation styling */
-.validation-message {
+.subtask-item {
+    margin-bottom: 4px;
+    transition: opacity 0.3s;
+}
+
+.subtask-item .form-check {
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+.subtask-item .form-check-input {
+    margin-top: 0;
+    cursor: pointer;
+}
+
+.subtask-item .form-check-label {
+    font-size: 12px;
+    color: var(--dark-text-secondary);
+    margin-left: 6px;
+    transition: text-decoration 0.2s, opacity 0.2s;
+}
+
+.text-decoration-line-through {
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.subtasks-container .form-control-sm {
+    height: calc(1.5em + 0.5rem + 2px);
+    padding: 0.25rem 0.5rem;
     font-size: 0.875rem;
-    margin-top: 0.25rem;
 }
 
-.input-validation-error,
-.is-invalid {
-    border-color: var(--bs-danger) !important;
+.subtasks-container .btn-sm {
+    padding: 0.25rem 0.5rem;
 }
 
-/* Toast notification styling */
+.subtasks-container .btn-sm .bi-plus,
+.subtasks-container button[type="button"] .bi-plus {
+    color: var(--dark-text) !important;
+}
+
+/* ===== FORM CONTROLS ===== */
+.form-control,
+select,
+.form-control-sm,
+.input-group-text,
+textarea {
+    background-color: #2b2a30 !important;
+    color: var(--dark-text) !important;
+    border-color: var(--dark-border) !important;
+}
+
+.form-control:focus,
+select:focus,
+.form-control-sm:focus,
+textarea:focus {
+    background-color: #333238 !important;
+    color: #ffffff !important;
+    border-color: var(--dark-border-strong) !important;
+    box-shadow: 0 0 0 0.2rem rgba(92, 90, 99, 0.25) !important;
+}
+
+.form-label {
+    color: var(--dark-text) !important;
+}
+
+.form-label.required:after {
+    content: " *";
+    color: #dc3545;
+}
+
+::placeholder {
+    color: var(--dark-text-secondary) !important;
+    opacity: 0.7 !important;
+}
+
+/* ===== MODAL STYLES ===== */
+.gitlab-modal .modal-content {
+    background-color: var(--dark-card-bg);
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+}
+
+.gitlab-modal .modal-header {
+    border-bottom: 1px solid var(--dark-border);
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gitlab-modal .modal-body {
+    padding: 16px;
+}
+
+.gitlab-modal .modal-footer {
+    border-top: 1px solid var(--dark-border);
+    padding: 16px;
+    gap: 8px;
+}
+
+.gitlab-modal .close {
+    color: var(--dark-text);
+    background: transparent;
+    border: none;
+    opacity: 0.7;
+    font-size: 1.5rem;
+    padding: 0;
+    margin: 0;
+}
+
+.gitlab-modal .close:hover {
+    opacity: 1;
+}
+
+/* ===== NOTIFICATION STYLES ===== */
 .toast-container {
     z-index: 1060;
 }
@@ -822,9 +659,9 @@ h1, h2, h3, h4, h5, h6 {
 .toast {
     min-width: 300px;
     max-width: 350px;
-    background-color: var(--gl-card-background);
-    color: var(--gl-text-color);
-    border: 1px solid var(--gl-border-color);
+    background-color: var(--dark-card-bg);
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
     border-radius: 0.25rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
 }
@@ -832,7 +669,7 @@ h1, h2, h3, h4, h5, h6 {
 .toast-header {
     padding: 0.5rem 0.75rem;
     background-color: transparent;
-    border-bottom: 1px solid var(--gl-border-color);
+    border-bottom: 1px solid var(--dark-border);
 }
 
 .toast-header.bg-success {
@@ -847,381 +684,114 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.75rem;
 }
 
-/* In-dialog notifications */
 .alert {
     margin-bottom: 0;
     border-radius: 0.25rem;
 }
 
 .alert-success {
-    color: #0f5132;
-    background-color: #d1e7dd;
-    border-color: #badbcc;
-}
-
-.alert-danger {
-    color: #842029;
-    background-color: #f8d7da;
-    border-color: #f5c2c7;
-}
-
-/* Required field indicator */
-.form-label.required:after {
-    content: " *";
-    color: var(--bs-danger);
-}
-
-/* Dark theme adaptations for validation */
-.gitlab-modal .validation-message {
-    color: #f77;
-}
-
-.gitlab-modal .alert-success {
     color: #d4edda;
     background-color: #28a745;
     border-color: #28a745;
 }
 
-.gitlab-modal .alert-danger {
+.alert-danger {
     color: #f8d7da;
     background-color: #dc3545;
     border-color: #dc3545;
 }
 
-
-/* Style for form controls in dark theme */
-.gitlab-modal .form-control,
-.gitlab-modal select,
-.gitlab-modal .form-control-sm,
-.gitlab-modal .input-group-text {
-    background-color: #2b2a30; /* Slightly lighter than background */
-    color: #e9e9eb; /* Light text */
-    border-color: #3c3b40; /* Current border color */
+.validation-message,
+.text-danger {
+    color: #f77 !important;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
 }
 
-/* Style for form controls when focused */
-.gitlab-modal .form-control:focus,
-.gitlab-modal select:focus,
-.gitlab-modal .form-control-sm:focus {
-    background-color: #333238; /* Slightly lighter than normal state */
-    color: #ffffff; /* White text for better visibility when focused */
-    border-color: #5c5a63; /* Brighter border when focused */
-    box-shadow: 0 0 0 0.2rem rgba(92, 90, 99, 0.25); /* Subtle glow effect */
+/* ===== DASHBOARD STYLES ===== */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
-/* Style for placeholder text */
-.gitlab-modal .form-control::placeholder {
-    color: #89888d; /* Secondary text color */
-    opacity: 0.7;
+.dashboard-header {
+    margin-bottom: 24px;
 }
 
-/* Style for disabled form controls */
-.gitlab-modal .form-control:disabled,
-.gitlab-modal select:disabled,
-.gitlab-modal .form-control-sm:disabled {
-    background-color: #28272d; /* Darker than normal */
-    color: #89888d; /* Secondary text color */
-    opacity: 0.7;
-}
-
-/* Style for validation - keep consistent with dark theme */
-.gitlab-modal .form-control.is-invalid,
-.gitlab-modal .form-control.input-validation-error {
-    border-color: #e24329; /* GitLab red color */
-    background-color: #2b2a30; /* Keep consistent background */
-}
-
-/* Style for dropdown options */
-.gitlab-modal select option {
-    background-color: #28272d; /* Same as main background */
-    color: #e9e9eb; /* Light text */
-}
-
-/* Style for the Add Project page */
-.add-project-form {
-    background-color: var(--gl-card-background);
-    border: 1px solid var(--gl-border-color);
+.intro-card {
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
     border-radius: 8px;
     padding: 24px;
     margin-bottom: 30px;
-    max-width: 600px;
 }
 
-.add-project-form h3 {
-    color: var(--gl-text-color);
+.intro-card p {
+    color: var(--dark-text);
     margin-bottom: 20px;
 }
 
-/* Make primary button consistent with the GitLab theme */
-.btn-primary {
-    background-color: var(--column-ready-color) !important; /* GitLab green color */
-    border-color: var(--column-ready-color) !important;
-    color: white !important;
-}
-
-.btn-primary:hover {
-    background-color: #00b27a !important; /* Slightly lighter green on hover */
-    border-color: #00b27a !important;
-}
-
-/* Make all form background colors consistent */
-.add-project-form .form-control,
-.add-project-form select,
-.add-project-form .form-control-sm,
-.add-project-form .input-group-text {
-    background-color: #2b2a30 !important; /* Same as in modals */
-    color: #e9e9eb !important; /* Light text */
-    border-color: #3c3b40 !important; /* Current border color */
-}
-
-/* Style for form controls when focused */
-.add-project-form .form-control:focus,
-.add-project-form select:focus,
-.add-project-form .form-control-sm:focus {
-    background-color: #333238 !important; /* Slightly lighter than normal state */
-    color: #ffffff !important; /* White text for better visibility when focused */
-    border-color: #5c5a63 !important; /* Brighter border when focused */
-    box-shadow: 0 0 0 0.2rem rgba(92, 90, 99, 0.25) !important; /* Subtle glow effect */
-}
-
-/* Make all page content areas consistent with dark theme */
-.content-wrapper {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
-    min-height: 100vh;
-}
-
-/* Add project form heading */
-.add-project-form h3 {
-    margin-bottom: 24px;
-    color: var(--gl-text-color);
-}
-
-/* Override Bootstrap default focus styles */
-.add-project-form .btn:focus,
-.add-project-form .btn-primary:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 153, 102, 0.25) !important;
-}
-
-/* Style for cancel link */
-.add-project-form .btn-link {
-    color: var(--gl-text-color) !important;
-    text-decoration: none;
-}
-
-.add-project-form .btn-link:hover {
-    text-decoration: underline;
-    color: white !important;
-}
-
-/* Add these global styles to ensure dark theme consistency */
-
-/* Make sure the body and html elements have the dark background */
-html, body {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
-}
-
-/* Ensure all page content areas have dark background */
-.content-wrapper,
-.page,
-.dashboard-container,
-main,
-.content-container {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
-}
-
-/* Make sure headings are properly colored */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--gl-text-color);
-}
-
-/* Ensure all buttons use the same color scheme */
-.btn-primary,
-.gitlab-modal .btn-primary {
-    background-color: var(--column-ready-color);
-    border-color: var(--column-ready-color);
-    color: white;
-}
-
-.btn-primary:hover,
-.gitlab-modal .btn-primary:hover {
-    background-color: #00b27a; /* Slightly lighter green on hover */
-    border-color: #00b27a;
-}
-
-/* Override any Bootstrap default focus styles */
-.btn:focus,
-.btn-primary:focus,
-.form-control:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 153, 102, 0.25);
-}
-
-/* Style default buttons consistently */
-.btn,
-.gitlab-modal .btn {
-    background-color: #2b2a30;
-    border-color: #3c3b40;
-    color: var(--gl-text-color);
-}
-
-.btn:hover,
-.gitlab-modal .btn:hover {
-    background-color: #333238;
-    border-color: #5c5a63;
-    color: white;
-}
-
-/* Ensure all form inputs have dark backgrounds and light text */
-.form-control,
-select,
-.form-control-sm,
-.input-group-text,
-textarea {
-    background-color: #2b2a30 !important;
-    color: var(--gl-text-color) !important;
-    border-color: #3c3b40 !important;
-}
-
-.form-control:focus,
-select:focus,
-.form-control-sm:focus,
-textarea:focus {
-    background-color: #333238 !important;
-    color: #ffffff !important;
-    border-color: #5c5a63 !important;
-    box-shadow: 0 0 0 0.2rem rgba(92, 90, 99, 0.25) !important;
-}
-
-/* Style dropdowns consistently */
-select option {
-    background-color: #28272d;
-    color: var(--gl-text-color);
-}
-
-/* Ensure link styles are consistent */
-a, .btn-link {
-    color: var(--column-ready-color);
-    text-decoration: none;
-}
-
-a:hover, .btn-link:hover {
-    color: #00b27a;
-    text-decoration: underline;
-}
-
-
-/* Add these styles to your app.css file to ensure consistency */
-
-/* Fix for input fields turning white on focus */
-.form-control,
-select,
-.form-control-sm,
-.input-group-text,
-textarea {
-    background-color: #2b2a30 !important; /* Dark background */
-    color: #e9e9eb !important; /* Light text */
-    border-color: #3c3b40 !important;
-}
-
-.form-control:focus,
-select:focus,
-.form-control-sm:focus,
-textarea:focus {
-    background-color: #333238 !important; /* Slightly lighter when focused */
-    color: #ffffff !important;
-    border-color: #5c5a63 !important;
-    box-shadow: 0 0 0 0.2rem rgba(92, 90, 99, 0.25) !important;
-}
-
-/* Style dropdown options */
-select option {
-    background-color: #28272d;
-    color: #e9e9eb;
-}
-
-/* Make Add Project page consistent with modals */
+/* ===== ADD PROJECT PAGE ===== */
 .add-project-form {
-    background-color: var(--gl-card-background);
-    border: 1px solid var(--gl-border-color);
+    background-color: var(--dark-card-bg);
+    border: 1px solid var(--dark-border);
     border-radius: 8px;
     padding: 24px;
     margin-bottom: 30px;
     max-width: 600px;
 }
 
-/* Make sure all buttons use the same color scheme */
-.btn-primary {
-    background-color: var(--column-ready-color) !important; /* GitLab green */
-    border-color: var(--column-ready-color) !important;
-    color: white !important;
+.add-project-form h3 {
+    margin-bottom: 24px;
+    color: var(--dark-text);
 }
 
-.btn-primary:hover {
-    background-color: #00b27a !important; /* Lighter green on hover */
-    border-color: #00b27a !important;
+/* ===== ERROR UI ===== */
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
 }
 
-/* Ensure consistent background colors */
-.content-wrapper,
-.page,
-.dashboard-container,
-.content-container {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
 }
 
-/* Make sure the body and html elements have the dark background */
-html, body {
-    background-color: var(--gl-background-color);
-    color: var(--gl-text-color);
+/* ===== MEDIA QUERIES ===== */
+@media (max-width: 640.98px) {
+    .kanban-column {
+        min-width: 100%;
+        max-width: 100%;
+    }
 }
 
-/* Style link buttons consistently */
-.btn-link {
-    color: var(--gl-text-color) !important;
-    text-decoration: none;
-}
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
 
-.btn-link:hover {
-    text-decoration: underline;
-    color: white !important;
-}
+    .sidebar {
+        width: var(--sidebar-width);
+        height: 100vh;
+        position: sticky;
+        top: 0;
+    }
 
-/* Style validation feedback */
-.validation-message,
-.text-danger {
-    color: #f77 !important; /* Lighter red for better visibility */
-}
-
-.form-label {
-    color: var(--gl-text-color) !important;
-}
-
-/* Fix specifically for the Add Project page labels */
-.add-project-form label,
-.add-project-form .form-label {
-    color: var(--gl-text-color) !important;
-}
-
-/* Also fix any placeholder text color */
-::placeholder {
-    color: #89888d !important;
-    opacity: 0.7 !important;
-}
-
-.kanban-board {
-    padding-top: 10px;
-}
-
-/* Move the project title container to align with columns */
-.d-flex.align-items-center.mb-3 {
-    padding-left: 12px; /* Match the left padding of columns */
-    margin-left: 0;
-}
-
-/* If needed, apply a more specific fix to just the project title */
-h3.me-2.mb-0 {
-    margin-left: 4px; /* Fine-tune alignment if needed */
+    .nav-scrollable {
+        display: block;
+        height: calc(100vh - 3.5rem);
+        overflow-y: auto;
+    }
 }

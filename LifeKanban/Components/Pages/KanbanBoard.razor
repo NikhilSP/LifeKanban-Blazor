@@ -77,15 +77,15 @@
                                             int completedSubtasks = milestoneTasks.Sum(t => t.subtasks.Count(s => s.isCompleted));
                                         }
                                         <span title="Subtasks completed">
-                                            <span class="bi bi-check2-square" style="font-size: 14px;"></span> @completedSubtasks/@totalSubtasks
+                                            <span class="bi bi-check2-square"  style="font-size: 14px;"></span> @completedSubtasks/@totalSubtasks
                                         </span>
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
+                                    <button type="button" class="card-btn" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
                                         <span class="bi bi-pencil"></span>
                                     </button>
-                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => ConfirmDeleteMilestone(milestone.Milestone.id)">
+                                    <button type="button" class="card-btn" style="padding: 4px;" @onclick="() => ConfirmDeleteMilestone(milestone.Milestone.id)">
                                         <span class="bi bi-trash"></span>
                                     </button>
                                 </div>
@@ -170,7 +170,7 @@
                                     <button type="button" class="card-btn" title="Edit" @onclick="() => EditTaskDialogOnClick(task)">
                                         <span class="bi bi-pencil"></span>
                                     </button>
-                                    <button type="button" style="background: transparent; border: none; color: var(--gl-text-secondary); cursor: pointer; padding: 4px;" @onclick="() => ConfirmDeleteTask(task.Task.id)">
+                                    <button type="button" class="card-btn" style="padding: 4px;" @onclick="() => ConfirmDeleteTask(task.Task.id)">
                                         <span class="bi bi-trash"></span>
                                     </button>
                                 </div>
