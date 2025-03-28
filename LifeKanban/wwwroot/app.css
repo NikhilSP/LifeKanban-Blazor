@@ -800,3 +800,90 @@ h1, h2, h3, h4, h5, h6 {
 .column-collapsed .column-actions button {
     margin-bottom: 5px;
 }
+
+/* Add these styles to your app.css file */
+
+/* Validation styling */
+.validation-message {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.input-validation-error,
+.is-invalid {
+    border-color: var(--bs-danger) !important;
+}
+
+/* Toast notification styling */
+.toast-container {
+    z-index: 1060;
+}
+
+.toast {
+    min-width: 300px;
+    max-width: 350px;
+    background-color: var(--gl-card-background);
+    color: var(--gl-text-color);
+    border: 1px solid var(--gl-border-color);
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.toast-header {
+    padding: 0.5rem 0.75rem;
+    background-color: transparent;
+    border-bottom: 1px solid var(--gl-border-color);
+}
+
+.toast-header.bg-success {
+    background-color: #198754 !important;
+}
+
+.toast-header.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.toast-body {
+    padding: 0.75rem;
+}
+
+/* In-dialog notifications */
+.alert {
+    margin-bottom: 0;
+    border-radius: 0.25rem;
+}
+
+.alert-success {
+    color: #0f5132;
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+}
+
+.alert-danger {
+    color: #842029;
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+}
+
+/* Required field indicator */
+.form-label.required:after {
+    content: " *";
+    color: var(--bs-danger);
+}
+
+/* Dark theme adaptations for validation */
+.gitlab-modal .validation-message {
+    color: #f77;
+}
+
+.gitlab-modal .alert-success {
+    color: #d4edda;
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.gitlab-modal .alert-danger {
+    color: #f8d7da;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}

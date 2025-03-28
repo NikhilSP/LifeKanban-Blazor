@@ -10,22 +10,28 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
-                <EditForm Model="@ProjectTaskItem" FormName="AddProject">
+                <EditForm Model="@ProjectTaskItem" FormName="AddProject" OnValidSubmit="@SafeModalOk">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-danger mb-3"/>
+
                     <div class="mb-3">
-                        <label for="taskName" class="form-label">Title</label>
+                        <label for="taskName" class="form-label required">Title</label>
                         <InputText id="taskName" class="form-control" @bind-Value="ProjectTaskItem.title"/>
+                        <ValidationMessage For="@(() => ProjectTaskItem.title)" class="text-danger"/>
                     </div>
+
                     <div class="mb-3">
                         <label for="Description" class="form-label">Description</label>
                         <InputTextArea id="Description" class="form-control" @bind-Value="ProjectTaskItem.description" rows="3"/>
                     </div>
+
                     <div class="mb-3">
                         <label for="milestone" class="form-label">Milestone</label>
                         <select id="milestone" class="form-control" value="@(ProjectTaskItem.milestone?.id.ToString() ?? "")" @onchange="HandleMilestoneChange">
                             <option value="">-- Select Milestone --</option>
                             @foreach (var milestone in ProjectItem.milestones)
                             {
-                            <option value="@milestone.id" selected="@(ProjectTaskItem.milestone?.id == milestone.id)">@milestone.name</option>
+                                <option value="@milestone.id" selected="@(ProjectTaskItem.milestone?.id == milestone.id)">@milestone.name</option>
                             }
                         </select>
                     </div>
@@ -41,30 +47,40 @@
                                         <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted"
                                                @onchange="e => subtask.isCompleted = (bool)e.Value"/>
                                         <input class="form-control form-control-sm ms-2" value="@subtask.title"
-                                               @onchange="e => subtask.title = e.Value.ToString()"/>
+                                               @onchange="e => UpdateSubtaskTitle(subtask, e.Value.ToString())"/>
                                     </div>
                                     <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);"
                                             @onclick="() => RemoveSubtask(subtask)">
                                         <span class="bi bi-trash"></span>
                                     </button>
                                 </div>
+                                @if (subtaskValidationErrors.ContainsKey(subtask.id))
+                                {
+                                    <div class="text-danger small mb-2 ms-4">@subtaskValidationErrors[subtask.id]</div>
+                                }
                             }
 
                             <div class="d-flex mt-2">
-                                <input class="form-control form-control-sm" @bind="newSubtaskTitle"
+                                <input class="form-control form-control-sm @(string.IsNullOrWhiteSpace(newSubtaskValidationMessage) ? "" : "is-invalid")"
+                                       @bind="newSubtaskTitle"
                                        placeholder="New subtask..." @onkeydown="@HandleSubtaskKeyDown"/>
                                 <button type="button" class="btn btn-sm ms-2" @onclick="AddNewSubtask">
                                     <span class="bi bi-plus"></span>
                                 </button>
                             </div>
+                            @if (!string.IsNullOrWhiteSpace(newSubtaskValidationMessage))
+                            {
+                                <div class="text-danger small mt-1">@newSubtaskValidationMessage</div>
+                            }
                         </div>
                     </div>
                 </EditForm>
 
-                @if (!string.IsNullOrEmpty(debugMessage))
+                @if (showNotification)
                 {
-                    <div class="alert mt-3">
-                        @debugMessage
+                    <div class="alert mt-3 @notificationClass">
+                        <strong>@notificationTitle</strong> @notificationMessage
+                        <button type="button" class="btn-close float-end" @onclick="CloseNotification"></button>
                     </div>
                 }
             </div>
@@ -75,13 +91,15 @@
                         <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
                         break;
                     case ModalDialogType.OkCancel:
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
                         <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
                         break;
                     case ModalDialogType.DeleteCancel:
-                        <button type="button" class="btn btn-danger" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
                         @if (!_inEditMode)
                         {
-                            <button type="button" class="btn btn-danger" @onclick="SafeMultipleModalOk">Add Multiple Task</button>
+                            <button type="button" class="btn btn-primary" @onclick="SafeMultipleModalOk">Add Multiple Tasks</button>
                             <div class="ms-1 help-icon" title="Add a task and keep the dialog open to add more tasks. Milestone selection will be preserved.">
                                 <span class="bi bi-question-circle"></span>
                             </div>
@@ -95,15 +113,21 @@
 </div>
 
 @code {
-    private string debugMessage;
     private string newSubtaskTitle = string.Empty;
+    private string newSubtaskValidationMessage = string.Empty;
+    private Dictionary<Guid, string> subtaskValidationErrors = new Dictionary<Guid, string>();
+
+// Notification properties
+    private bool showNotification = false;
+    private string notificationMessage = string.Empty;
+    private string notificationTitle = string.Empty;
+    private string notificationClass = string.Empty;
 
     private void HandleMilestoneChange(ChangeEventArgs e)
     {
         try
         {
             var selectedId = e.Value.ToString();
-            debugMessage = $"Selected milestone ID: {selectedId}";
 
             if (string.IsNullOrEmpty(selectedId))
             {
@@ -118,29 +142,55 @@
         }
         catch (Exception ex)
         {
-            debugMessage = $"Error: {ex.Message}";
+            ShowErrorNotification("Error", $"Error selecting milestone: {ex.Message}");
             StateHasChanged();
         }
     }
 
     private void AddNewSubtask()
     {
-        if (!string.IsNullOrWhiteSpace(newSubtaskTitle))
+        newSubtaskValidationMessage = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(newSubtaskTitle))
         {
-            ProjectTaskItem.subtasks.Add(new SubTaskItem
+            newSubtaskValidationMessage = "Subtask title is required";
+            return;
+        }
+
+        ProjectTaskItem.subtasks.Add(new SubTaskItem
+        {
+            id = Guid.NewGuid(),
+            title = newSubtaskTitle,
+            isCompleted = false
+        });
+        newSubtaskTitle = string.Empty;
+        StateHasChanged();
+    }
+
+    private void UpdateSubtaskTitle(SubTaskItem subtask, string newTitle)
+    {
+        if (string.IsNullOrWhiteSpace(newTitle))
+        {
+            subtaskValidationErrors[subtask.id] = "Subtask title is required";
+        }
+        else
+        {
+            subtask.title = newTitle;
+            if (subtaskValidationErrors.ContainsKey(subtask.id))
             {
-                id = Guid.NewGuid(),
-                title = newSubtaskTitle,
-                isCompleted = false
-            });
-            newSubtaskTitle = string.Empty;
-            StateHasChanged();
+                subtaskValidationErrors.Remove(subtask.id);
+            }
         }
     }
 
     private void RemoveSubtask(SubTaskItem subtask)
     {
         ProjectTaskItem.subtasks.Remove(subtask);
+        if (subtaskValidationErrors.ContainsKey(subtask.id))
+        {
+            subtaskValidationErrors.Remove(subtask.id);
+        }
+
         StateHasChanged();
     }
 
@@ -156,13 +206,38 @@
     {
         try
         {
-            debugMessage = "Add Task button clicked";
-            StateHasChanged();
+// Validate that all subtasks have titles
+            bool hasErrors = false;
+            subtaskValidationErrors.Clear();
+
+            foreach (var subtask in ProjectTaskItem.subtasks)
+            {
+                if (string.IsNullOrWhiteSpace(subtask.title))
+                {
+                    subtaskValidationErrors[subtask.id] = "Subtask title is required";
+                    hasErrors = true;
+                }
+            }
+
+            if (hasErrors)
+            {
+                ShowErrorNotification("Validation Error", "Please fix the errors before submitting.");
+                StateHasChanged();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
+            {
+                ShowErrorNotification("Validation Error", "Task title is required.");
+                StateHasChanged();
+                return;
+            }
+
             ModalOk();
         }
         catch (Exception ex)
         {
-            debugMessage = $"Error in ModalOk: {ex.Message}";
+            ShowErrorNotification("Error", $"Error saving task: {ex.Message}");
             StateHasChanged();
         }
     }
@@ -171,13 +246,38 @@
     {
         try
         {
-            debugMessage = "Add Multiple Task button clicked";
-            StateHasChanged();
+// Validate that all subtasks have titles
+            bool hasErrors = false;
+            subtaskValidationErrors.Clear();
+
+            foreach (var subtask in ProjectTaskItem.subtasks)
+            {
+                if (string.IsNullOrWhiteSpace(subtask.title))
+                {
+                    subtaskValidationErrors[subtask.id] = "Subtask title is required";
+                    hasErrors = true;
+                }
+            }
+
+            if (hasErrors)
+            {
+                ShowErrorNotification("Validation Error", "Please fix the errors before submitting.");
+                StateHasChanged();
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
+            {
+                ShowErrorNotification("Validation Error", "Task title is required.");
+                StateHasChanged();
+                return;
+            }
+
             MultipleModalOk();
         }
         catch (Exception ex)
         {
-            debugMessage = $"Error in ModalOk: {ex.Message}";
+            ShowErrorNotification("Error", $"Error saving task: {ex.Message}");
             StateHasChanged();
         }
     }
@@ -224,6 +324,10 @@
         if (_inEditMode)
         {
             result = await Client.UpdateTask(ProjectTaskItem, ProjectItem.id);
+            if (result is not null)
+            {
+                ShowSuccessNotification("Success", "Task updated successfully.");
+            }
         }
         else
         {
@@ -236,13 +340,20 @@
             }
 
             result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
+            if (result is not null)
+            {
+                ShowSuccessNotification("Success", "Task added successfully.");
+            }
         }
 
         if (result is not null)
         {
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
         }
-
+        else
+        {
+            ShowErrorNotification("Error", _inEditMode ? "Failed to update task." : "Failed to add task.");
+        }
 
         return OnClose.InvokeAsync(true);
     }
@@ -268,12 +379,13 @@
 
         if (result is not null)
         {
+            ShowSuccessNotification("Success", "Task added successfully. You can add another task.");
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
 
-            // Store the old milestone for reuse
+// Store the old milestone for reuse
             var oldMilestone = ProjectTaskItem.milestone;
 
-            // Create a completely new task instead of modifying the existing one
+// Create a completely new task instead of modifying the existing one
             ProjectTaskItem = new ProjectTaskItem
             {
                 title = "",
@@ -284,11 +396,46 @@
             };
 
             StateHasChanged();
-            // Return Task.CompletedTask to keep the dialog open
+// Return Task.CompletedTask to keep the dialog open
             return Task.CompletedTask;
+        }
+        else
+        {
+            ShowErrorNotification("Error", "Failed to add task.");
         }
 
         return OnClose.InvokeAsync(true);
+    }
+
+    private void ShowSuccessNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-success";
+        showNotification = true;
+
+// Auto-hide after 3 seconds
+        var timer = new System.Threading.Timer(async _ => 
+        {
+            await InvokeAsync(() => 
+            {
+                showNotification = false;
+                StateHasChanged();
+            });
+        }, null, 5000, Timeout.Infinite);
+    }
+
+    private void ShowErrorNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-danger";
+        showNotification = true;
+    }
+
+    private void CloseNotification()
+    {
+        showNotification = false;
     }
 
     public enum ModalDialogType

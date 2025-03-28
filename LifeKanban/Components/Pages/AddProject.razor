@@ -10,10 +10,14 @@
 
 <div class="add-project-form">
     <EditForm Model="@ProjectItem" FormName="AddProject" OnValidSubmit=@OnAddProject>
+        <DataAnnotationsValidator/>
+
         <div class="mb-4">
             <label for="projectName" class="form-label">Project Name</label>
             <InputText id="projectName" class="form-control" @bind-Value="ProjectItem.name" placeholder="Enter project name"/>
+            <ValidationMessage For="@(() => ProjectItem.name)" class="text-danger"/>
         </div>
+
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">Create Project</button>
             <a href="/" class="btn btn-link">Cancel</a>
@@ -21,10 +25,31 @@
     </EditForm>
 </div>
 
+@if (showNotification)
+{
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header @notificationClass">
+                <strong class="me-auto">@notificationTitle</strong>
+                <button type="button" class="btn-close" @onclick="CloseNotification"></button>
+            </div>
+            <div class="toast-body">
+                @notificationMessage
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new() { name = string.Empty };
 
-    private async Task  OnAddProject()
+// Notification properties
+    private bool showNotification = false;
+    private string notificationMessage = string.Empty;
+    private string notificationTitle = string.Empty;
+    private string notificationClass = string.Empty;
+
+    private async Task OnAddProject()
     {
         var result = await Client.AddProject(ProjectItem);
         if (result is not null)
@@ -35,9 +60,47 @@
             {
                 ProjectItem = project;
                 ProjectStateService.NotifyStateChanged();
+
+                ShowSuccessNotification("Project Created", $"Project '{project.name}' has been created successfully.");
+
                 NavigationManager.NavigateTo($"/kanbanboard/{project.id}");
             }
         }
+        else
+        {
+            ShowErrorNotification("Error", "Failed to create project. Please try again.");
+        }
+    }
+
+    private void ShowSuccessNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "bg-success text-white";
+        showNotification = true;
+
+// Auto-hide after 5 seconds
+        var timer = new System.Threading.Timer(async _ => 
+        {
+            await InvokeAsync(() => 
+            {
+                showNotification = false;
+                StateHasChanged();
+            });
+        }, null, 3000, Timeout.Infinite);
+    }
+
+    private void ShowErrorNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "bg-danger text-white";
+        showNotification = true;
+    }
+
+    private void CloseNotification()
+    {
+        showNotification = false;
     }
 
 }

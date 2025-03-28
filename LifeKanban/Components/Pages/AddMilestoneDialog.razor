@@ -10,12 +10,24 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
-                <EditForm Model="@MilestoneItem" FormName="AddMilestone">
+                <EditForm Model="@MilestoneItem" FormName="AddMilestone" OnValidSubmit="@SafeModalOk">
+                    <DataAnnotationsValidator/>
+                    <ValidationSummary class="text-danger mb-3"/>
+
                     <div class="mb-3">
-                        <label for="taskName" class="form-label">Title</label>
-                        <InputText id="taskName" class="form-control" @bind-Value="MilestoneItem.name"/>
+                        <label for="milestoneName" class="form-label required">Title</label>
+                        <InputText id="milestoneName" class="form-control" @bind-Value="MilestoneItem.name"/>
+                        <ValidationMessage For="@(() => MilestoneItem.name)" class="text-danger"/>
                     </div>
                 </EditForm>
+
+                @if (showNotification)
+                {
+                    <div class="alert mt-3 @notificationClass">
+                        <strong>@notificationTitle</strong> @notificationMessage
+                        <button type="button" class="btn-close float-end" @onclick="CloseNotification"></button>
+                    </div>
+                }
             </div>
             <div class="modal-footer">
                 @switch (DialogType)
@@ -29,7 +41,7 @@
                         break;
                     case ModalDialogType.DeleteCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-danger" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
                         break;
                 }
             </div>
@@ -39,16 +51,22 @@
 
 @code {
 
-// A wrapper for the ModalOk method with error handling
+    // A wrapper for the ModalOk method with error handling and validation
     private void SafeModalOk()
     {
         try
         {
-            StateHasChanged();
+            if (string.IsNullOrWhiteSpace(MilestoneItem.name))
+            {
+                ShowErrorNotification("Validation Error", "Milestone name is required.");
+                return;
+            }
+
             ModalOk();
         }
         catch (Exception ex)
         {
+            ShowErrorNotification("Error", $"Error saving milestone: {ex.Message}");
             StateHasChanged();
         }
     }
@@ -66,6 +84,12 @@
     [Parameter] public ModalDialogType DialogType { get; set; }
 
     [Parameter] public EventCallback<MilestoneItem> OnItemSelected { get; set; }
+
+    // Notification properties
+    private bool showNotification = false;
+    private string notificationMessage = string.Empty;
+    private string notificationTitle = string.Empty;
+    private string notificationClass = string.Empty;
 
     private bool _inEditMode = false;
     private string _actionButtonString = "Add";
@@ -88,14 +112,66 @@
 
     private async Task<Task> ModalOk()
     {
-        var result = _inEditMode ? await Client.UpdateMilestone(MilestoneItem, ProjectItem.id) : await Client.AddMilestone(MilestoneItem, ProjectItem.id);
+        Guid? result;
+
+        if (_inEditMode)
+        {
+            result = await Client.UpdateMilestone(MilestoneItem, ProjectItem.id);
+            if (result is not null)
+            {
+                ShowSuccessNotification("Success", "Milestone updated successfully.");
+            }
+        }
+        else
+        {
+            result = await Client.AddMilestone(MilestoneItem, ProjectItem.id);
+            if (result is not null)
+            {
+                ShowSuccessNotification("Success", "Milestone added successfully.");
+            }
+        }
 
         if (result is not null)
         {
             await OnItemSelected.InvokeAsync(MilestoneItem);
         }
+        else
+        {
+            ShowErrorNotification("Error", _inEditMode ? "Failed to update milestone." : "Failed to add milestone.");
+        }
 
         return OnClose.InvokeAsync(true);
+    }
+
+    private void ShowSuccessNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-success";
+        showNotification = true;
+
+        // Auto-hide after 3 seconds
+        var timer = new System.Threading.Timer(async _ => 
+        {
+            await InvokeAsync(() => 
+            {
+                showNotification = false;
+                StateHasChanged();
+            });
+        }, null, 5000, Timeout.Infinite);
+    }
+
+    private void ShowErrorNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-danger";
+        showNotification = true;
+    }
+
+    private void CloseNotification()
+    {
+        showNotification = false;
     }
 
     public enum ModalDialogType
