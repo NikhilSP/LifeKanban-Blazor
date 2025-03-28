@@ -21,18 +21,11 @@
                     </div>
                     <div class="mb-3">
                         <label for="milestone" class="form-label">Milestone</label>
-                        <select id="milestone" class="form-control" @onchange="HandleMilestoneChange">
+                        <select id="milestone" class="form-control" value="@(ProjectTaskItem.milestone?.id.ToString() ?? "")" @onchange="HandleMilestoneChange">
                             <option value="">-- Select Milestone --</option>
                             @foreach (var milestone in ProjectItem.milestones)
                             {
-                                @if (CurrentTaskItem?.milestone?.id == milestone.id)
-                                {
-                                    <option value="@milestone.id" selected>@milestone.name</option>
-                                }
-                                else
-                                {
-                                    <option value="@milestone.id">@milestone.name</option>
-                                }
+                            <option value="@milestone.id" selected="@(ProjectTaskItem.milestone?.id == milestone.id)">@milestone.name</option>
                             }
                         </select>
                     </div>
@@ -276,11 +269,22 @@
         if (result is not null)
         {
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
-            
+
+            // Store the old milestone for reuse
             var oldMilestone = ProjectTaskItem.milestone;
-            ProjectTaskItem = new();
-            ProjectTaskItem.milestone = oldMilestone;
-            
+
+            // Create a completely new task instead of modifying the existing one
+            ProjectTaskItem = new ProjectTaskItem
+            {
+                title = "",
+                description = "",
+                status = "To Do",
+                milestone = oldMilestone,
+                subtasks = new List<SubTaskItem>()
+            };
+
+            StateHasChanged();
+            // Return Task.CompletedTask to keep the dialog open
             return Task.CompletedTask;
         }
 
