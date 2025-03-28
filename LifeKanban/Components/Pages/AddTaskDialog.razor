@@ -10,14 +10,17 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
-                <EditForm Model="@ProjectTaskItem" FormName="AddProject" OnValidSubmit="@SafeModalOk">
+                <EditForm Model="@ProjectTaskItem" FormName="AddProject" OnValidSubmit="@ValidateAndSubmit">
                     <DataAnnotationsValidator/>
-                    <ValidationSummary class="text-danger mb-3"/>
 
                     <div class="mb-3">
                         <label for="taskName" class="form-label required">Title</label>
                         <InputText id="taskName" class="form-control" @bind-Value="ProjectTaskItem.title"/>
                         <ValidationMessage For="@(() => ProjectTaskItem.title)" class="text-danger"/>
+                        @if (!string.IsNullOrEmpty(duplicateError))
+                        {
+                            <div class="text-danger mt-1">@duplicateError</div>
+                        }
                     </div>
 
                     <div class="mb-3">
@@ -36,7 +39,7 @@
                         </select>
                     </div>
 
-                    <!-- New subtasks section -->
+                    <!-- Subtasks section -->
                     <div class="mb-3">
                         <label class="form-label">Subtasks</label>
                         <div class="subtasks-container">
@@ -88,18 +91,18 @@
                 @switch (DialogType)
                 {
                     case ModalDialogType.Ok:
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">@_actionButtonString</button>
                         break;
                     case ModalDialogType.OkCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">@_actionButtonString</button>
                         break;
                     case ModalDialogType.DeleteCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">@_actionButtonString</button>
                         @if (!_inEditMode)
                         {
-                            <button type="button" class="btn btn-primary" @onclick="SafeMultipleModalOk">Add Multiple Tasks</button>
+                            <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmitMultiple">Add Multiple Tasks</button>
                             <div class="ms-1 help-icon" title="Add a task and keep the dialog open to add more tasks. Milestone selection will be preserved.">
                                 <span class="bi bi-question-circle"></span>
                             </div>
@@ -116,8 +119,9 @@
     private string newSubtaskTitle = string.Empty;
     private string newSubtaskValidationMessage = string.Empty;
     private Dictionary<Guid, string> subtaskValidationErrors = new Dictionary<Guid, string>();
+    private string duplicateError = string.Empty;
 
-// Notification properties
+    // Notification properties
     private bool showNotification = false;
     private string notificationMessage = string.Empty;
     private string notificationTitle = string.Empty;
@@ -202,38 +206,73 @@
         }
     }
 
-    private void SafeModalOk()
+    private async Task ValidateAndSubmit()
+    {
+        if (ValidateTask())
+        {
+            await SafeModalOk();
+        }
+    }
+
+    private async Task ValidateAndSubmitMultiple()
+    {
+        if (ValidateTask())
+        {
+            await SafeMultipleModalOk();
+        }
+    }
+
+    private bool ValidateTask()
+    {
+        // Clear previous errors
+        duplicateError = string.Empty;
+
+        // Validate task title
+        if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
+        {
+            ShowErrorNotification("Validation Error", "Task title is required.");
+            return false;
+        }
+
+        // Check for duplicate task title
+        // Skip duplicate check if we're in edit mode and the title hasn't changed
+        if (!_inEditMode || (CurrentTaskItem != null && ProjectTaskItem.title != CurrentTaskItem.title))
+        {
+            bool isDuplicate = Client.IsTaskTitleDuplicate(ProjectTaskItem.title, ProjectItem);
+            if (isDuplicate)
+            {
+                duplicateError = $"A task with the title '{ProjectTaskItem.title}' already exists in this project.";
+                return false;
+            }
+        }
+
+        // Validate subtasks
+        bool hasSubtaskErrors = false;
+        subtaskValidationErrors.Clear();
+
+        foreach (var subtask in ProjectTaskItem.subtasks)
+        {
+            if (string.IsNullOrWhiteSpace(subtask.title))
+            {
+                subtaskValidationErrors[subtask.id] = "Subtask title is required";
+                hasSubtaskErrors = true;
+            }
+        }
+
+        if (hasSubtaskErrors)
+        {
+            ShowErrorNotification("Validation Error", "Please fix the errors in subtasks before submitting.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task SafeModalOk()
     {
         try
         {
-// Validate that all subtasks have titles
-            bool hasErrors = false;
-            subtaskValidationErrors.Clear();
-
-            foreach (var subtask in ProjectTaskItem.subtasks)
-            {
-                if (string.IsNullOrWhiteSpace(subtask.title))
-                {
-                    subtaskValidationErrors[subtask.id] = "Subtask title is required";
-                    hasErrors = true;
-                }
-            }
-
-            if (hasErrors)
-            {
-                ShowErrorNotification("Validation Error", "Please fix the errors before submitting.");
-                StateHasChanged();
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
-            {
-                ShowErrorNotification("Validation Error", "Task title is required.");
-                StateHasChanged();
-                return;
-            }
-
-            ModalOk();
+            await ModalOk();
         }
         catch (Exception ex)
         {
@@ -242,38 +281,11 @@
         }
     }
 
-    private void SafeMultipleModalOk()
+    private async Task SafeMultipleModalOk()
     {
         try
         {
-// Validate that all subtasks have titles
-            bool hasErrors = false;
-            subtaskValidationErrors.Clear();
-
-            foreach (var subtask in ProjectTaskItem.subtasks)
-            {
-                if (string.IsNullOrWhiteSpace(subtask.title))
-                {
-                    subtaskValidationErrors[subtask.id] = "Subtask title is required";
-                    hasErrors = true;
-                }
-            }
-
-            if (hasErrors)
-            {
-                ShowErrorNotification("Validation Error", "Please fix the errors before submitting.");
-                StateHasChanged();
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
-            {
-                ShowErrorNotification("Validation Error", "Task title is required.");
-                StateHasChanged();
-                return;
-            }
-
-            MultipleModalOk();
+            await MultipleModalOk();
         }
         catch (Exception ex)
         {
@@ -382,10 +394,10 @@
             ShowSuccessNotification("Success", "Task added successfully. You can add another task.");
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
 
-// Store the old milestone for reuse
+            // Store the old milestone for reuse
             var oldMilestone = ProjectTaskItem.milestone;
 
-// Create a completely new task instead of modifying the existing one
+            // Create a completely new task instead of modifying the existing one
             ProjectTaskItem = new ProjectTaskItem
             {
                 title = "",
@@ -395,8 +407,11 @@
                 subtasks = new List<SubTaskItem>()
             };
 
+            // Clear duplicate error when starting a new task
+            duplicateError = string.Empty;
+
             StateHasChanged();
-// Return Task.CompletedTask to keep the dialog open
+            // Return Task.CompletedTask to keep the dialog open
             return Task.CompletedTask;
         }
         else
@@ -414,15 +429,15 @@
         notificationClass = "alert-success";
         showNotification = true;
 
-// Auto-hide after 3 seconds
-        var timer = new System.Threading.Timer(async _ => 
+        // Auto-hide after 3 seconds
+        var timer = new System.Threading.Timer(async _ =>
         {
-            await InvokeAsync(() => 
+            await InvokeAsync(() =>
             {
                 showNotification = false;
                 StateHasChanged();
             });
-        }, null, 5000, Timeout.Infinite);
+        }, null, 3000, Timeout.Infinite);
     }
 
     private void ShowErrorNotification(string title, string message)

@@ -10,26 +10,41 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
-                <EditForm Model="@FormProjectItem" FormName="EditProjectMilestone">
+                <EditForm Model="@FormProjectItem" FormName="EditProjectMilestone" OnValidSubmit="@ValidateAndSubmit">
+                    <DataAnnotationsValidator />
+                    
                     <div class="mb-3">
-                        <label for="taskName" class="form-label">Title</label>
-                        <InputText id="taskName" class="form-control" @bind-Value="FormProjectItem.name"/>
+                        <label for="projectName" class="form-label required">Title</label>
+                        <InputText id="projectName" class="form-control" @bind-Value="FormProjectItem.name"/>
+                        <ValidationMessage For="@(() => FormProjectItem.name)" class="text-danger" />
+                        @if (!string.IsNullOrEmpty(duplicateError))
+                        {
+                            <div class="text-danger mt-1">@duplicateError</div>
+                        }
                     </div>
                 </EditForm>
+
+                @if (showNotification)
+                {
+                    <div class="alert mt-3 @notificationClass">
+                        <strong>@notificationTitle</strong> @notificationMessage
+                        <button type="button" class="btn-close float-end" @onclick="CloseNotification"></button>
+                    </div>
+                }
             </div>
             <div class="modal-footer">
                 @switch (DialogType)
                 {
                     case ModalDialogType.Ok:
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Update</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">Update</button>
                         break;
                     case ModalDialogType.OkCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">Update</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">Update</button>
                         break;
                     case ModalDialogType.DeleteCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-danger" @onclick="SafeModalOk">Update</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">Update</button>
                         break;
                 }
             </div>
@@ -38,15 +53,65 @@
 </div>
 
 @code {
-    private void SafeModalOk()
+    // Error tracking
+    private string duplicateError = string.Empty;
+    
+    // Notification properties
+    private bool showNotification = false;
+    private string notificationMessage = string.Empty;
+    private string notificationTitle = string.Empty;
+    private string notificationClass = string.Empty;
+    
+    private async Task ValidateAndSubmit()
+    {
+        if (await ValidateProjectAsync())
+        {
+            await SafeModalOk();
+        }
+    }
+    
+    private async Task<bool> ValidateProjectAsync()
+    {
+        // Clear previous errors
+        duplicateError = string.Empty;
+        
+        // Validate project name
+        if (string.IsNullOrWhiteSpace(FormProjectItem.name))
+        {
+            ShowErrorNotification("Validation Error", "Project name is required.");
+            return false;
+        }
+        
+        // Only check for duplicates if the name has actually changed
+        if (!FormProjectItem.name.Equals(ProjectItem.name, StringComparison.OrdinalIgnoreCase))
+        {
+            // Get all projects
+            var projects = await Client.GetProjects();
+            
+            // Check if any OTHER project has this name (exclude the current project)
+            bool isDuplicate = projects
+                .Where(p => p.id != ProjectItem.id) // Exclude current project
+                .Any(p => p.name.Equals(FormProjectItem.name, StringComparison.OrdinalIgnoreCase));
+            
+            if (isDuplicate)
+            {
+                duplicateError = $"A project with the name '{FormProjectItem.name}' already exists.";
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    private async Task SafeModalOk()
     {
         try
         {
-            StateHasChanged();
-            ModalOk();
+            await ModalOk();
         }
         catch (Exception ex)
         {
+            ShowErrorNotification("Error", $"Error updating project: {ex.Message}");
             StateHasChanged();
         }
     }
@@ -63,7 +128,15 @@
 
     protected override void OnInitialized()
     {
-        FormProjectItem = ProjectItem;
+        // Create a deep copy of the ProjectItem to avoid directly modifying it
+        FormProjectItem = new ProjectItem
+        {
+            id = ProjectItem.id,
+            name = ProjectItem.name,
+            position = ProjectItem.position,
+            tasks = ProjectItem.tasks,
+            milestones = ProjectItem.milestones
+        };
     }
 
     private Task ModalCancel()
@@ -77,10 +150,46 @@
 
         if (result is not null)
         {
+            ShowSuccessNotification("Success", "Project updated successfully.");
             await OnItemSelected.InvokeAsync(FormProjectItem);
+        }
+        else
+        {
+            ShowErrorNotification("Error", "Failed to update project.");
         }
 
         return OnClose.InvokeAsync(true);
+    }
+    
+    private void ShowSuccessNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-success";
+        showNotification = true;
+        
+        // Auto-hide after 3 seconds
+        var timer = new System.Threading.Timer(async _ => 
+        {
+            await InvokeAsync(() => 
+            {
+                showNotification = false;
+                StateHasChanged();
+            });
+        }, null, 3000, Timeout.Infinite);
+    }
+    
+    private void ShowErrorNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-danger";
+        showNotification = true;
+    }
+    
+    private void CloseNotification()
+    {
+        showNotification = false;
     }
 
     public enum ModalDialogType

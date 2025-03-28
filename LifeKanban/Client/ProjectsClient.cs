@@ -237,4 +237,20 @@ public class ProjectsClient(HttpClient httpClient)
             return false;
         }
     }
+    
+    public async Task<bool> IsProjectNameDuplicate(string projectName)
+    {
+        var projects = await GetProjects();
+        return projects.Any(p => p.name.Equals(projectName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool IsTaskTitleDuplicate(string taskTitle, ProjectItem project)
+    {
+        return project.tasks.Any(t => t.title.Equals(taskTitle, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool IsMilestoneNameDuplicate(string milestoneName, ProjectItem project)
+    {
+        return project.milestones.Any(m => m.name.Equals(milestoneName, StringComparison.OrdinalIgnoreCase));
+    }
 }

@@ -9,15 +9,19 @@
 <h3>Create New Project</h3>
 
 <div class="add-project-form">
-    <EditForm Model="@ProjectItem" FormName="AddProject" OnValidSubmit=@OnAddProject>
-        <DataAnnotationsValidator/>
-
+    <EditForm Model="@ProjectItem" FormName="AddProject" OnValidSubmit=@ValidateAndAddProject>
+        <DataAnnotationsValidator />
+        
         <div class="mb-4">
-            <label for="projectName" class="form-label">Project Name</label>
+            <label for="projectName" class="form-label required">Project Name</label>
             <InputText id="projectName" class="form-control" @bind-Value="ProjectItem.name" placeholder="Enter project name"/>
-            <ValidationMessage For="@(() => ProjectItem.name)" class="text-danger"/>
+            <ValidationMessage For="@(() => ProjectItem.name)" class="text-danger" />
+            @if (!string.IsNullOrEmpty(duplicateError))
+            {
+                <div class="text-danger mt-1">@duplicateError</div>
+            }
         </div>
-
+        
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary">Create Project</button>
             <a href="/" class="btn btn-link">Cancel</a>
@@ -42,12 +46,30 @@
 
 @code {
     [SupplyParameterFromForm] private ProjectItem ProjectItem { get; set; } = new() { name = string.Empty };
-
-// Notification properties
+    
+    // Notification properties
     private bool showNotification = false;
     private string notificationMessage = string.Empty;
     private string notificationTitle = string.Empty;
     private string notificationClass = string.Empty;
+    private string duplicateError = string.Empty;
+
+    private async Task ValidateAndAddProject()
+    {
+        // Clear previous error
+        duplicateError = string.Empty;
+        
+        // Check for duplicate project name
+        bool isDuplicate = await Client.IsProjectNameDuplicate(ProjectItem.name);
+        if (isDuplicate)
+        {
+            duplicateError = $"A project with the name '{ProjectItem.name}' already exists.";
+            return;
+        }
+        
+        // If no duplicate, proceed with adding the project
+        await OnAddProject();
+    }
 
     private async Task OnAddProject()
     {
@@ -60,9 +82,9 @@
             {
                 ProjectItem = project;
                 ProjectStateService.NotifyStateChanged();
-
+                
                 ShowSuccessNotification("Project Created", $"Project '{project.name}' has been created successfully.");
-
+                
                 NavigationManager.NavigateTo($"/kanbanboard/{project.id}");
             }
         }
@@ -71,15 +93,15 @@
             ShowErrorNotification("Error", "Failed to create project. Please try again.");
         }
     }
-
+    
     private void ShowSuccessNotification(string title, string message)
     {
         notificationTitle = title;
         notificationMessage = message;
         notificationClass = "bg-success text-white";
         showNotification = true;
-
-// Auto-hide after 5 seconds
+        
+        // Auto-hide after 5 seconds
         var timer = new System.Threading.Timer(async _ => 
         {
             await InvokeAsync(() => 
@@ -87,9 +109,9 @@
                 showNotification = false;
                 StateHasChanged();
             });
-        }, null, 3000, Timeout.Infinite);
+        }, null, 5000, Timeout.Infinite);
     }
-
+    
     private void ShowErrorNotification(string title, string message)
     {
         notificationTitle = title;
@@ -97,10 +119,9 @@
         notificationClass = "bg-danger text-white";
         showNotification = true;
     }
-
+    
     private void CloseNotification()
     {
         showNotification = false;
     }
-
 }

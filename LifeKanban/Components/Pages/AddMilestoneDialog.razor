@@ -10,14 +10,17 @@
                 <button type="button" class="close" @onclick="@ModalCancel">&times;</button>
             </div>
             <div class="modal-body">
-                <EditForm Model="@MilestoneItem" FormName="AddMilestone" OnValidSubmit="@SafeModalOk">
+                <EditForm Model="@MilestoneItem" FormName="AddMilestone" OnValidSubmit="@ValidateAndSubmit">
                     <DataAnnotationsValidator/>
-                    <ValidationSummary class="text-danger mb-3"/>
 
                     <div class="mb-3">
                         <label for="milestoneName" class="form-label required">Title</label>
                         <InputText id="milestoneName" class="form-control" @bind-Value="MilestoneItem.name"/>
                         <ValidationMessage For="@(() => MilestoneItem.name)" class="text-danger"/>
+                        @if (!string.IsNullOrEmpty(duplicateError))
+                        {
+                            <div class="text-danger mt-1">@duplicateError</div>
+                        }
                     </div>
                 </EditForm>
 
@@ -33,15 +36,15 @@
                 @switch (DialogType)
                 {
                     case ModalDialogType.Ok:
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">@_actionButtonString</button>
                         break;
                     case ModalDialogType.OkCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">@_actionButtonString</button>
                         break;
                     case ModalDialogType.DeleteCancel:
                         <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
-                        <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
+                        <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">@_actionButtonString</button>
                         break;
                 }
             </div>
@@ -51,18 +54,51 @@
 
 @code {
 
+    // Error tracking
+    private string duplicateError = string.Empty;
+
+    // Validate before submitting
+    private async Task ValidateAndSubmit()
+    {
+        if (ValidateMilestone())
+        {
+            await SafeModalOk();
+        }
+    }
+
+    private bool ValidateMilestone()
+    {
+        // Clear previous errors
+        duplicateError = string.Empty;
+
+        // Validate milestone name
+        if (string.IsNullOrWhiteSpace(MilestoneItem.name))
+        {
+            ShowErrorNotification("Validation Error", "Milestone name is required.");
+            return false;
+        }
+
+        // Check for duplicate milestone name
+        // Skip duplicate check if we're in edit mode and the name hasn't changed
+        if (!_inEditMode || (CurrentMilestoneItem != null && MilestoneItem.name != CurrentMilestoneItem.name))
+        {
+            bool isDuplicate = Client.IsMilestoneNameDuplicate(MilestoneItem.name, ProjectItem);
+            if (isDuplicate)
+            {
+                duplicateError = $"A milestone with the name '{MilestoneItem.name}' already exists in this project.";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // A wrapper for the ModalOk method with error handling and validation
-    private void SafeModalOk()
+    private async Task SafeModalOk()
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(MilestoneItem.name))
-            {
-                ShowErrorNotification("Validation Error", "Milestone name is required.");
-                return;
-            }
-
-            ModalOk();
+            await ModalOk();
         }
         catch (Exception ex)
         {
@@ -151,14 +187,14 @@
         showNotification = true;
 
         // Auto-hide after 3 seconds
-        var timer = new System.Threading.Timer(async _ => 
+        var timer = new System.Threading.Timer(async _ =>
         {
-            await InvokeAsync(() => 
+            await InvokeAsync(() =>
             {
                 showNotification = false;
                 StateHasChanged();
             });
-        }, null, 5000, Timeout.Infinite);
+        }, null, 3000, Timeout.Infinite);
     }
 
     private void ShowErrorNotification(string title, string message)
