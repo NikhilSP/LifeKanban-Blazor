@@ -227,6 +227,20 @@
         // Clear previous errors
         duplicateError = string.Empty;
 
+        if (!string.IsNullOrWhiteSpace(newSubtaskTitle))
+        {
+            // Automatically add the pending subtask
+            ProjectTaskItem.subtasks.Add(new SubTaskItem
+            {
+                id = Guid.NewGuid(),
+                title = newSubtaskTitle,
+                isCompleted = false
+            });
+        
+            // Clear the input field
+            newSubtaskTitle = string.Empty;
+        }
+        
         // Validate task title
         if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
         {
@@ -266,6 +280,24 @@
         }
 
         return true;
+    }
+    
+    private void ShowInfoNotification(string title, string message)
+    {
+        notificationTitle = title;
+        notificationMessage = message;
+        notificationClass = "alert-info";
+        showNotification = true;
+    
+        // Auto-hide after 3 seconds
+        var timer = new System.Threading.Timer(async _ => 
+        {
+            await InvokeAsync(() => 
+            {
+                showNotification = false;
+                StateHasChanged();
+            });
+        }, null, 3000, Timeout.Infinite);
     }
 
     private async Task SafeModalOk()
