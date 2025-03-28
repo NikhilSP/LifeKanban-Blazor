@@ -70,11 +70,15 @@
                             <div class="card-footer">
                                 <div class="card-metadata">
                                     <div class="card-id">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
-                                            <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                                        </svg>
-                                        Milestone-@milestone.Milestone.id.ToString().Substring(0, 4)
+                                        @{
+                                            // Count total subtasks across all tasks in this milestone
+                                            var milestoneTasks = _tasks.Where(t => t.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
+                                            int totalSubtasks = milestoneTasks.Sum(t => t.subtasks.Count);
+                                            int completedSubtasks = milestoneTasks.Sum(t => t.subtasks.Count(s => s.isCompleted));
+                                        }
+                                        <span title="Subtasks completed">
+                                            <span class="bi bi-check2-square" style="font-size: 14px;"></span> @completedSubtasks/@totalSubtasks
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="card-actions">
@@ -149,32 +153,20 @@
                                 </div>
                             }
 
-                            @if (task.Task.milestone != null)
-                            {
-                                <div class="card-labels">
-                                    <span class="card-label" style="background-color: var(--column-ready-color);">
-                                        @task.Task.milestone?.name
-                                    </span>
-                                </div>
-                            }
-
                             <div class="card-footer">
                                 <div class="card-metadata">
-                                    <div class="card-id">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                                            <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
-                                            <path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
-                                        </svg>
-                                        Task-@task.Task.id.ToString().Substring(0, 4)
+                                    <div class="card-metadata">
+                                        @if (task.Task.milestone != null)
+                                        {
+                                            <div class="card-labels bottom-labels">
+                                                <span class="card-label" style="background-color: var(--column-ready-color);">
+                                                    @task.Task.milestone.name
+                                                </span>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                                 <div class="card-actions">
-                                    <button type="button" class="card-btn" title="Move up" @onclick="() => MoveTaskUp(task)">
-                                        <span class="bi bi-arrow-up"></span>
-                                    </button>
-                                    <button type="button" class="card-btn" title="Move down" @onclick="() => MoveTaskDown(task)">
-                                        <span class="bi bi-arrow-down"></span>
-                                    </button>
                                     <button type="button" class="card-btn" title="Edit" @onclick="() => EditTaskDialogOnClick(task)">
                                         <span class="bi bi-pencil"></span>
                                     </button>
@@ -772,5 +764,6 @@ This action cannot be undone."
         // Save state to localStorage
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "milestonesCollapsed", _isMilestoneColumnCollapsed.ToString().ToLower());
     }
+
 
 }

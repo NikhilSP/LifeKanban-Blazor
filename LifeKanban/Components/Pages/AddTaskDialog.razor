@@ -36,7 +36,7 @@
                             }
                         </select>
                     </div>
-                    
+
                     <!-- New subtasks section -->
                     <div class="mb-3">
                         <label class="form-label">Subtasks</label>
@@ -45,12 +45,12 @@
                             {
                                 <div class="subtask-item d-flex align-items-center mb-2">
                                     <div class="form-check d-flex align-items-center flex-grow-1">
-                                        <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted" 
-                                               @onchange="e => subtask.isCompleted = (bool)e.Value" />
-                                        <input class="form-control form-control-sm ms-2" value="@subtask.title" 
-                                               @onchange="e => subtask.title = e.Value.ToString()" />
+                                        <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted"
+                                               @onchange="e => subtask.isCompleted = (bool)e.Value"/>
+                                        <input class="form-control form-control-sm ms-2" value="@subtask.title"
+                                               @onchange="e => subtask.title = e.Value.ToString()"/>
                                     </div>
-                                    <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);" 
+                                    <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);"
                                             @onclick="() => RemoveSubtask(subtask)">
                                         <span class="bi bi-trash"></span>
                                     </button>
@@ -58,8 +58,8 @@
                             }
 
                             <div class="d-flex mt-2">
-                                <input class="form-control form-control-sm" @bind="newSubtaskTitle" 
-                                       placeholder="New subtask..." @onkeydown="@HandleSubtaskKeyDown" />
+                                <input class="form-control form-control-sm" @bind="newSubtaskTitle"
+                                       placeholder="New subtask..." @onkeydown="@HandleSubtaskKeyDown"/>
                                 <button type="button" class="btn btn-sm ms-2" @onclick="AddNewSubtask">
                                     <span class="bi bi-plus"></span>
                                 </button>
@@ -82,12 +82,18 @@
                         <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
                         break;
                     case ModalDialogType.OkCancel:
-                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
                         <button type="button" class="btn btn-primary" @onclick="SafeModalOk">@_actionButtonString</button>
                         break;
                     case ModalDialogType.DeleteCancel:
-                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
                         <button type="button" class="btn btn-danger" @onclick="SafeModalOk">@_actionButtonString</button>
+                        @if (!_inEditMode)
+                        {
+                            <button type="button" class="btn btn-danger" @onclick="SafeMultipleModalOk">Add Multiple Task</button>
+                            <div class="ms-1 help-icon" title="Add a task and keep the dialog open to add more tasks. Milestone selection will be preserved.">
+                                <span class="bi bi-question-circle"></span>
+                            </div>
+                        }
+
                         break;
                 }
             </div>
@@ -144,7 +150,7 @@
         ProjectTaskItem.subtasks.Remove(subtask);
         StateHasChanged();
     }
-    
+
     private void HandleSubtaskKeyDown(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
@@ -160,6 +166,21 @@
             debugMessage = "Add Task button clicked";
             StateHasChanged();
             ModalOk();
+        }
+        catch (Exception ex)
+        {
+            debugMessage = $"Error in ModalOk: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private void SafeMultipleModalOk()
+    {
+        try
+        {
+            debugMessage = "Add Multiple Task button clicked";
+            StateHasChanged();
+            MultipleModalOk();
         }
         catch (Exception ex)
         {
@@ -215,18 +236,52 @@
         {
             var columnPositions = ProjectItem.tasks.Select(x => x.columnPosition).ToList();
 
-           if (columnPositions.Any())
-           {
-               var newColumnPosition = columnPositions.Max();
-               ProjectTaskItem.columnPosition = newColumnPosition+10;
-           }
-           
+            if (columnPositions.Any())
+            {
+                var newColumnPosition = columnPositions.Max();
+                ProjectTaskItem.columnPosition = newColumnPosition + 10;
+            }
+
             result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
         }
 
         if (result is not null)
         {
             await OnItemSelected.InvokeAsync(ProjectTaskItem);
+        }
+
+
+        return OnClose.InvokeAsync(true);
+    }
+
+    private async Task<Task> MultipleModalOk()
+    {
+        Guid? result;
+
+        if (_inEditMode)
+        {
+            return OnClose.InvokeAsync(true);
+        }
+
+        var columnPositions = ProjectItem.tasks.Select(x => x.columnPosition).ToList();
+
+        if (columnPositions.Any())
+        {
+            var newColumnPosition = columnPositions.Max();
+            ProjectTaskItem.columnPosition = newColumnPosition + 10;
+        }
+
+        result = await Client.AddTask(ProjectTaskItem, ProjectItem.id);
+
+        if (result is not null)
+        {
+            await OnItemSelected.InvokeAsync(ProjectTaskItem);
+            
+            var oldMilestone = ProjectTaskItem.milestone;
+            ProjectTaskItem = new();
+            ProjectTaskItem.milestone = oldMilestone;
+            
+            return Task.CompletedTask;
         }
 
         return OnClose.InvokeAsync(true);
@@ -238,4 +293,5 @@
         OkCancel,
         DeleteCancel
     }
+
 }

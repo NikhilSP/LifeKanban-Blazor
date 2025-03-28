@@ -412,6 +412,18 @@ h1:focus {
     gap: 4px;
 }
 
+.bottom-labels {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.bottom-labels .card-label {
+    font-size: 12px;
+    padding: 1px 10px;
+    color: white;
+}
+
+
 .card-milestone {
     display: flex;
     align-items: center;
