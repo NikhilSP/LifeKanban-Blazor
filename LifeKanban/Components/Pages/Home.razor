@@ -28,22 +28,22 @@
             </div>
         </div>
         <div class="cards-container">
-            @foreach (var todo in _quickTodos)
+            @foreach (var todo in _quickTodos.OrderBy(t => t.IsCompleted ? 0 : 1))
             {
-                <div class="todo-item">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center flex-grow-1">
-                            <input type="checkbox" class="form-check-input me-2" checked="@todo.IsCompleted"
-                                   @onchange="e => ToggleQuickTodoCompletion(todo, (bool)e.Value!)" />
-                            <input type="text" class="todo-input" value="@todo.Title"
-                                   @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
-                                   @onkeydown="e => HandleTodoKeyDown(e, todo)" />
-                        </div>
-                        <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
-                            <span class="bi bi-trash"></span>
-                        </button>
+            <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <input type="checkbox" class="form-check-input me-2" checked="@todo.IsCompleted"
+                               @onchange="e => ToggleQuickTodoCompletion(todo, (bool)e.Value!)" />
+                        <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")" value="@todo.Title"
+                               @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                               @onkeydown="e => HandleTodoKeyDown(e, todo)" />
                     </div>
+                    <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                        <span class="bi bi-trash"></span>
+                    </button>
                 </div>
+            </div>
             }
 
             <div class="add-todo-container">
@@ -118,21 +118,9 @@
                         </div>
                         <div class="card-actions">
                             <div class="dropdown">
-                                <button type="button" class="card-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                <button type="button" class="card-btn" id="dropdownMenu-@task.Task.id" data-bs-toggle="dropdown" aria-expanded="false">
                                     <span class="bi bi-three-dots"></span>
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-dark">
-                                    <li>
-                                        <a class="dropdown-item" @onclick="() => MarkTaskAsDone(task)">
-                                            <span class="bi bi-check-circle me-2"></span> Mark as Done
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" @onclick="() => GoToProject(task.ProjectId)">
-                                            <span class="bi bi-arrow-right me-2"></span> Go to Project
-                                        </a>
-                                    </li>
-                                </ul>
                             </div>
                         </div>
                     </div>
@@ -191,6 +179,14 @@
 
     .add-button:hover {
         color: var(--dark-text);
+    }
+
+    .completed-todo {
+        opacity: 0.6;
+    }
+
+    .completed-input {
+        text-decoration: line-through;
     }
 </style>
 
