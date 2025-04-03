@@ -490,4 +490,52 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
     
         return false;
     }
+    
+    // In LifeKanbanApi/Repository/ProjectRepository.cs
+    public async Task<List<QuickTodo>> GetQuickTodos(CancellationToken cancellationToken = default)
+    {
+        return await projectDbContext.QuickTodos
+            .OrderBy(t => t.DateCreated)
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Guid?> AddQuickTodo(QuickTodo todo, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            projectDbContext.QuickTodos.Add(todo);
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return todo.Id;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> UpdateQuickTodo(QuickTodo todo, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            projectDbContext.QuickTodos.Update(todo);
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteQuickTodo(Guid id, CancellationToken cancellationToken = default)
+    {
+        var todo = await projectDbContext.QuickTodos.FindAsync([id], cancellationToken);
+        if (todo != null)
+        {
+            projectDbContext.QuickTodos.Remove(todo);
+            await projectDbContext.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        return false;
+    }
 }

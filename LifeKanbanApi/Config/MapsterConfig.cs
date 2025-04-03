@@ -28,5 +28,12 @@ namespace LifeKanbanApi.Config;
                 .Map(dest => dest.Id, src => src.Id)
                 .Map(dest => dest.Title, src => src.Title)
                 .Map(dest => dest.IsCompleted, src => src.IsCompleted);
+            
+            TypeAdapterConfig<QuickTodo, QuickTodoDto>.NewConfig()
+                .Map(dest => dest.Id, src => src.Id)
+                .Map(dest => dest.Title, src => src.Title)
+                .Map(dest => dest.IsCompleted, src => src.IsCompleted)
+                .Map(dest => dest.DateCreated, src => src.DateCreated)
+                .Map(dest => dest.DateCompleted, src => src.DateCompleted);
         }
     }

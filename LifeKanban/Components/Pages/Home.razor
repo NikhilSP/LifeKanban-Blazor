@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject ProjectStateService ProjectStateService
 @rendermode InteractiveServer
+@inject QuickTodosClient QuickTodosClient
 
 <PageTitle>Home</PageTitle>
 
@@ -294,13 +295,19 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadInProgressTasks();
-        InitializeQuickTodos();
+        await LoadQuickTodos();
         ProjectStateService.ProjectsChanged += OnProjectsChanged;
     }
 
     private async void OnProjectsChanged()
     {
         await LoadInProgressTasks();
+        StateHasChanged();
+    }
+
+    private async Task LoadQuickTodos()
+    {
+        _quickTodos = await QuickTodosClient.GetQuickTodos();
         StateHasChanged();
     }
 
@@ -363,33 +370,45 @@
         };
     }
 
-    private void AddQuickTodo()
+    private async Task AddQuickTodo()
     {
         if (!string.IsNullOrWhiteSpace(_newTodoTitle))
         {
-            _quickTodos.Add(new QuickTodoItem
+            var newTodo = new QuickTodoItem
             {
-                Id = Guid.NewGuid(),
                 Title = _newTodoTitle,
                 IsCompleted = false,
                 DateCreated = DateTime.Now
-            });
+            };
+
+            var result = await QuickTodosClient.AddQuickTodo(newTodo);
+
+            if (result != null)
+            {
+                newTodo.Id = result.Value;
+                _quickTodos.Add(newTodo);
+            }
 
             _newTodoTitle = string.Empty;
+            StateHasChanged();
         }
     }
 
-    private void DeleteQuickTodo(QuickTodoItem todo)
+    private async Task DeleteQuickTodo(QuickTodoItem todo)
     {
-        _quickTodos.Remove(todo);
+        var result = await QuickTodosClient.DeleteQuickTodo(todo.Id);
+
+        if (result)
+        {
+            _quickTodos.Remove(todo);
+            StateHasChanged();
+        }
     }
 
-    private void ToggleQuickTodoCompletion(QuickTodoItem todo, bool isCompleted)
+    private async Task ToggleQuickTodoCompletion(QuickTodoItem todo, bool isCompleted)
     {
-        // Make sure we're only updating this specific todo
         todo.IsCompleted = isCompleted;
-    
-        // Set or clear the completion date based on status
+
         if (isCompleted)
         {
             todo.DateCompleted = DateTime.Now;
@@ -399,13 +418,14 @@
             todo.DateCompleted = null;
         }
 
-        // Force UI refresh
+        await QuickTodosClient.UpdateQuickTodo(todo);
         StateHasChanged();
     }
 
-    private void UpdateQuickTodoTitle(QuickTodoItem todo, string newTitle)
+    private async Task UpdateQuickTodoTitle(QuickTodoItem todo, string newTitle)
     {
         todo.Title = newTitle;
+        await QuickTodosClient.UpdateQuickTodo(todo);
     }
 
     private void HandleNewTodoKeyDown(KeyboardEventArgs e)
@@ -445,20 +465,11 @@
         public string ProjectName { get; set; } = string.Empty;
     }
 
-    public class QuickTodoItem
-    {
-        public Guid Id { get; set; }
-        public string Title { get; set; } = string.Empty;
-        public bool IsCompleted { get; set; }
-        public DateTime DateCreated { get; set; }
-        public DateTime? DateCompleted { get; set; } // New nullable DateTime property
-    }
-
     public void Dispose()
     {
         ProjectStateService.ProjectsChanged -= OnProjectsChanged;
     }
-    
+
     private void HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
     {
         // If enter is pressed and title is empty, delete the todo

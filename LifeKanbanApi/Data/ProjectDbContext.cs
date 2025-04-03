@@ -9,6 +9,7 @@ public sealed class ProjectDbContext(DbContextOptions<ProjectDbContext> options)
     public DbSet<ProjectTask> Tasks { get; set; }
     public DbSet<Milestone> Milestones { get; set; }
     public DbSet<SubTask> SubTasks { get; set; }
+    public DbSet<QuickTodo> QuickTodos { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

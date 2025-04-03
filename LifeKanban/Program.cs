@@ -14,6 +14,7 @@ builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri("http
 
 builder.Services.AddSingleton<ProjectsClient>();
 builder.Services.AddSingleton<ProjectStateService>();
+builder.Services.AddSingleton<QuickTodosClient>();
 
 var app = builder.Build();
 
