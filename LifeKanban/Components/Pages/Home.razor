@@ -28,7 +28,7 @@
             </div>
         </div>
         <div class="cards-container">
-            @foreach (var todo in _quickTodos.OrderBy(t => t.IsCompleted ? 0 : 1))
+            @foreach (var todo in _quickTodos.OrderBy(t => t.IsCompleted ? 1 : 0))
             {
             <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")">
                 <div class="d-flex align-items-center justify-content-between">
@@ -48,7 +48,7 @@
 
             <div class="add-todo-container">
                 <input type="text" class="todo-input"
-                       placeholder="Add a new to-do..."
+                       placeholder="Click here to add new to-do..."
                        @bind="_newTodoTitle"
                        @onkeydown="HandleNewTodoKeyDown" />
                 <button type="button" class="add-button" @onclick="AddQuickTodo">+</button>
@@ -109,8 +109,8 @@
                                         </span>
                                     </div>
                                 }
-                                <div class="ms-2">
-                                    <span class="card-label" style="background-color: var(--dark-card-hover);">
+                                <div class="card-labels bottom-labels">
+                                    <span class="card-label" style="background-color: var(--column-ready-color);">
                                         @task.ProjectName
                                     </span>
                                 </div>
@@ -291,6 +291,7 @@
     private void ToggleQuickTodoCompletion(QuickTodoItem todo, bool isCompleted)
     {
         todo.IsCompleted = isCompleted;
+        StateHasChanged();
     }
 
     private void UpdateQuickTodoTitle(QuickTodoItem todo, string newTitle)
