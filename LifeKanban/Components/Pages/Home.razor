@@ -1,16 +1,364 @@
 ﻿@page "/"
+@using LifeKanban.Client
+@using LifeKanban.Model
+@using LifeKanban.StateManagement
+@inject ProjectsClient Client
+@inject NavigationManager NavigationManager
+@inject ProjectStateService ProjectStateService
+@rendermode InteractiveServer
 
 <PageTitle>Home</PageTitle>
 
-<div class="dashboard-container">
-    <div class="dashboard-header">
-        <h1>Welcome to LifeKanban</h1>
+<div class="dashboard-header">
+    <h1>Welcome to LifeKanban</h1>
+</div>
+
+<div class="kanban-board">
+    <div class="kanban-column">
+        <div class="column-header" style="border-top: 4px solid #0066cc;">
+            <div class="column-title">
+                Quick To-Dos
+                <div class="column-count">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                        <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                    </svg>
+                    @_quickTodos.Count
+                </div>
+            </div>
+        </div>
+        <div class="cards-container">
+            @foreach (var todo in _quickTodos)
+            {
+                <div class="todo-item">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <input type="checkbox" class="form-check-input me-2" checked="@todo.IsCompleted"
+                                   @onchange="e => ToggleQuickTodoCompletion(todo, (bool)e.Value!)" />
+                            <input type="text" class="todo-input" value="@todo.Title"
+                                   @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                                   @onkeydown="e => HandleTodoKeyDown(e, todo)" />
+                        </div>
+                        <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                            <span class="bi bi-trash"></span>
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <div class="add-todo-container">
+                <input type="text" class="todo-input"
+                       placeholder="Add a new to-do..."
+                       @bind="_newTodoTitle"
+                       @onkeydown="HandleNewTodoKeyDown" />
+                <button type="button" class="add-button" @onclick="AddQuickTodo">+</button>
+            </div>
+        </div>
     </div>
-    
-    <div class="intro-card">
-        <p>Your personal Kanban board project management system. Create projects and organize tasks with our GitLab-inspired interface.</p>
-        <a href="/AddProject" class="btn btn-primary">
-            <span class="bi bi-plus"></span> New Project
-        </a>
+
+    <div class="kanban-column column-inprogress">
+        <div class="column-header">
+            <div class="column-title">
+                In Progress
+                <div class="column-count">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                        <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                    </svg>
+                    @_inProgressTasks.Count
+                </div>
+            </div>
+        </div>
+        <div class="cards-container">
+            @foreach (var task in _inProgressTasks)
+            {
+                <div class="kanban-card">
+                    <div class="card-title">@task.Task.title</div>
+
+                    @if (!string.IsNullOrEmpty(task.Task.description))
+                    {
+                        <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
+                    }
+
+                    @if (task.Task.subtasks.Any())
+                    {
+                        <div class="subtasks-list">
+                            @foreach (var subtask in task.Task.subtasks)
+                            {
+                                <div class="subtask-item">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
+                                               @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)"/>
+                                        <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
+                                            @subtask.title
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <div class="card-footer">
+                        <div class="card-metadata">
+                            <div class="card-metadata">
+                                @if (task.Task.milestone != null)
+                                {
+                                    <div class="card-labels bottom-labels">
+                                        <span class="card-label" style="background-color: var(--column-ready-color);">
+                                            @task.Task.milestone.name
+                                        </span>
+                                    </div>
+                                }
+                                <div class="ms-2">
+                                    <span class="card-label" style="background-color: var(--dark-card-hover);">
+                                        @task.ProjectName
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <div class="dropdown">
+                                <button type="button" class="card-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="bi bi-three-dots"></span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark">
+                                    <li>
+                                        <a class="dropdown-item" @onclick="() => MarkTaskAsDone(task)">
+                                            <span class="bi bi-check-circle me-2"></span> Mark as Done
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" @onclick="() => GoToProject(task.ProjectId)">
+                                            <span class="bi bi-arrow-right me-2"></span> Go to Project
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 </div>
+
+<style>
+    /* Simplified styles for To-Do items */
+    .todo-item {
+        padding: 8px;
+        margin-bottom: 10px;
+        background-color: transparent;
+        cursor: pointer;
+    }
+
+    .todo-delete-btn {
+        background: transparent;
+        border: none;
+        color: var(--dark-text-secondary);
+        opacity: 0.7;
+    }
+
+    .todo-delete-btn:hover {
+        opacity: 1;
+        color: #ff6b6b;
+    }
+
+    .add-todo-container {
+        padding: 8px;
+        position: relative;
+        background-color: transparent;
+    }
+
+    .todo-input {
+        width: 100%;
+        background-color: transparent;
+        border: none;
+        color: var(--dark-text);
+        outline: none;
+    }
+
+    .add-button {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--dark-text-secondary);
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0 5px;
+    }
+
+    .add-button:hover {
+        color: var(--dark-text);
+    }
+</style>
+
+@code {
+    private List<InProgressTaskViewModel> _inProgressTasks = [];
+    private List<QuickTodoItem> _quickTodos = [];
+    private string _newTodoTitle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInProgressTasks();
+        InitializeQuickTodos();
+        ProjectStateService.ProjectsChanged += OnProjectsChanged;
+    }
+
+    private async void OnProjectsChanged()
+    {
+        await LoadInProgressTasks();
+        StateHasChanged();
+    }
+
+    private async Task LoadInProgressTasks()
+    {
+        _inProgressTasks.Clear();
+        var projects = await Client.GetProjects();
+
+        foreach (var project in projects)
+        {
+            var fullProject = await Client.GetProjectById(project.id);
+            if (fullProject != null)
+            {
+                var inProgressTasks = fullProject.tasks
+                    .Where(t => t.status == "In Progress")
+                    .Select(t => new InProgressTaskViewModel
+                    {
+                        Task = t,
+                        ProjectId = project.id,
+                        ProjectName = project.name
+                    })
+                    .ToList();
+
+                _inProgressTasks.AddRange(inProgressTasks);
+            }
+        }
+    }
+
+    private async Task MarkTaskAsDone(InProgressTaskViewModel task)
+    {
+        task.Task.status = "Done";
+        await Client.UpdateTask(task.Task, task.ProjectId);
+        await LoadInProgressTasks();
+        ProjectStateService.NotifyStateChanged();
+    }
+
+    private void GoToProject(Guid projectId)
+    {
+        NavigationManager.NavigateTo($"/kanbanboard/{projectId}");
+    }
+
+    private void InitializeQuickTodos()
+    {
+        _quickTodos = new List<QuickTodoItem>
+        {
+            new QuickTodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = "Review project documentation",
+                IsCompleted = false,
+                DateCreated = DateTime.Now.AddDays(-1)
+            },
+            new QuickTodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = "Prepare for weekly team meeting",
+                IsCompleted = false,
+                DateCreated = DateTime.Now
+            }
+        };
+    }
+
+    private void AddQuickTodo()
+    {
+        if (!string.IsNullOrWhiteSpace(_newTodoTitle))
+        {
+            _quickTodos.Add(new QuickTodoItem
+            {
+                Id = Guid.NewGuid(),
+                Title = _newTodoTitle,
+                IsCompleted = false,
+                DateCreated = DateTime.Now
+            });
+
+            _newTodoTitle = string.Empty;
+        }
+    }
+
+    private void DeleteQuickTodo(QuickTodoItem todo)
+    {
+        _quickTodos.Remove(todo);
+    }
+
+    private void ToggleQuickTodoCompletion(QuickTodoItem todo, bool isCompleted)
+    {
+        todo.IsCompleted = isCompleted;
+    }
+
+    private void UpdateQuickTodoTitle(QuickTodoItem todo, string newTitle)
+    {
+        todo.Title = newTitle;
+    }
+
+    private void HandleNewTodoKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            AddQuickTodo();
+        }
+    }
+
+    private void HandleQuickTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
+    {
+        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && string.IsNullOrWhiteSpace(todo.Title))
+        {
+            DeleteQuickTodo(todo);
+        }
+    }
+
+    private async Task ToggleSubtaskCompletion(ProjectTaskItem taskItem, SubTaskItem subtask)
+    {
+// Toggle the completion status
+        subtask.isCompleted = !subtask.isCompleted;
+
+// Find the project ID for this task
+        var project = _inProgressTasks.FirstOrDefault(t => t.Task.id == taskItem.id);
+        if (project != null)
+        {
+// Update the task on the server
+            await Client.UpdateTask(taskItem, project.ProjectId);
+        }
+    }
+
+    public class InProgressTaskViewModel
+    {
+        public ProjectTaskItem Task { get; set; }
+        public Guid ProjectId { get; set; }
+        public string ProjectName { get; set; } = string.Empty;
+    }
+
+    public class QuickTodoItem
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public bool IsCompleted { get; set; }
+        public DateTime DateCreated { get; set; }
+    }
+
+    public void Dispose()
+    {
+        ProjectStateService.ProjectsChanged -= OnProjectsChanged;
+    }
+    
+    private void HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
+    {
+        // If enter is pressed and title is empty, delete the todo
+        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && string.IsNullOrWhiteSpace(todo.Title))
+        {
+            DeleteQuickTodo(todo);
+        }
+    }
+
+}
