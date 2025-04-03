@@ -30,12 +30,16 @@
         <div class="cards-container">
             @foreach (var todo in _quickTodos.OrderBy(t => t.IsCompleted ? 1 : 0))
             {
-            <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")">
+            <!-- Adding @key is crucial to ensure each todo maintains its own state -->
+            <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <input type="checkbox" class="form-check-input me-2" checked="@todo.IsCompleted"
-                               @onchange="e => ToggleQuickTodoCompletion(todo, (bool)e.Value!)" />
-                        <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")" value="@todo.Title"
+                        <!-- Make sure the event is properly bound to this specific todo -->
+                        <input type="checkbox" class="form-check-input me-2"
+                               checked="@todo.IsCompleted"
+                               @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)" />
+                        <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")"
+                               value="@todo.Title"
                                @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
                                @onkeydown="e => HandleTodoKeyDown(e, todo)" />
                     </div>
@@ -47,11 +51,19 @@
             }
 
             <div class="add-todo-container">
-                <input type="text" class="todo-input"
-                       placeholder="Click here to add new to-do..."
-                       @bind="_newTodoTitle"
-                       @onkeydown="HandleNewTodoKeyDown" />
-                <button type="button" class="add-button" @onclick="AddQuickTodo">+</button>
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <!-- Optional: Add a placeholder checkbox for visual consistency -->
+                        <div class="form-check-input me-2 placeholder-checkbox"></div>
+                        <input type="text" class="todo-input"
+                               placeholder="Click here to add new to-do..."
+                               @bind="_newTodoTitle"
+                               @onkeydown="HandleNewTodoKeyDown" />
+                    </div>
+                    <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
+                        <span class="bi bi-plus"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -188,6 +200,76 @@
     .completed-input {
         text-decoration: line-through;
     }
+
+    .todo-input:focus {
+        background-color: rgba(255, 255, 255, 0.05); /* Slight white overlay for dark themes */
+        outline: none; /* Remove default focus outline */
+        transition: background-color 0.2s ease; /* Smooth transition */
+    }
+
+    /* Make sure the container also reflects the focus state */
+    .todo-item:has(.todo-input:focus) {
+        background-color: rgba(255, 255, 255, 0.02); /* Subtle background change for the entire item */
+    }
+
+    /* Optional: add a subtle left border when focused for additional visual cue */
+    .todo-input:focus {
+        border-left: 2px solid var(--primary-color);
+        padding-left: 3px;
+    }
+
+    /* Updated styles for the add todo container to match existing todos */
+    .add-todo-container {
+        padding: 8px;
+        background-color: transparent;
+        margin-bottom: 10px;
+    }
+
+    /* Make the add button match the delete button */
+    .todo-add-btn {
+        background: transparent;
+        border: none;
+        color: var(--dark-text-secondary);
+        opacity: 0.7;
+    }
+
+    .todo-add-btn:hover {
+        opacity: 1;
+        color: var(--primary-color); /* Use primary color for add vs red for delete */
+    }
+
+    /* Remove the old add button styles */
+    .add-button {
+        display: none;
+    }
+
+    /* Optional: Style for the placeholder checkbox */
+    .placeholder-checkbox {
+        width: 16px;
+        height: 16px;
+        border: 1px solid var(--dark-text-secondary);
+        border-radius: 3px;
+        opacity: 0.3;
+    }
+
+    /* Ensure both types of inputs have the same styling */
+    .todo-input {
+        width: 100%;
+        background-color: transparent;
+        border: none;
+        color: var(--dark-text);
+        outline: none;
+    }
+
+    /* Match hover effects */
+    .add-todo-container:hover {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Add transition for smoother hover effects */
+    .todo-item, .add-todo-container, .todo-add-btn, .todo-delete-btn {
+        transition: all 0.2s ease;
+    }
 </style>
 
 @code {
@@ -290,7 +372,10 @@
 
     private void ToggleQuickTodoCompletion(QuickTodoItem todo, bool isCompleted)
     {
+        // Make sure we're only updating this specific todo
         todo.IsCompleted = isCompleted;
+    
+        // Force UI refresh
         StateHasChanged();
     }
 
