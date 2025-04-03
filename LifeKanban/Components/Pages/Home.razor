@@ -28,27 +28,6 @@
             </div>
         </div>
         <div class="cards-container">
-            @foreach (var todo in _quickTodos.OrderBy(t => t.IsCompleted ? 1 : 0))
-            {
-            <!-- Adding @key is crucial to ensure each todo maintains its own state -->
-            <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center flex-grow-1">
-                        <!-- Make sure the event is properly bound to this specific todo -->
-                        <input type="checkbox" class="form-check-input me-2"
-                               checked="@todo.IsCompleted"
-                               @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)" />
-                        <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")"
-                               value="@todo.Title"
-                               @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
-                               @onkeydown="e => HandleTodoKeyDown(e, todo)" />
-                    </div>
-                    <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
-                        <span class="bi bi-trash"></span>
-                    </button>
-                </div>
-            </div>
-            }
 
             <div class="add-todo-container">
                 <div class="d-flex align-items-center justify-content-between">
@@ -58,13 +37,48 @@
                         <input type="text" class="todo-input"
                                placeholder="Click here to add new to-do..."
                                @bind="_newTodoTitle"
-                               @onkeydown="HandleNewTodoKeyDown" />
+                               @onkeydown="HandleNewTodoKeyDown"/>
                     </div>
                     <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
                         <span class="bi bi-plus"></span>
                     </button>
                 </div>
             </div>
+
+            @{
+                // Use a code block to prepare the sorted list
+                var incompleteTodos = _quickTodos
+                    .Where(t => !t.IsCompleted)
+                    .OrderBy(t => t.DateCreated); // Oldest created first (top)
+
+                var completedTodos = _quickTodos
+                    .Where(t => t.IsCompleted)
+                    .OrderByDescending(t => t.DateCompleted); // Latest completed first (top), so earliest completed is at the bottom
+
+                var sortedTodos = incompleteTodos.Concat(completedTodos);
+            }
+
+            @foreach (var todo in sortedTodos)
+            {
+                <!-- Adding @key is crucial to ensure each todo maintains its own state -->
+                <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <!-- Make sure the event is properly bound to this specific todo -->
+                            <input type="checkbox" class="form-check-input me-2"
+                                   checked="@todo.IsCompleted"
+                                   @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
+                            <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")"
+                                   value="@todo.Title"
+                                   @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                                   @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                        </div>
+                        <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                            <span class="bi bi-trash"></span>
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     </div>
 
@@ -375,6 +389,16 @@
         // Make sure we're only updating this specific todo
         todo.IsCompleted = isCompleted;
     
+        // Set or clear the completion date based on status
+        if (isCompleted)
+        {
+            todo.DateCompleted = DateTime.Now;
+        }
+        else
+        {
+            todo.DateCompleted = null;
+        }
+
         // Force UI refresh
         StateHasChanged();
     }
@@ -427,6 +451,7 @@
         public string Title { get; set; } = string.Empty;
         public bool IsCompleted { get; set; }
         public DateTime DateCreated { get; set; }
+        public DateTime? DateCompleted { get; set; } // New nullable DateTime property
     }
 
     public void Dispose()
