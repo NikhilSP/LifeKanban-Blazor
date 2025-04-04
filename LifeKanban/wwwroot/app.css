@@ -1345,3 +1345,46 @@ textarea:focus {
     display: block !important;
     visibility: visible !important;
 }
+
+/* Hide scrollbar by default but maintain scrolling functionality */
+.scribble-textarea {
+    /* Existing styles */
+    overflow-y: auto;
+
+    /* Hide default scrollbar for most browsers */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+/* Hide WebKit (Chrome/Safari) scrollbar by default */
+.scribble-textarea::-webkit-scrollbar {
+    width: 0;
+    background: transparent;
+    display: none;
+}
+
+/* Show scrollbar only when textarea is focused or being interacted with */
+.scribble-textarea:focus::-webkit-scrollbar,
+.scribble-textarea:active::-webkit-scrollbar {
+    width: 8px;
+    display: block;
+}
+
+.scribble-textarea:focus,
+.scribble-textarea:active {
+    scrollbar-width: thin; /* Show thin scrollbar in Firefox when focused */
+}
+
+/* Style the scrollbar when visible */
+.scribble-textarea:focus::-webkit-scrollbar-thumb,
+.scribble-textarea:active::-webkit-scrollbar-thumb {
+    background-color: rgba(150, 150, 150, 0.5);
+    border-radius: 4px;
+}
+
+/* Style the scrollbar track */
+.scribble-textarea:focus::-webkit-scrollbar-track,
+.scribble-textarea:active::-webkit-scrollbar-track {
+    background-color: rgba(50, 50, 50, 0.3);
+    border-radius: 4px;
+}
