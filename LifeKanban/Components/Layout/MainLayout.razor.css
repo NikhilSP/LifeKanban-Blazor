@@ -96,3 +96,11 @@ main {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+
+.theme-toggle-container {
+    position: absolute;
+    top: 12px;
+    right: 20px;
+    z-index: 100;
+}

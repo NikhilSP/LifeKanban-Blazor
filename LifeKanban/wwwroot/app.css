@@ -1388,3 +1388,307 @@ textarea:focus {
     background-color: rgba(50, 50, 50, 0.3);
     border-radius: 4px;
 }
+
+/* Claude Theme Colors - Based on Authentic Interface */
+[data-theme="claude"] {
+    /* Main Theme Colors */
+    --primary-color: #F56565;          /* Anthropic coral/orange for primary elements */
+    --primary-hover: #F78585;          /* Lighter coral for hover */
+    --sidebar-bg: #1E1E1E;             /* Very dark gray, almost black */
+    --sidebar-header-bg: #1E1E1E;      /* Same dark for sidebar header */
+    --nav-bg: #1E1E1E;                 /* Dark for navigation */
+
+    /* Theme Colors */
+    --dark-bg: #1E1E1E;                /* Very dark background matching screenshot */
+    --dark-column-bg: #242424;         /* Slightly lighter dark gray */
+    --dark-card-bg: #2A2A2A;           /* Card background */
+    --dark-card-hover: #333333;        /* Card hover */
+    --dark-border: #3A3A3A;            /* Border */
+    --dark-border-strong: #444444;     /* Stronger border */
+    --dark-text: #E1E1E1;              /* Off-white for text */
+    --dark-text-secondary: #A0A0A0;    /* Light gray for secondary text */
+
+    /* Column Colors */
+    --column-todo-color: #F56565;      /* Coral */
+    --column-inprogress-color: #F56565; /* Coral */
+    --column-done-color: #F56565;      /* Coral */
+    --status-ready-color: #F56565;     /* Coral */
+    --status-review-color: #F56565;    /* Coral */
+    --status-qa-color: #F56565;        /* Coral */
+
+    /* Component Dimensions remain the same */
+    --sidebar-width: 250px;
+
+    /* Other colors */
+    --gl-border-color: #3A3A3A;
+    --column-ready-color: #F56565;
+    --gl-text-secondary: #A0A0A0;
+}
+
+/* Card styling */
+[data-theme="claude"] .kanban-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid #3A3A3A;
+    transition: all 0.2s ease;
+    background-color: #2A2A2A;
+}
+
+[data-theme="claude"] .kanban-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    background-color: #333333;
+}
+
+/* Column styling */
+[data-theme="claude"] .kanban-column {
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    background-color: #242424;
+    border: 1px solid #3A3A3A;
+}
+
+/* Header styling */
+[data-theme="claude"] .column-header {
+    padding: 14px 16px;
+    font-weight: 500;
+    background-color: #242424;
+    border-bottom: 1px solid #3A3A3A;
+}
+
+[data-theme="claude"] .column-title {
+    color: #E1E1E1;
+}
+
+/* Button styling */
+[data-theme="claude"] .btn-primary {
+    background-color: #F56565 !important;
+    border: none !important;
+    box-shadow: none;
+    border-radius: 6px;
+    font-weight: 400;
+    padding: 8px 16px;
+}
+
+[data-theme="claude"] .btn-primary:hover {
+    background-color: #F78585 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Form control styling */
+[data-theme="claude"] .form-control,
+[data-theme="claude"] select,
+[data-theme="claude"] .form-control-sm,
+[data-theme="claude"] .input-group-text,
+[data-theme="claude"] textarea {
+    background-color: #2A2A2A !important;
+    color: #E1E1E1 !important;
+    border: 1px solid #3A3A3A !important;
+    border-radius: 6px;
+}
+
+[data-theme="claude"] .form-control:focus,
+[data-theme="claude"] select:focus,
+[data-theme="claude"] .form-control-sm:focus,
+[data-theme="claude"] textarea:focus {
+    border-color: #F56565 !important;
+    box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2) !important;
+    background-color: #333333 !important;
+}
+
+/* Modal styling */
+[data-theme="claude"] .gitlab-modal .modal-content {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #3A3A3A;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    background-color: #242424;
+}
+
+[data-theme="claude"] .gitlab-modal .modal-header {
+    background-color: #2A2A2A;
+    border-bottom: 1px solid #3A3A3A;
+    padding: 16px 20px;
+}
+
+/* Label styling */
+[data-theme="claude"] .card-label {
+    border-radius: 20px;
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    background-color: #333333;
+    color: #E1E1E1;
+}
+
+/* Sidebar styling */
+[data-theme="claude"] .sidebar {
+    background-color: #1E1E1E;
+    border-right: 1px solid #3A3A3A;
+}
+
+[data-theme="claude"] .sidebar-header {
+    background-color: #1E1E1E;
+    border-bottom: 1px solid #3A3A3A;
+}
+
+[data-theme="claude"] .sidebar-header .navbar-brand {
+    color: #E1E1E1;
+    font-weight: 500;
+}
+
+[data-theme="claude"] .nav-item ::deep .nav-link {
+    color: #A0A0A0;
+    font-weight: 400;
+    transition: all 0.2s ease;
+    padding: 10px 16px;
+}
+
+[data-theme="claude"] .nav-item ::deep a.active {
+    background-color: #333333;
+    color: #E1E1E1;
+}
+
+[data-theme="claude"] .nav-item ::deep .nav-link:hover {
+    background-color: #2A2A2A;
+    color: #E1E1E1;
+}
+
+/* Add a starburst icon to the board */
+[data-theme="claude"] .kanban-board::before {
+    content: "✹";
+    position: fixed;
+    top: 80px;
+    right: 40px;
+    font-size: 24px;
+    color: #F56565;
+    opacity: 0.8;
+    z-index: 0;
+}
+
+/* Content area styling */
+[data-theme="claude"] .content-wrapper {
+    background-color: #1E1E1E;
+    color: #E1E1E1;
+}
+
+/* Toggle button */
+[data-theme="claude"] .theme-toggle-btn {
+    color: #F56565;
+    background-color: rgba(245, 101, 101, 0.1);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    transition: all 0.2s ease;
+}
+
+[data-theme="claude"] .theme-toggle-btn:hover {
+    background-color: rgba(245, 101, 101, 0.2);
+}
+
+/* Custom typography and spacing */
+[data-theme="claude"] .kanban-board .kanban-column .kanban-card .card-title {
+    color: #E1E1E1 !important;
+    font-weight: 500;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+}
+
+[data-theme="claude"] .card-metadata {
+    color: #A0A0A0;
+    font-size: 0.8rem;
+}
+
+/* Subtask styling */
+[data-theme="claude"] .subtask-item .form-check-label {
+    font-size: 0.875rem;
+    color: #E1E1E1;
+}
+
+[data-theme="claude"] .subtask-item .form-check-input:checked {
+    background-color: #F56565;
+    border-color: #F56565;
+}
+
+/* Subtask checkbox */
+[data-theme="claude"] .form-check-input {
+    background-color: #2A2A2A;
+    border: 1px solid #3A3A3A;
+}
+
+/* Focus and active states */
+[data-theme="claude"] button:focus,
+[data-theme="claude"] .btn:focus {
+    box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.4);
+}
+
+/* New chat button styling */
+[data-theme="claude"] .btn.btn-primary {
+    font-weight: 400;
+    padding: 8px 14px;
+    font-size: 0.9rem;
+}
+
+/* Customized scrollbar */
+[data-theme="claude"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="claude"] ::-webkit-scrollbar-track {
+    background-color: #242424;
+}
+
+[data-theme="claude"] ::-webkit-scrollbar-thumb {
+    background-color: #3A3A3A;
+    border-radius: 4px;
+}
+
+[data-theme="claude"] ::-webkit-scrollbar-thumb:hover {
+    background-color: #444444;
+}
+
+/* Quick todos styling */
+[data-theme="claude"] .todo-item {
+    padding: 8px 10px;
+    background-color: #2A2A2A;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+[data-theme="claude"] .todo-input {
+    color: #E1E1E1 !important;
+    background-color: transparent !important;
+}
+
+[data-theme="claude"] .todo-item:hover {
+    background-color: #333333;
+}
+
+/* Scribble area */
+[data-theme="claude"] .scribble-textarea {
+    background-color: #2A2A2A !important;
+    color: #E1E1E1 !important;
+    border: 1px solid #3A3A3A !important;
+    padding: 16px;
+}
+
+/* Life months */
+[data-theme="claude"] .month-circle {
+    background-color: #333333;
+}
+
+[data-theme="claude"] .past-month {
+    background-color: #F56565;
+}
+
+[data-theme="claude"] .current-month {
+    background-color: #F78585;
+}
+
+[data-theme="claude"] .life-months-chart {
+    background-color: #242424;
+    border: 1px solid #3A3A3A;
+}
+
