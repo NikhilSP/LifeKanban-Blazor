@@ -7,6 +7,7 @@
 @inject ProjectStateService ProjectStateService
 @rendermode InteractiveServer
 @inject QuickTodosClient QuickTodosClient
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Home</PageTitle>
 
@@ -15,6 +16,59 @@
 </div>
 
 <div class="kanban-board">
+    <!-- New Life in Months Column -->
+    <div class="kanban-column @(_isLifeColumnCollapsed ? "column-collapsed" : "")" data-column-id="life-months">
+        <div class="column-header" style="border-top: 4px solid #6f42c1;">
+            <div class="column-title">
+                Life in Months
+            </div>
+            <div class="column-actions">
+                <button type="button" @onclick="ToggleLifeColumn" title="@(_isLifeColumnCollapsed ? "Expand" : "Collapse")">
+                    <span class="bi @(_isLifeColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                </button>
+                <button type="button" @onclick="OpenLifeSettings">
+                    <span class="bi bi-gear"></span>
+                </button>
+            </div>
+        </div>
+        <div class="cards-container">
+            @if (_showLifeSettings)
+            {
+                <div class="life-settings-card">
+                    <div class="card-title">Life Settings</div>
+                    <div class="mb-3">
+                        <label for="birthDate" class="form-label">Birth Date</label>
+                        <input type="date" class="form-control" id="birthDate" @bind="_birthDate"/>
+                    </div>
+                    <div class="mb-3">
+                        <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
+                        <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120"/>
+                    </div>
+                    <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
+                </div>
+            }
+            else
+            {
+                <div class="life-months-chart">
+                    <p class="text-center mb-3">
+                        @(_totalMonths-_currentMonth) of @_totalMonths months left (@Math.Round(_percentComplete)% complete)
+                    </p>
+                    <div class="months-container">
+                        @for (int i = 0; i < _totalMonths; i++)
+                        {
+                            bool isPast = i < _currentMonth;
+                            bool isCurrent = i == _currentMonth;
+
+                            <div class="month-circle @(isPast ? "past-month" : "") @(isCurrent ? "current-month" : "")"
+                                 title="Month @(i + 1) of @_totalMonths">
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
     <div class="kanban-column">
         <div class="column-header" style="border-top: 4px solid #0066cc;">
             <div class="column-title">
@@ -29,11 +83,9 @@
             </div>
         </div>
         <div class="cards-container">
-
             <div class="add-todo-container">
                 <div class="d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center flex-grow-1">
-                        <!-- Optional: Add a placeholder checkbox for visual consistency -->
                         <div class="form-check-input me-2 placeholder-checkbox"></div>
                         <input type="text" class="todo-input"
                                placeholder="Click here to add new to-do..."
@@ -47,25 +99,22 @@
             </div>
 
             @{
-                // Use a code block to prepare the sorted list
                 var incompleteTodos = _quickTodos
                     .Where(t => !t.IsCompleted)
-                    .OrderBy(t => t.DateCreated); // Oldest created first (top)
+                    .OrderBy(t => t.DateCreated);
 
                 var completedTodos = _quickTodos
                     .Where(t => t.IsCompleted)
-                    .OrderByDescending(t => t.DateCompleted); // Latest completed first (top), so earliest completed is at the bottom
+                    .OrderByDescending(t => t.DateCompleted);
 
                 var sortedTodos = incompleteTodos.Concat(completedTodos);
             }
 
             @foreach (var todo in sortedTodos)
             {
-                <!-- Adding @key is crucial to ensure each todo maintains its own state -->
                 <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center flex-grow-1">
-                            <!-- Make sure the event is properly bound to this specific todo -->
                             <input type="checkbox" class="form-check-input me-2"
                                    checked="@todo.IsCompleted"
                                    @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
@@ -158,6 +207,59 @@
 </div>
 
 <style>
+    /* Life in Months styles */
+    .life-settings-card {
+        background-color: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 15px;
+    }
+
+    .life-months-chart {
+        background-color: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    .months-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        justify-content: flex-start;
+    }
+
+    .month-circle {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: var(--dark-border);
+        margin: 2px;
+    }
+
+    .past-month {
+        background-color: #6f42c1;
+    }
+
+    .current-month {
+        background-color: #fd7e14;
+        animation: shape-shift 2s infinite alternate;
+    }
+
+    @@keyframes shape-shift {
+        0% {
+            /* Square-like shape */
+            border-radius: 0%;
+            clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+        }
+        100% {
+            /* Diamond-like shape */
+            border-radius: 0%;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+    }
+
     /* Simplified styles for To-Do items */
     .todo-item {
         padding: 8px;
@@ -217,30 +319,26 @@
     }
 
     .todo-input:focus {
-        background-color: rgba(255, 255, 255, 0.05); /* Slight white overlay for dark themes */
-        outline: none; /* Remove default focus outline */
-        transition: background-color 0.2s ease; /* Smooth transition */
+        background-color: rgba(255, 255, 255, 0.05);
+        outline: none;
+        transition: background-color 0.2s ease;
     }
 
-    /* Make sure the container also reflects the focus state */
     .todo-item:has(.todo-input:focus) {
-        background-color: rgba(255, 255, 255, 0.02); /* Subtle background change for the entire item */
+        background-color: rgba(255, 255, 255, 0.02);
     }
 
-    /* Optional: add a subtle left border when focused for additional visual cue */
     .todo-input:focus {
         border-left: 2px solid var(--primary-color);
         padding-left: 3px;
     }
 
-    /* Updated styles for the add todo container to match existing todos */
     .add-todo-container {
         padding: 8px;
         background-color: transparent;
         margin-bottom: 10px;
     }
 
-    /* Make the add button match the delete button */
     .todo-add-btn {
         background: transparent;
         border: none;
@@ -250,15 +348,13 @@
 
     .todo-add-btn:hover {
         opacity: 1;
-        color: var(--primary-color); /* Use primary color for add vs red for delete */
+        color: var(--primary-color);
     }
 
-    /* Remove the old add button styles */
     .add-button {
         display: none;
     }
 
-    /* Optional: Style for the placeholder checkbox */
     .placeholder-checkbox {
         width: 16px;
         height: 16px;
@@ -267,7 +363,6 @@
         opacity: 0.3;
     }
 
-    /* Ensure both types of inputs have the same styling */
     .todo-input {
         width: 100%;
         background-color: transparent;
@@ -276,12 +371,10 @@
         outline: none;
     }
 
-    /* Match hover effects */
     .add-todo-container:hover {
         background-color: rgba(255, 255, 255, 0.02);
     }
 
-    /* Add transition for smoother hover effects */
     .todo-item, .add-todo-container, .todo-add-btn, .todo-delete-btn {
         transition: all 0.2s ease;
     }
@@ -292,11 +385,102 @@
     private List<QuickTodoItem> _quickTodos = [];
     private string _newTodoTitle = string.Empty;
 
+// Life in Months properties
+    private bool _isLifeColumnCollapsed = false;
+    private bool _showLifeSettings = false;
+    private DateTime _birthDate = DateTime.Now.AddYears(-30); // Default to 30 years ago
+    private int _expectedYears = 60; // Default life expectancy
+    private int _totalMonths = 720; // Default (60 years * 12 months)
+    private int _currentMonth = 360; // Default to halfway through
+    private double _percentComplete = 50; // Default to 50%
+
     protected override async Task OnInitializedAsync()
     {
         await LoadInProgressTasks();
         await LoadQuickTodos();
         ProjectStateService.ProjectsChanged += OnProjectsChanged;
+
+// Load life settings from local storage
+        await LoadLifeSettings();
+        await CalculateLifeMonths();
+    }
+
+    private async Task LoadLifeSettings()
+    {
+        try
+        {
+            var birthDateStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeBirthDate");
+            var expectedYearsStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeExpectedYears");
+            var collapsedStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeColumnCollapsed");
+
+            if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out DateTime savedBirthDate))
+            {
+                _birthDate = savedBirthDate;
+            }
+
+            if (!string.IsNullOrEmpty(expectedYearsStr) && int.TryParse(expectedYearsStr, out int savedExpectedYears))
+            {
+                _expectedYears = savedExpectedYears;
+            }
+
+            if (!string.IsNullOrEmpty(collapsedStr) && bool.TryParse(collapsedStr, out bool savedCollapsed))
+            {
+                _isLifeColumnCollapsed = savedCollapsed;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading life settings: {ex.Message}");
+        }
+    }
+
+    private async Task SaveLifeSettings()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeBirthDate", _birthDate.ToString("o"));
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeExpectedYears", _expectedYears.ToString());
+
+            _showLifeSettings = false;
+            await CalculateLifeMonths();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving life settings: {ex.Message}");
+        }
+    }
+
+    private async Task CalculateLifeMonths()
+    {
+// Calculate total months based on expected years
+        _totalMonths = _expectedYears * 12;
+
+// Calculate current month based on birth date
+        var now = DateTime.Now;
+        var monthsLived = ((now.Year - _birthDate.Year) * 12) + now.Month - _birthDate.Month;
+
+        if (now.Day < _birthDate.Day)
+        {
+            monthsLived--; // Adjust if we haven't reached the day of month yet
+        }
+
+        _currentMonth = Math.Max(0, Math.Min(monthsLived, _totalMonths));
+
+// Calculate percentage complete
+        _percentComplete = Math.Round((double)_currentMonth / _totalMonths * 100, 1);
+
+        StateHasChanged();
+    }
+
+    private async Task ToggleLifeColumn()
+    {
+        _isLifeColumnCollapsed = !_isLifeColumnCollapsed;
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeColumnCollapsed", _isLifeColumnCollapsed.ToString().ToLower());
+    }
+
+    private void OpenLifeSettings()
+    {
+        _showLifeSettings = true;
     }
 
     private async void OnProjectsChanged()
@@ -347,27 +531,6 @@
     private void GoToProject(Guid projectId)
     {
         NavigationManager.NavigateTo($"/kanbanboard/{projectId}");
-    }
-
-    private void InitializeQuickTodos()
-    {
-        _quickTodos = new List<QuickTodoItem>
-        {
-            new QuickTodoItem
-            {
-                Id = Guid.NewGuid(),
-                Title = "Review project documentation",
-                IsCompleted = false,
-                DateCreated = DateTime.Now.AddDays(-1)
-            },
-            new QuickTodoItem
-            {
-                Id = Guid.NewGuid(),
-                Title = "Prepare for weekly team meeting",
-                IsCompleted = false,
-                DateCreated = DateTime.Now
-            }
-        };
     }
 
     private async Task AddQuickTodo()
@@ -428,32 +591,29 @@
         await QuickTodosClient.UpdateQuickTodo(todo);
     }
 
-    private void HandleNewTodoKeyDown(KeyboardEventArgs e)
+    private async void HandleNewTodoKeyDown(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
         {
-            AddQuickTodo();
+            await AddQuickTodo();
         }
     }
 
-    private void HandleQuickTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
+    private async void HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
     {
         if ((e.Code == "Enter" || e.Code == "NumpadEnter") && string.IsNullOrWhiteSpace(todo.Title))
         {
-            DeleteQuickTodo(todo);
+            await DeleteQuickTodo(todo);
         }
     }
 
     private async Task ToggleSubtaskCompletion(ProjectTaskItem taskItem, SubTaskItem subtask)
     {
-// Toggle the completion status
         subtask.isCompleted = !subtask.isCompleted;
 
-// Find the project ID for this task
         var project = _inProgressTasks.FirstOrDefault(t => t.Task.id == taskItem.id);
         if (project != null)
         {
-// Update the task on the server
             await Client.UpdateTask(taskItem, project.ProjectId);
         }
     }
@@ -468,15 +628,6 @@
     public void Dispose()
     {
         ProjectStateService.ProjectsChanged -= OnProjectsChanged;
-    }
-
-    private void HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
-    {
-        // If enter is pressed and title is empty, delete the todo
-        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && string.IsNullOrWhiteSpace(todo.Title))
-        {
-            DeleteQuickTodo(todo);
-        }
     }
 
 }

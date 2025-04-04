@@ -8,8 +8,9 @@
     --nav-bg: #222;                    /* Navigation background */
 
     /* Dark Theme Colors */
-    --dark-bg: #1f1e24;                /* Main background */
-    --dark-card-bg: #28272d;           /* Card background */
+    --dark-bg: #1f1e24;                /* Main background */    
+    --dark-column-bg: #28272d;           /* Card background */
+    --dark-card-bg: #2d2c33;           /* Card background */
     --dark-card-hover: #3a393f;        /* Card hover state */
     --dark-border: #3c3b40;            /* Border color */
     --dark-border-strong: #5c5a63;     /* Strong border color */
@@ -236,7 +237,7 @@ h3.me-2.mb-0 {
 .kanban-column {
     min-width: 280px;
     width: 400px;
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     border-radius: 8px;
     display: flex;
     flex-direction: column;
@@ -274,7 +275,7 @@ h3.me-2.mb-0 {
 }
 
 .column-open .column-header {
-    border-top-color: var(--dark-card-bg);
+    border-top-color: var(--dark-column-bg);
 }
 
 .column-ready .column-header {
@@ -613,7 +614,7 @@ textarea:focus {
 
 /* ===== MODAL STYLES ===== */
 .gitlab-modal .modal-content {
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     color: var(--dark-text);
     border: 1px solid var(--dark-border);
     border-radius: 8px;
@@ -659,7 +660,7 @@ textarea:focus {
 .toast {
     min-width: 300px;
     max-width: 350px;
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     color: var(--dark-text);
     border: 1px solid var(--dark-border);
     border-radius: 0.25rem;
@@ -720,7 +721,7 @@ textarea:focus {
 }
 
 .intro-card {
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     border: 1px solid var(--dark-border);
     border-radius: 8px;
     padding: 24px;
@@ -734,7 +735,7 @@ textarea:focus {
 
 /* ===== ADD PROJECT PAGE ===== */
 .add-project-form {
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     border: 1px solid var(--dark-border);
     border-radius: 8px;
     padding: 24px;
@@ -798,7 +799,7 @@ textarea:focus {
 
 /* ===== SHARED CARD COMPONENTS ===== */
 .app-card {
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     border: 1px solid var(--dark-border);
     border-radius: 8px;
     padding: 16px;
@@ -1047,7 +1048,7 @@ textarea:focus {
 }
 
 .app-modal-content {
-    background-color: var(--dark-card-bg);
+    background-color: var(--dark-column-bg);
     color: var(--dark-text);
     border: 1px solid var(--dark-border);
     border-radius: 8px;
