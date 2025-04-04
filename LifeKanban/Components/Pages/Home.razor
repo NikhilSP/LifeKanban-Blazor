@@ -69,6 +69,36 @@
         </div>
     </div>
 
+    <div class="kanban-column @(_isScribbleColumnCollapsed ? "column-collapsed" : "")" data-column-id="scribble">
+        <div class="column-header" style="border-top: 4px solid #5cb85c;">
+            <div class="column-title">
+                Scribble
+            </div>
+            <div class="column-actions">
+                <button type="button" @onclick="ToggleScribbleColumn" title="@(_isScribbleColumnCollapsed ? "Expand" : "Collapse")">
+                    <span class="bi @(_isScribbleColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                </button>
+            </div>
+        </div>
+        <div class="cards-container">
+            <div class="scribble-container">
+            <textarea
+                class="scribble-textarea"
+                placeholder="Type your thoughts here..."
+                @bind="_scribbleText"
+                @bind:event="oninput"
+                @onblur="SaveScribble">
+            </textarea>
+                @if (_showScribbleSaved)
+                {
+                <div class="save-indicator">
+                    <span class="bi bi-check-circle"></span> Saved
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+
     <div class="kanban-column">
         <div class="column-header" style="border-top: 4px solid #0066cc;">
             <div class="column-title">
@@ -393,11 +423,18 @@
     private int _totalMonths = 720; // Default (60 years * 12 months)
     private int _currentMonth = 360; // Default to halfway through
     private double _percentComplete = 50; // Default to 50%
+    
+    private bool _isScribbleColumnCollapsed = false;
+    private string _scribbleText = string.Empty;
+    private bool _showScribbleSaved = false;
+    private Timer? _saveIndicatorTimer;
+
 
     protected override async Task OnInitializedAsync()
     {
         await LoadInProgressTasks();
         await LoadQuickTodos();
+        await LoadScribble();
         ProjectStateService.ProjectsChanged += OnProjectsChanged;
 
 // Load life settings from local storage
@@ -628,6 +665,64 @@
     public void Dispose()
     {
         ProjectStateService.ProjectsChanged -= OnProjectsChanged;
+        _saveIndicatorTimer?.Dispose();
+    }
+    
+    private async Task ToggleScribbleColumn()
+    {
+        _isScribbleColumnCollapsed = !_isScribbleColumnCollapsed;
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "scribbleColumnCollapsed", _isScribbleColumnCollapsed.ToString().ToLower());
+    }
+
+    private async Task LoadScribble()
+    {
+        try
+        {
+            var savedText = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "scribbleText");
+            var collapsedState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "scribbleColumnCollapsed");
+        
+            if (!string.IsNullOrEmpty(savedText))
+            {
+                _scribbleText = savedText;
+            }
+        
+            if (!string.IsNullOrEmpty(collapsedState) && bool.TryParse(collapsedState, out bool isCollapsed))
+            {
+                _isScribbleColumnCollapsed = isCollapsed;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading scribble: {ex.Message}");
+        }
+    }
+
+    private async Task SaveScribble()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "scribbleText", _scribbleText);
+        
+            // Show saved indicator
+            _showScribbleSaved = true;
+        
+            // Clear any existing timer
+            _saveIndicatorTimer?.Dispose();
+        
+            // Hide indicator after 2 seconds
+            _saveIndicatorTimer = new System.Threading.Timer(async _ =>
+            {
+                await InvokeAsync(() =>
+                {
+                    _showScribbleSaved = false;
+                    StateHasChanged();
+                });
+            }, null, 2000, Timeout.Infinite);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving scribble: {ex.Message}");
+        }
     }
 
 }

@@ -1203,3 +1203,145 @@ textarea:focus {
     display: flex;
     gap: 8px;
 }
+
+/* Add these styles to LifeKanban/wwwroot/app.css */
+/* Or add them inside the <style> tag in Home.razor */
+
+/* Scribble column styling */
+.scribble-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+.scribble-textarea {
+    flex: 1;
+    height: calc(100vh - 180px);
+    min-height: 300px;
+    background-color: var(--dark-card-bg);
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
+    border-radius: 8px;
+    padding: 16px;
+    resize: none;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.scribble-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(0, 153, 102, 0.2);
+}
+
+.scribble-textarea::placeholder {
+    color: var(--dark-text-secondary);
+    opacity: 0.7;
+}
+
+.save-indicator {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background-color: rgba(40, 40, 40, 0.8);
+    color: #5cb85c;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Modify the kanban-column style to make columns more equal in width */
+.kanban-board .kanban-column {
+    flex: 1;
+    min-width: 280px;
+    max-width: 400px;
+}
+
+/* Special styling for the scribble column */
+.kanban-column[data-column-id="scribble"] .column-header {
+    border-top: 4px solid #5cb85c;
+}
+
+.kanban-column[data-column-id="scribble"] {
+    flex: 2; /* Takes twice as much space as columns with flex: 1 */
+    min-width: 350px; /* Enforce a larger minimum width */
+    max-width: 400px; /* Allow it to grow wider than other columns */
+    transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+/* Collapsed column styles - these need to override the column width settings */
+.kanban-column.column-collapsed {
+    width: 50px !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
+    flex: 0 0 50px !important; /* Don't grow or shrink, stay exactly 50px */
+    transition: width 0.3s ease, min-width 0.3s ease, max-width 0.3s ease, flex 0.3s ease;
+}
+
+/* Make sure the textarea fills the available space */
+.scribble-textarea {
+    width: 100%; /* Make sure it takes full width of container */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+/* Fix for vertical text in collapsed column */
+.column-collapsed .column-title {
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: auto;
+    padding: 10px 0;
+    white-space: nowrap;
+}
+
+/* Make sure collapsed columns hide their content */
+.column-collapsed .cards-container {
+    display: none !important;
+}
+
+/* Force strong specificity to ensure collapse works */
+.kanban-board .kanban-column.column-collapsed {
+    width: 50px !important;
+    min-width: 50px !important;
+    flex: 0 0 50px !important;
+}
+
+.column-collapsed .column-actions {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.column-collapsed .column-actions button {
+    margin-bottom: 5px;
+    display: block; /* Ensure buttons are visible */
+}
+
+/* Specifically target the chevron icon to ensure it's visible and correctly oriented */
+.column-collapsed .column-actions .bi-chevron-right {
+    display: inline-block;
+    visibility: visible;
+}
+
+/* Make sure the button is visible in collapsed state */
+.column-collapsed .column-actions button[title*="Expand"] {
+    display: block !important;
+    visibility: visible !important;
+}
