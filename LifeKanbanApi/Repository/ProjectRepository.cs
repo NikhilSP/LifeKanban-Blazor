@@ -429,6 +429,16 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         if (task is not null)
         {
             subtask.ProjectTaskId = taskId;
+        
+            // Set position if not already set
+            if (subtask.Position <= 0)
+            {
+                var maxPosition = task.SubTasks.Any() 
+                    ? task.SubTasks.Max(s => s.Position) 
+                    : 0;
+                subtask.Position = maxPosition + 10;
+            }
+        
             task.SubTasks.Add(subtask);
             projectDbContext.SubTasks.Add(subtask);
             await projectDbContext.SaveChangesAsync(cancellationToken);

@@ -27,7 +27,8 @@ namespace LifeKanbanApi.Config;
             TypeAdapterConfig<SubTask, SubTaskDto>.NewConfig()
                 .Map(dest => dest.Id, src => src.Id)
                 .Map(dest => dest.Title, src => src.Title)
-                .Map(dest => dest.IsCompleted, src => src.IsCompleted);
+                .Map(dest => dest.IsCompleted, src => src.IsCompleted)
+                .Map(dest => dest.Position, src => src.Position);
             
             TypeAdapterConfig<QuickTodo, QuickTodoDto>.NewConfig()
                 .Map(dest => dest.Id, src => src.Id)

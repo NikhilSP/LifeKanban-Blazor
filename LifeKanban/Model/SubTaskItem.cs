@@ -11,4 +11,5 @@ public class SubTaskItem
     public string title { get; set; } = string.Empty;
     
     public bool isCompleted { get; set; }
+    public int position { get; set; } = 0;
 }

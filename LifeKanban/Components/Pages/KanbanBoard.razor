@@ -128,7 +128,7 @@
                             @if (task.Task.subtasks.Any())
                             {
                                 <div class="subtasks-list">
-                                    @foreach (var subtask in task.Task.subtasks)
+                                    @foreach (var subtask in task.Task.subtasks.OrderBy(s => s.position))
                                     {
                                         <div class="subtask-item">
                                             <div class="form-check">

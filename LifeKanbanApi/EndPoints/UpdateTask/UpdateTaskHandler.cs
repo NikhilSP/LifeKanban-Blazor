@@ -40,10 +40,19 @@ public class UpdateTaskHandler(ProjectRepository projectRepository)
         foreach (var subtask in request.Task.SubTasks)
         {
             var existingSubtask = existingTask.SubTasks.FirstOrDefault(s => s.Id == subtask.Id);
-            
+    
             if (existingSubtask == null)
             {
-                // This is a new subtask
+                // This is a new subtask - calculate position if not provided
+                if (subtask.Position <= 0)
+                {
+                    // Set position to max + 10
+                    var maxPosition = existingTask.SubTasks.Any() 
+                        ? existingTask.SubTasks.Max(s => s.Position) 
+                        : 0;
+                    subtask.Position = maxPosition + 10;
+                }
+        
                 await projectRepository.AddSubTask(subtask, request.Task.Id, cancellationToken);
             }
             else
@@ -51,6 +60,7 @@ public class UpdateTaskHandler(ProjectRepository projectRepository)
                 // Update existing subtask
                 existingSubtask.Title = subtask.Title;
                 existingSubtask.IsCompleted = subtask.IsCompleted;
+                existingSubtask.Position = subtask.Position;
                 await projectRepository.UpdateSubTask(existingSubtask, cancellationToken);
             }
         }

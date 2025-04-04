@@ -21,41 +21,58 @@
 </div>
 
 <div class="kanban-board">
-    @foreach (var column in _dashboardColumns.Where(c => c.IsVisible).OrderBy(c => c.Order))
+@foreach (var column in _dashboardColumns.Where(c => c.IsVisible).OrderBy(c => c.Order))
+{
+    @if (column.Id == "life-months")
     {
-        @if (column.Id == "life-months")
-        {
-            <div class="kanban-column @(_isLifeColumnCollapsed ? "column-collapsed" : "")" data-column-id="life-months">
-                <div class="column-header" style="border-top: 4px solid #6f42c1;">
-                    <div class="column-title">
-                        Life in Months
-                    </div>
-                    <div class="column-actions">
-                        <button type="button" @onclick="ToggleLifeColumn" title="@(_isLifeColumnCollapsed ? "Expand" : "Collapse")">
-                            <span class="bi @(_isLifeColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
-                        </button>
-                        <button type="button" @onclick="OpenLifeSettings">
-                            <span class="bi bi-gear"></span>
-                        </button>
-                    </div>
+        <div class="kanban-column @(_isLifeColumnCollapsed ? "column-collapsed" : "")" data-column-id="life-months">
+            <div class="column-header" style="border-top: 4px solid #6f42c1;">
+                <div class="column-title">
+                    Life Visualization
                 </div>
-                <div class="cards-container">
-                    @if (_showLifeSettings)
-                    {
-                        <div class="life-settings-card">
-                            <div class="card-title">Life Settings</div>
-                            <div class="mb-3">
-                                <label for="birthDate" class="form-label">Birth Date</label>
-                                <input type="date" class="form-control" id="birthDate" @bind="_birthDate"/>
-                            </div>
-                            <div class="mb-3">
-                                <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
-                                <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120"/>
-                            </div>
-                            <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
+                <div class="column-actions">
+                    <button type="button" @onclick="ToggleLifeColumn" title="@(_isLifeColumnCollapsed ? "Expand" : "Collapse")">
+                        <span class="bi @(_isLifeColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                    </button>
+                    <button type="button" @onclick="OpenLifeSettings">
+                        <span class="bi bi-gear"></span>
+                    </button>
+                </div>
+            </div>
+            <div class="cards-container">
+                @if (_showLifeSettings)
+                {
+                    <div class="life-settings-card">
+                        <div class="card-title">Life Settings</div>
+                        <div class="mb-3">
+                            <label for="birthDate" class="form-label">Birth Date</label>
+                            <input type="date" class="form-control" id="birthDate" @bind="_birthDate"/>
                         </div>
-                    }
-                    else
+                        <div class="mb-3">
+                            <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
+                            <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120"/>
+                        </div>
+                        <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
+                    </div>
+                }
+                else
+                {
+                    <div class="view-toggle-container mb-3">
+                        <div class="btn-group">
+                            <button type="button"
+                                    class="btn @(_lifeViewType == LifeViewType.Months ? "btn-primary" : "btn-outline-secondary")"
+                                    @onclick="() => SwitchLifeView(LifeViewType.Months)">
+                                Life in Months
+                            </button>
+                            <button type="button"
+                                    class="btn @(_lifeViewType == LifeViewType.WeeksInYear ? "btn-primary" : "btn-outline-secondary")"
+                                    @onclick="() => SwitchLifeView(LifeViewType.WeeksInYear)">
+                                Weeks in Year
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (_lifeViewType == LifeViewType.Months)
                     {
                         <div class="life-months-chart">
                             <p class="text-center mb-3">
@@ -74,190 +91,262 @@
                             </div>
                         </div>
                     }
+                    else
+                    {
+                        <div class="weeks-in-year-chart">
+                            <p class="text-center mb-3">
+                                @(_weeksLeftInYear) of 52 weeks left in @DateTime.Now.Year
+                            </p>
+                            <div class="weeks-container">
+                                @for (int i = 0; i < 52; i++)
+                                {
+                                    bool isPast = i < _currentWeekOfYear;
+                                    bool isCurrent = i == _currentWeekOfYear;
+
+                                    <div class="week-square @(isPast ? "past-week" : "") @(isCurrent ? "current-week" : "")"
+                                         title="Week @(i + 1) of 52">
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+    else if (column.Id == "scribble")
+    {
+        <div class="kanban-column @(_isScribbleColumnCollapsed ? "column-collapsed" : "")" data-column-id="scribble">
+            <div class="column-header" style="border-top: 4px solid #5cb85c;">
+                <div class="column-title">
+                    Scribble
+                </div>
+                <div class="column-actions">
+                    <button type="button" @onclick="ToggleScribbleColumn" title="@(_isScribbleColumnCollapsed ? "Expand" : "Collapse")">
+                        <span class="bi @(_isScribbleColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                    </button>
                 </div>
             </div>
-        }
-        else if (column.Id == "scribble")
-        {
-            <div class="kanban-column @(_isScribbleColumnCollapsed ? "column-collapsed" : "")" data-column-id="scribble">
-                <div class="column-header" style="border-top: 4px solid #5cb85c;">
-                    <div class="column-title">
-                        Scribble
-                    </div>
-                    <div class="column-actions">
-                        <button type="button" @onclick="ToggleScribbleColumn" title="@(_isScribbleColumnCollapsed ? "Expand" : "Collapse")">
-                            <span class="bi @(_isScribbleColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
-                        </button>
-                    </div>
-                </div>
-                <div class="cards-container">
-                    <div class="scribble-container">
-                        <textarea
+            <div class="cards-container">
+                <div class="scribble-container">
+                    <textarea
                         class="scribble-textarea"
                         placeholder="Type your thoughts here..."
                         @bind="_scribbleText"
                         @bind:event="oninput"
                         @onblur="SaveScribble">
                     </textarea>
-                        @if (_showScribbleSaved)
+                    @if (_showScribbleSaved)
+                    {
+                        <div class="save-indicator">
+                            <span class="bi bi-check-circle"></span> Saved
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else if (column.Id == "quick-todos")
+    {
+        <div class="kanban-column">
+            <div class="column-header" style="border-top: 4px solid #0066cc;">
+                <div class="column-title">
+                    Quick To-Dos
+                    <div class="column-count">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                            <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                        </svg>
+                        @_quickTodos.Count
+                    </div>
+                </div>
+            </div>
+            <div class="cards-container">
+                <div class="add-todo-container">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center flex-grow-1">
+                            <div class="form-check-input me-2 placeholder-checkbox"></div>
+                            <input type="text" class="todo-input"
+                                   placeholder="Click here to add new to-do..."
+                                   @bind="_newTodoTitle"
+                                   @onkeydown="HandleNewTodoKeyDown"/>
+                        </div>
+                        <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
+                            <span class="bi bi-plus"></span>
+                        </button>
+                    </div>
+                </div>
+
+                @{
+                    // Group non-completed todos by date
+                    var incompleteTodosByDate = _quickTodos
+                        .Where(t => !t.IsCompleted)
+                        .GroupBy(t => t.DateCreated.Date)
+                        .OrderByDescending(g => g.Key); // Newest date first
+
+                    // Get completed todos
+                    var completedTodos = _quickTodos
+                        .Where(t => t.IsCompleted)
+                        .OrderByDescending(t => t.DateCompleted);
+                }
+
+                @* Display non-completed todos grouped by date *@
+                @foreach (var dateGroup in incompleteTodosByDate)
+                {
+                    <div class="date-group">
+                        <div class="date-header">
+                            @if (dateGroup.Key.Date == DateTime.Today)
+                            {
+                                <span>Today</span>
+                            }
+                            else if (dateGroup.Key.Date == DateTime.Today.AddDays(-1))
+                            {
+                                <span>Yesterday</span>
+                            }
+                            else
+                            {
+                                <span>@dateGroup.Key.ToString("MMMM d")</span>
+                            }
+                        </div>
+
+                        @foreach (var todo in dateGroup.OrderByDescending(t => t.DateCreated))
                         {
-                            <div class="save-indicator">
-                                <span class="bi bi-check-circle"></span> Saved
+                            <div class="todo-item" @key="todo.Id">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <input type="checkbox" class="form-check-input me-2"
+                                               checked="@todo.IsCompleted"
+                                               @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
+                                        <input type="text" class="todo-input"
+                                               value="@todo.Title"
+                                               @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                                               @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                                    </div>
+                                    <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                                        <span class="bi bi-trash"></span>
+                                    </button>
+                                </div>
                             </div>
                         }
                     </div>
-                </div>
-            </div>
-        }
-        else if (column.Id == "quick-todos")
-        {
-            <div class="kanban-column">
-                <div class="column-header" style="border-top: 4px solid #0066cc;">
-                    <div class="column-title">
-                        Quick To-Dos
-                        <div class="column-count">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
-                            </svg>
-                            @_quickTodos.Count
+                }
+
+                @* Display completed todos section if there are any *@
+                @if (completedTodos.Any())
+                {
+                    <div class="date-group">
+                        <div class="date-header completed-header">
+                            <span>Completed</span>
                         </div>
-                    </div>
-                </div>
-                <div class="cards-container">
-                    <div class="add-todo-container">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center flex-grow-1">
-                                <div class="form-check-input me-2 placeholder-checkbox"></div>
-                                <input type="text" class="todo-input"
-                                       placeholder="Click here to add new to-do..."
-                                       @bind="_newTodoTitle"
-                                       @onkeydown="HandleNewTodoKeyDown"/>
-                            </div>
-                            <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
-                                <span class="bi bi-plus"></span>
-                            </button>
-                        </div>
-                    </div>
 
-                    @{
-                        var incompleteTodos = _quickTodos
-                            .Where(t => !t.IsCompleted)
-                            .OrderBy(t => t.DateCreated);
-
-                        var completedTodos = _quickTodos
-                            .Where(t => t.IsCompleted)
-                            .OrderByDescending(t => t.DateCompleted);
-
-                        var sortedTodos = incompleteTodos.Concat(completedTodos);
-                    }
-
-                    @foreach (var todo in sortedTodos)
-                    {
-                        <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div class="d-flex align-items-center flex-grow-1">
-                                    <input type="checkbox" class="form-check-input me-2"
-                                           checked="@todo.IsCompleted"
-                                           @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
-                                    <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")"
-                                           value="@todo.Title"
-                                           @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
-                                           @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                        @foreach (var todo in completedTodos)
+                        {
+                            <div class="todo-item completed-todo" @key="todo.Id">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center flex-grow-1">
+                                        <input type="checkbox" class="form-check-input me-2"
+                                               checked="@todo.IsCompleted"
+                                               @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
+                                        <input type="text" class="todo-input completed-input"
+                                               value="@todo.Title"
+                                               @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                                               @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                                    </div>
+                                    <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                                        <span class="bi bi-trash"></span>
+                                    </button>
                                 </div>
-                                <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
-                                    <span class="bi bi-trash"></span>
-                                </button>
                             </div>
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+                }
             </div>
-        }
-        else if (column.Id == "in-progress")
-        {
-            <div class="kanban-column column-inprogress">
-                <div class="column-header">
-                    <div class="column-title">
-                        In Progress
-                        <div class="column-count">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
-                            </svg>
-                            @_inProgressTasks.Count
-                        </div>
+        </div>
+    }
+    else if (column.Id == "in-progress")
+    {
+        <div class="kanban-column column-inprogress">
+            <div class="column-header">
+                <div class="column-title">
+                    In Progress
+                    <div class="column-count">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                            <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                        </svg>
+                        @_inProgressTasks.Count
                     </div>
                 </div>
-                <div class="cards-container">
-                    @foreach (var task in _inProgressTasks)
-                    {
-                        <div class="kanban-card">
-                            <div class="card-title">@task.Task.title</div>
+            </div>
+            <div class="cards-container">
+                @foreach (var task in _inProgressTasks)
+                {
+                    <div class="kanban-card">
+                        <div class="card-title">@task.Task.title</div>
 
-                            @if (!string.IsNullOrEmpty(task.Task.description))
-                            {
-                                <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
-                            }
+                        @if (!string.IsNullOrEmpty(task.Task.description))
+                        {
+                            <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
+                        }
 
-                            @if (task.Task.subtasks.Any())
-                            {
-                                <div class="subtasks-list">
-                                    @foreach (var subtask in task.Task.subtasks)
-                                    {
-                                        <div class="subtask-item">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
-                                                       @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)"/>
-                                                <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
-                                                    @subtask.title
-                                                </label>
-                                            </div>
+                        @if (task.Task.subtasks.Any())
+                        {
+                            <div class="subtasks-list">
+                                @foreach (var subtask in task.Task.subtasks.OrderBy(s => s.position))
+                                {
+                                    <div class="subtask-item">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
+                                                   @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)"/>
+                                            <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
+                                                @subtask.title
+                                            </label>
                                         </div>
-                                    }
-                                </div>
-                            }
+                                    </div>
+                                }
+                            </div>
+                        }
 
-                            <div class="card-footer">
+                        <div class="card-footer">
+                            <div class="card-metadata">
                                 <div class="card-metadata">
-                                    <div class="card-metadata">
-                                        @if (task.Task.milestone != null)
-                                        {
-                                            <div class="card-labels bottom-labels">
-                                                <span class="card-label" style="background-color: var(--column-ready-color);">
-                                                    @task.Task.milestone.name
-                                                </span>
-                                            </div>
-                                        }
+                                    @if (task.Task.milestone != null)
+                                    {
                                         <div class="card-labels bottom-labels">
                                             <span class="card-label" style="background-color: var(--column-ready-color);">
-                                                @task.ProjectName
+                                                @task.Task.milestone.name
                                             </span>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="card-actions">
-                                    <div class="dropdown">
-                                        <button type="button" class="card-btn" id="dropdownMenu-@task.Task.id" data-bs-toggle="dropdown" aria-expanded="false">
-                                            <span class="bi bi-three-dots"></span>
-                                        </button>
+                                    }
+                                    <div class="card-labels bottom-labels">
+                                        <span class="card-label" style="background-color: var(--column-ready-color);">
+                                            @task.ProjectName
+                                        </span>
                                     </div>
                                 </div>
                             </div>
+                            <div class="card-actions">
+                                <div class="dropdown">
+                                    <button type="button" class="card-btn" id="dropdownMenu-@task.Task.id" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="bi bi-three-dots"></span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
             </div>
-        }
+        </div>
     }
+}
 </div>
 
 @if (_showColumnManagementModal)
 {
-    <ColumnManagementModal 
-        Columns="@_dashboardColumns" 
-        OnClose="CloseColumnManagement" 
-        OnSave="SaveColumnSettings" />
+    <ColumnManagementModal
+        Columns="@_dashboardColumns"
+        OnClose="CloseColumnManagement"
+        OnSave="SaveColumnSettings"/>
 }
 
 <style>
@@ -432,6 +521,57 @@
     .todo-item, .add-todo-container, .todo-add-btn, .todo-delete-btn {
         transition: all 0.2s ease;
     }
+
+    .life-months-chart, .weeks-in-year-chart {
+        background-color: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        border-radius: 8px;
+        padding: 16px;
+    }
+
+    /* Weeks in year styling */
+    .weeks-container {
+        display: grid;
+        grid-template-columns: repeat(13, 1fr);
+        gap: 4px;
+    }
+
+    .week-square {
+        width: 16px;
+        height: 16px;
+        background-color: var(--dark-border);
+        border-radius: 2px;
+    }
+
+    .past-week {
+        background-color: #5cb85c; /* Green, different from the purple used for months */
+    }
+
+    .current-week {
+        background-color: #fd7e14;
+        animation: pulse 2s infinite alternate;
+    }
+
+    @@keyframes pulse {
+        0% { opacity: 0.7; }
+        100% { opacity: 1; }
+    }
+
+    /* View toggle styling */
+    .view-toggle-container {
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-group {
+        width: 100%;
+    }
+
+    .btn-group .btn {
+        flex: 1;
+        font-size: 12px;
+        padding: 4px 8px;
+    }
 </style>
 
 @code {
@@ -465,6 +605,19 @@
     private string _scribbleText = string.Empty;
     private bool _showScribbleSaved = false;
     private Timer? _saveIndicatorTimer;
+
+    private enum LifeViewType
+    {
+        Months,
+        WeeksInYear
+    }
+
+    // Current view type
+    private LifeViewType _lifeViewType = LifeViewType.Months;
+
+    // Week calculations 
+    private int _currentWeekOfYear = 0;
+    private int _weeksLeftInYear = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -539,35 +692,6 @@
     private void CloseColumnManagement()
     {
         _showColumnManagementModal = false;
-    }
-
-    private async Task LoadLifeSettings()
-    {
-        try
-        {
-            var birthDateStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeBirthDate");
-            var expectedYearsStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeExpectedYears");
-            var collapsedStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeColumnCollapsed");
-
-            if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out DateTime savedBirthDate))
-            {
-                _birthDate = savedBirthDate;
-            }
-
-            if (!string.IsNullOrEmpty(expectedYearsStr) && int.TryParse(expectedYearsStr, out int savedExpectedYears))
-            {
-                _expectedYears = savedExpectedYears;
-            }
-
-            if (!string.IsNullOrEmpty(collapsedStr) && bool.TryParse(collapsedStr, out bool savedCollapsed))
-            {
-                _isLifeColumnCollapsed = savedCollapsed;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading life settings: {ex.Message}");
-        }
     }
 
     private async Task SaveLifeSettings()
@@ -821,6 +945,70 @@
         catch (Exception ex)
         {
             Console.WriteLine($"Error saving scribble: {ex.Message}");
+        }
+    }
+
+    private async Task SwitchLifeView(LifeViewType viewType)
+    {
+        _lifeViewType = viewType;
+
+        if (viewType == LifeViewType.WeeksInYear)
+        {
+            await CalculateWeeksInYear();
+        }
+
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeViewType", viewType.ToString());
+    }
+
+    // Calculate weeks in current year
+    private Task CalculateWeeksInYear()
+    {
+        var currentDate = DateTime.Now;
+
+        // Calculate current week of year (approximately)
+        _currentWeekOfYear = (int)Math.Floor((currentDate.DayOfYear - 1) / 7.0);
+
+        // Calculate weeks left in year
+        _weeksLeftInYear = 52 - _currentWeekOfYear;
+
+        return Task.CompletedTask;
+    }
+
+    private async Task LoadLifeSettings()
+    {
+        try
+        {
+            var birthDateStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeBirthDate");
+            var expectedYearsStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeExpectedYears");
+            var collapsedStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeColumnCollapsed");
+            var viewTypeStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeViewType");
+
+            if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out DateTime savedBirthDate))
+            {
+                _birthDate = savedBirthDate;
+            }
+
+            if (!string.IsNullOrEmpty(expectedYearsStr) && int.TryParse(expectedYearsStr, out int savedExpectedYears))
+            {
+                _expectedYears = savedExpectedYears;
+            }
+
+            if (!string.IsNullOrEmpty(collapsedStr) && bool.TryParse(collapsedStr, out bool savedCollapsed))
+            {
+                _isLifeColumnCollapsed = savedCollapsed;
+            }
+
+            if (!string.IsNullOrEmpty(viewTypeStr) && Enum.TryParse<LifeViewType>(viewTypeStr, out var savedViewType))
+            {
+                _lifeViewType = savedViewType;
+            }
+
+            // Initialize week calculations
+            await CalculateWeeksInYear();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading life settings: {ex.Message}");
         }
     }
 

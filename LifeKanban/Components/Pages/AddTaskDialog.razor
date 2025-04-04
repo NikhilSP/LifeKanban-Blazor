@@ -43,7 +43,7 @@
                     <div class="mb-3">
                         <label class="form-label">Subtasks</label>
                         <div class="subtasks-container">
-                            @foreach (var subtask in ProjectTaskItem.subtasks)
+                            @foreach (var subtask in ProjectTaskItem.subtasks.OrderBy(s => s.position))
                             {
                                 <div class="subtask-item d-flex align-items-center mb-2">
                                     <div class="form-check d-flex align-items-center flex-grow-1">
@@ -161,11 +161,19 @@
             return;
         }
 
+        // Calculate the next position value (max position + 10)
+        int nextPosition = 10;
+        if (ProjectTaskItem.subtasks.Any())
+        {
+            nextPosition = ProjectTaskItem.subtasks.Max(s => s.position) + 10;
+        }
+
         ProjectTaskItem.subtasks.Add(new SubTaskItem
         {
             id = Guid.NewGuid(),
             title = newSubtaskTitle,
-            isCompleted = false
+            isCompleted = false,
+            position = nextPosition // Assign the calculated position
         });
         newSubtaskTitle = string.Empty;
         StateHasChanged();

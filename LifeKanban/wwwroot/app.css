@@ -1691,4 +1691,48 @@ textarea:focus {
     background-color: #242424;
     border: 1px solid #3A3A3A;
 }
+/* Add these styles to your app.css file */
 
+/* Date grouping styles for Quick Todos */
+.date-group {
+    margin-bottom: 16px;
+}
+
+.date-header {
+    font-size: 12px;
+    color: var(--dark-text-secondary);
+    margin-bottom: 6px;
+    padding-left: 4px;
+    font-weight: 500;
+}
+
+.completed-header {
+    margin-top: 16px;
+    padding-top: 8px;
+    border-top: 1px solid var(--dark-border);
+}
+
+/* For dark theme */
+[data-theme="dark"] .date-header {
+    color: var(--dark-text-secondary);
+}
+
+/* For claude theme */
+[data-theme="claude"] .date-header {
+    color: var(--gl-text-secondary);
+}
+
+/* Enhance todo items for better visual grouping */
+.todo-item {
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.todo-item:hover {
+    background-color: var(--dark-card-hover);
+}
+
+/* Subtle separation between date groups */
+.date-group + .date-group {
+    position: relative;
+}

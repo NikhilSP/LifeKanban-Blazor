@@ -28,7 +28,8 @@ public class AddTaskHandler(ProjectRepository projectRepository)
             SubTasks = new List<SubTask>()
         };
 
-        // Add subtasks if there are any
+        // Add subtasks if there are any, preserving their positions
+        int position = 10;
         foreach (var subtask in request.Task.SubTasks)
         {
             task.SubTasks.Add(new SubTask
@@ -36,8 +37,10 @@ public class AddTaskHandler(ProjectRepository projectRepository)
                 Id = Guid.NewGuid(),
                 Title = subtask.Title,
                 IsCompleted = subtask.IsCompleted,
-                ProjectTaskId = task.Id
+                ProjectTaskId = task.Id,
+                Position = subtask.Position > 0 ? subtask.Position : position
             });
+            position += 10;
         }
 
         var result = await projectRepository.AddTask(task, request.ProjectGuid, cancellationToken);
