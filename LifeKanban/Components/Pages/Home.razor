@@ -11,230 +11,254 @@
 
 <PageTitle>Home</PageTitle>
 
-<div class="dashboard-header">
-    <h1>Welcome to LifeKanban</h1>
+<div class="dashboard-header d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center">
+        <h1>Welcome to LifeKanban</h1>
+        <button type="button" class="btn btn-link ms-2" @onclick="OpenColumnManagement">
+            <span class="bi bi-gear-fill" title="Manage Dashboard"></span>
+        </button>
+    </div>
 </div>
 
 <div class="kanban-board">
-    <!-- New Life in Months Column -->
-    <div class="kanban-column @(_isLifeColumnCollapsed ? "column-collapsed" : "")" data-column-id="life-months">
-        <div class="column-header" style="border-top: 4px solid #6f42c1;">
-            <div class="column-title">
-                Life in Months
-            </div>
-            <div class="column-actions">
-                <button type="button" @onclick="ToggleLifeColumn" title="@(_isLifeColumnCollapsed ? "Expand" : "Collapse")">
-                    <span class="bi @(_isLifeColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
-                </button>
-                <button type="button" @onclick="OpenLifeSettings">
-                    <span class="bi bi-gear"></span>
-                </button>
-            </div>
-        </div>
-        <div class="cards-container">
-            @if (_showLifeSettings)
-            {
-                <div class="life-settings-card">
-                    <div class="card-title">Life Settings</div>
-                    <div class="mb-3">
-                        <label for="birthDate" class="form-label">Birth Date</label>
-                        <input type="date" class="form-control" id="birthDate" @bind="_birthDate"/>
+    @foreach (var column in _dashboardColumns.Where(c => c.IsVisible).OrderBy(c => c.Order))
+    {
+        @if (column.Id == "life-months")
+        {
+            <div class="kanban-column @(_isLifeColumnCollapsed ? "column-collapsed" : "")" data-column-id="life-months">
+                <div class="column-header" style="border-top: 4px solid #6f42c1;">
+                    <div class="column-title">
+                        Life in Months
                     </div>
-                    <div class="mb-3">
-                        <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
-                        <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120"/>
+                    <div class="column-actions">
+                        <button type="button" @onclick="ToggleLifeColumn" title="@(_isLifeColumnCollapsed ? "Expand" : "Collapse")">
+                            <span class="bi @(_isLifeColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                        </button>
+                        <button type="button" @onclick="OpenLifeSettings">
+                            <span class="bi bi-gear"></span>
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
                 </div>
-            }
-            else
-            {
-                <div class="life-months-chart">
-                    <p class="text-center mb-3">
-                        @(_totalMonths-_currentMonth) of @_totalMonths months left (@Math.Round(_percentComplete)% complete)
-                    </p>
-                    <div class="months-container">
-                        @for (int i = 0; i < _totalMonths; i++)
-                        {
-                            bool isPast = i < _currentMonth;
-                            bool isCurrent = i == _currentMonth;
+                <div class="cards-container">
+                    @if (_showLifeSettings)
+                    {
+                        <div class="life-settings-card">
+                            <div class="card-title">Life Settings</div>
+                            <div class="mb-3">
+                                <label for="birthDate" class="form-label">Birth Date</label>
+                                <input type="date" class="form-control" id="birthDate" @bind="_birthDate"/>
+                            </div>
+                            <div class="mb-3">
+                                <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
+                                <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120"/>
+                            </div>
+                            <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="life-months-chart">
+                            <p class="text-center mb-3">
+                                @(_totalMonths - _currentMonth) of @_totalMonths months left (@Math.Round(_percentComplete)% complete)
+                            </p>
+                            <div class="months-container">
+                                @for (int i = 0; i < _totalMonths; i++)
+                                {
+                                    bool isPast = i < _currentMonth;
+                                    bool isCurrent = i == _currentMonth;
 
-                            <div class="month-circle @(isPast ? "past-month" : "") @(isCurrent ? "current-month" : "")"
-                                 title="Month @(i + 1) of @_totalMonths">
+                                    <div class="month-circle @(isPast ? "past-month" : "") @(isCurrent ? "current-month" : "")"
+                                         title="Month @(i + 1) of @_totalMonths">
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (column.Id == "scribble")
+        {
+            <div class="kanban-column @(_isScribbleColumnCollapsed ? "column-collapsed" : "")" data-column-id="scribble">
+                <div class="column-header" style="border-top: 4px solid #5cb85c;">
+                    <div class="column-title">
+                        Scribble
+                    </div>
+                    <div class="column-actions">
+                        <button type="button" @onclick="ToggleScribbleColumn" title="@(_isScribbleColumnCollapsed ? "Expand" : "Collapse")">
+                            <span class="bi @(_isScribbleColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
+                        </button>
+                    </div>
+                </div>
+                <div class="cards-container">
+                    <div class="scribble-container">
+                        <textarea
+                        class="scribble-textarea"
+                        placeholder="Type your thoughts here..."
+                        @bind="_scribbleText"
+                        @bind:event="oninput"
+                        @onblur="SaveScribble">
+                    </textarea>
+                        @if (_showScribbleSaved)
+                        {
+                            <div class="save-indicator">
+                                <span class="bi bi-check-circle"></span> Saved
                             </div>
                         }
                     </div>
                 </div>
-            }
-        </div>
-    </div>
-
-    <div class="kanban-column @(_isScribbleColumnCollapsed ? "column-collapsed" : "")" data-column-id="scribble">
-        <div class="column-header" style="border-top: 4px solid #5cb85c;">
-            <div class="column-title">
-                Scribble
             </div>
-            <div class="column-actions">
-                <button type="button" @onclick="ToggleScribbleColumn" title="@(_isScribbleColumnCollapsed ? "Expand" : "Collapse")">
-                    <span class="bi @(_isScribbleColumnCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
-                </button>
-            </div>
-        </div>
-        <div class="cards-container">
-            <div class="scribble-container">
-            <textarea
-                class="scribble-textarea"
-                placeholder="Type your thoughts here..."
-                @bind="_scribbleText"
-                @bind:event="oninput"
-                @onblur="SaveScribble">
-            </textarea>
-                @if (_showScribbleSaved)
-                {
-                <div class="save-indicator">
-                    <span class="bi bi-check-circle"></span> Saved
-                </div>
-                }
-            </div>
-        </div>
-    </div>
-
-    <div class="kanban-column">
-        <div class="column-header" style="border-top: 4px solid #0066cc;">
-            <div class="column-title">
-                Quick To-Dos
-                <div class="column-count">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                        <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
-                    </svg>
-                    @_quickTodos.Count
-                </div>
-            </div>
-        </div>
-        <div class="cards-container">
-            <div class="add-todo-container">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="d-flex align-items-center flex-grow-1">
-                        <div class="form-check-input me-2 placeholder-checkbox"></div>
-                        <input type="text" class="todo-input"
-                               placeholder="Click here to add new to-do..."
-                               @bind="_newTodoTitle"
-                               @onkeydown="HandleNewTodoKeyDown"/>
-                    </div>
-                    <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
-                        <span class="bi bi-plus"></span>
-                    </button>
-                </div>
-            </div>
-
-            @{
-                var incompleteTodos = _quickTodos
-                    .Where(t => !t.IsCompleted)
-                    .OrderBy(t => t.DateCreated);
-
-                var completedTodos = _quickTodos
-                    .Where(t => t.IsCompleted)
-                    .OrderByDescending(t => t.DateCompleted);
-
-                var sortedTodos = incompleteTodos.Concat(completedTodos);
-            }
-
-            @foreach (var todo in sortedTodos)
-            {
-                <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center flex-grow-1">
-                            <input type="checkbox" class="form-check-input me-2"
-                                   checked="@todo.IsCompleted"
-                                   @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
-                            <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")"
-                                   value="@todo.Title"
-                                   @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
-                                   @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+        }
+        else if (column.Id == "quick-todos")
+        {
+            <div class="kanban-column">
+                <div class="column-header" style="border-top: 4px solid #0066cc;">
+                    <div class="column-title">
+                        Quick To-Dos
+                        <div class="column-count">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                            </svg>
+                            @_quickTodos.Count
                         </div>
-                        <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
-                            <span class="bi bi-trash"></span>
-                        </button>
                     </div>
                 </div>
-            }
-        </div>
-    </div>
-
-    <div class="kanban-column column-inprogress">
-        <div class="column-header">
-            <div class="column-title">
-                In Progress
-                <div class="column-count">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                        <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                        <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
-                    </svg>
-                    @_inProgressTasks.Count
-                </div>
-            </div>
-        </div>
-        <div class="cards-container">
-            @foreach (var task in _inProgressTasks)
-            {
-                <div class="kanban-card">
-                    <div class="card-title">@task.Task.title</div>
-
-                    @if (!string.IsNullOrEmpty(task.Task.description))
-                    {
-                        <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
-                    }
-
-                    @if (task.Task.subtasks.Any())
-                    {
-                        <div class="subtasks-list">
-                            @foreach (var subtask in task.Task.subtasks)
-                            {
-                                <div class="subtask-item">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
-                                               @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)"/>
-                                        <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
-                                            @subtask.title
-                                        </label>
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-
-                    <div class="card-footer">
-                        <div class="card-metadata">
-                            <div class="card-metadata">
-                                @if (task.Task.milestone != null)
-                                {
-                                    <div class="card-labels bottom-labels">
-                                        <span class="card-label" style="background-color: var(--column-ready-color);">
-                                            @task.Task.milestone.name
-                                        </span>
-                                    </div>
-                                }
-                                <div class="card-labels bottom-labels">
-                                    <span class="card-label" style="background-color: var(--column-ready-color);">
-                                        @task.ProjectName
-                                    </span>
-                                </div>
+                <div class="cards-container">
+                    <div class="add-todo-container">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center flex-grow-1">
+                                <div class="form-check-input me-2 placeholder-checkbox"></div>
+                                <input type="text" class="todo-input"
+                                       placeholder="Click here to add new to-do..."
+                                       @bind="_newTodoTitle"
+                                       @onkeydown="HandleNewTodoKeyDown"/>
                             </div>
+                            <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
+                                <span class="bi bi-plus"></span>
+                            </button>
                         </div>
-                        <div class="card-actions">
-                            <div class="dropdown">
-                                <button type="button" class="card-btn" id="dropdownMenu-@task.Task.id" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span class="bi bi-three-dots"></span>
+                    </div>
+
+                    @{
+                        var incompleteTodos = _quickTodos
+                            .Where(t => !t.IsCompleted)
+                            .OrderBy(t => t.DateCreated);
+
+                        var completedTodos = _quickTodos
+                            .Where(t => t.IsCompleted)
+                            .OrderByDescending(t => t.DateCompleted);
+
+                        var sortedTodos = incompleteTodos.Concat(completedTodos);
+                    }
+
+                    @foreach (var todo in sortedTodos)
+                    {
+                        <div class="todo-item @(todo.IsCompleted ? "completed-todo" : "")" @key="todo.Id">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center flex-grow-1">
+                                    <input type="checkbox" class="form-check-input me-2"
+                                           checked="@todo.IsCompleted"
+                                           @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
+                                    <input type="text" class="todo-input @(todo.IsCompleted ? "completed-input" : "")"
+                                           value="@todo.Title"
+                                           @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                                           @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                                </div>
+                                <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                                    <span class="bi bi-trash"></span>
                                 </button>
                             </div>
                         </div>
+                    }
+                </div>
+            </div>
+        }
+        else if (column.Id == "in-progress")
+        {
+            <div class="kanban-column column-inprogress">
+                <div class="column-header">
+                    <div class="column-title">
+                        In Progress
+                        <div class="column-count">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                                <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                            </svg>
+                            @_inProgressTasks.Count
+                        </div>
                     </div>
                 </div>
-            }
-        </div>
-    </div>
+                <div class="cards-container">
+                    @foreach (var task in _inProgressTasks)
+                    {
+                        <div class="kanban-card">
+                            <div class="card-title">@task.Task.title</div>
+
+                            @if (!string.IsNullOrEmpty(task.Task.description))
+                            {
+                                <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
+                            }
+
+                            @if (task.Task.subtasks.Any())
+                            {
+                                <div class="subtasks-list">
+                                    @foreach (var subtask in task.Task.subtasks)
+                                    {
+                                        <div class="subtask-item">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
+                                                       @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)"/>
+                                                <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
+                                                    @subtask.title
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <div class="card-footer">
+                                <div class="card-metadata">
+                                    <div class="card-metadata">
+                                        @if (task.Task.milestone != null)
+                                        {
+                                            <div class="card-labels bottom-labels">
+                                                <span class="card-label" style="background-color: var(--column-ready-color);">
+                                                    @task.Task.milestone.name
+                                                </span>
+                                            </div>
+                                        }
+                                        <div class="card-labels bottom-labels">
+                                            <span class="card-label" style="background-color: var(--column-ready-color);">
+                                                @task.ProjectName
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-actions">
+                                    <div class="dropdown">
+                                        <button type="button" class="card-btn" id="dropdownMenu-@task.Task.id" data-bs-toggle="dropdown" aria-expanded="false">
+                                            <span class="bi bi-three-dots"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
 </div>
+
+@if (_showColumnManagementModal)
+{
+    <ColumnManagementModal 
+        Columns="@_dashboardColumns" 
+        OnClose="CloseColumnManagement" 
+        OnSave="SaveColumnSettings" />
+}
 
 <style>
     /* Life in Months styles */
@@ -411,11 +435,24 @@
 </style>
 
 @code {
+
+
+    public class DashboardColumn
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public bool IsVisible { get; set; } = true;
+        public int Order { get; set; }
+    }
+
+    private List<DashboardColumn> _dashboardColumns = new();
+    private bool _showColumnManagementModal = false;
+
     private List<InProgressTaskViewModel> _inProgressTasks = [];
     private List<QuickTodoItem> _quickTodos = [];
     private string _newTodoTitle = string.Empty;
 
-// Life in Months properties
+    // Life in Months properties
     private bool _isLifeColumnCollapsed = false;
     private bool _showLifeSettings = false;
     private DateTime _birthDate = DateTime.Now.AddYears(-30); // Default to 30 years ago
@@ -423,23 +460,85 @@
     private int _totalMonths = 720; // Default (60 years * 12 months)
     private int _currentMonth = 360; // Default to halfway through
     private double _percentComplete = 50; // Default to 50%
-    
+
     private bool _isScribbleColumnCollapsed = false;
     private string _scribbleText = string.Empty;
     private bool _showScribbleSaved = false;
     private Timer? _saveIndicatorTimer;
 
-
     protected override async Task OnInitializedAsync()
     {
+        // Initialize the dashboard columns
+        _dashboardColumns = new List<DashboardColumn>
+        {
+            new() { Id = "life-months", Title = "Life in Months", Order = 0, IsVisible = true },
+            new() { Id = "scribble", Title = "Scribble", Order = 1, IsVisible = true },
+            new() { Id = "quick-todos", Title = "Quick To-Dos", Order = 2, IsVisible = true },
+            new() { Id = "in-progress", Title = "In Progress", Order = 3, IsVisible = true }
+        };
+
+        // Load column settings from local storage
+        await LoadColumnSettings();
+
         await LoadInProgressTasks();
         await LoadQuickTodos();
         await LoadScribble();
         ProjectStateService.ProjectsChanged += OnProjectsChanged;
 
-// Load life settings from local storage
+        // Load life settings from local storage
         await LoadLifeSettings();
         await CalculateLifeMonths();
+    }
+
+    private async Task LoadColumnSettings()
+    {
+        try
+        {
+            var columnSettings = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "dashboardColumns");
+            if (!string.IsNullOrEmpty(columnSettings))
+            {
+                _dashboardColumns = System.Text.Json.JsonSerializer.Deserialize<List<DashboardColumn>>(columnSettings) ?? _dashboardColumns;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading column settings: {ex.Message}");
+        }
+    }
+
+    private async Task SaveColumnSettings(List<DashboardColumn> columns)
+    {
+        _dashboardColumns = columns;
+
+        // Update order based on position in list (only for visible columns)
+        var visibleColumns = _dashboardColumns.Where(c => c.IsVisible).ToList();
+        for (int i = 0; i < visibleColumns.Count; i++)
+        {
+            visibleColumns[i].Order = i;
+        }
+
+        try
+        {
+            var columnSettings = System.Text.Json.JsonSerializer.Serialize(_dashboardColumns);
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "dashboardColumns", columnSettings);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving column settings: {ex.Message}");
+        }
+
+        _showColumnManagementModal = false;
+        StateHasChanged();
+    }
+
+    private void OpenColumnManagement()
+    {
+        _showColumnManagementModal = true;
+    }
+
+    private void CloseColumnManagement()
+    {
+        _showColumnManagementModal = false;
     }
 
     private async Task LoadLifeSettings()
@@ -667,7 +766,7 @@
         ProjectStateService.ProjectsChanged -= OnProjectsChanged;
         _saveIndicatorTimer?.Dispose();
     }
-    
+
     private async Task ToggleScribbleColumn()
     {
         _isScribbleColumnCollapsed = !_isScribbleColumnCollapsed;
@@ -680,12 +779,12 @@
         {
             var savedText = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "scribbleText");
             var collapsedState = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "scribbleColumnCollapsed");
-        
+
             if (!string.IsNullOrEmpty(savedText))
             {
                 _scribbleText = savedText;
             }
-        
+
             if (!string.IsNullOrEmpty(collapsedState) && bool.TryParse(collapsedState, out bool isCollapsed))
             {
                 _isScribbleColumnCollapsed = isCollapsed;
@@ -702,13 +801,13 @@
         try
         {
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "scribbleText", _scribbleText);
-        
+
             // Show saved indicator
             _showScribbleSaved = true;
-        
+
             // Clear any existing timer
             _saveIndicatorTimer?.Dispose();
-        
+
             // Hide indicator after 2 seconds
             _saveIndicatorTimer = new System.Threading.Timer(async _ =>
             {

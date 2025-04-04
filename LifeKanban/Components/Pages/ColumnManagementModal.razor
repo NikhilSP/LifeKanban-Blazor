@@ -1,0 +1,193 @@
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="modal fade show gitlab-modal" id="columnManagementModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Manage Dashboard Columns</h4>
+                <button type="button" class="close" @onclick="OnCancel">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Customize your dashboard by showing/hiding columns and changing their order.</p>
+                
+                <div class="column-management-list">
+                    @foreach (var column in Columns)
+                    {
+                        <div class="column-management-item @(column.IsVisible ? "draggable-item" : "")" 
+                             draggable="@column.IsVisible.ToString().ToLower()" 
+                             data-id="@column.Id" 
+                             @key="column.Id">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    @if (column.IsVisible)
+                                    {
+                                        <span class="column-drag-handle me-2">
+                                            <i class="bi bi-grip-vertical"></i>
+                                        </span>
+                                    }
+                                    <span class="column-title">@column.Title</span>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="column-@column.Id" 
+                                           checked="@column.IsVisible" 
+                                           @onchange="e => ToggleColumnVisibility(column.Id, e.Value is bool value && value)" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" @onclick="OnCancel">Cancel</button>
+                <button type="button" class="btn btn-primary" @onclick="SaveChanges">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .column-management-list {
+        margin-bottom: 1rem;
+    }
+    
+    .column-management-item {
+        padding: 10px;
+        margin-bottom: 8px;
+        background-color: var(--dark-card-bg);
+        border: 1px solid var(--dark-border);
+        border-radius: 4px;
+        cursor: default;
+    }
+    
+    .column-management-item.draggable-item {
+        cursor: grab;
+    }
+    
+    .column-management-item.draggable-item:hover {
+        background-color: var(--dark-card-hover);
+    }
+    
+    .column-drag-handle {
+        cursor: grab;
+        color: var(--dark-text-secondary);
+    }
+    
+    .column-title {
+        font-weight: 500;
+    }
+    
+    .column-management-item.dragging {
+        opacity: 0.6;
+    }
+    
+    .column-management-item.drag-over {
+        border: 2px dashed rgba(255, 255, 255, 0.5);
+        padding: 8px;
+    }
+</style>
+
+@code {
+    [Parameter] public List<Home.DashboardColumn> Columns { get; set; } = new();
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<List<Home.DashboardColumn>> OnSave { get; set; }
+    
+    private DotNetObjectReference<ColumnManagementModal>? _dotNetRef;
+    private IJSObjectReference? _dragDropModule;
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                _dotNetRef = DotNetObjectReference.Create(this);
+                await JSRuntime.InvokeVoidAsync("setupColumnDrag", _dotNetRef);
+                
+                Console.WriteLine("Column drag and drop initialized");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error setting up drag and drop: {ex.Message}");
+            }
+        }
+    }
+
+    private void ToggleColumnVisibility(string id, bool isVisible)
+    {
+        Console.WriteLine($"Toggling visibility of column {id} to {isVisible}");
+        
+        var column = Columns.FirstOrDefault(c => c.Id == id);
+        if (column != null)
+        {
+            column.IsVisible = isVisible;
+            StateHasChanged();
+        }
+    }
+    
+    [JSInvokable]
+    public void UpdateColumnOrder(string sourceId, int targetIndex)
+    {
+        Console.WriteLine($"UpdateColumnOrder called with sourceId: {sourceId}, targetIndex: {targetIndex}");
+        
+        var sourceColumn = Columns.FirstOrDefault(c => c.Id == sourceId);
+        if (sourceColumn == null || !sourceColumn.IsVisible)
+        {
+            Console.WriteLine("Source column not found or not visible");
+            return;
+        }
+        
+        // Get only visible columns for reordering
+        var visibleColumns = Columns.Where(c => c.IsVisible).ToList();
+        var currentIndex = visibleColumns.IndexOf(sourceColumn);
+        
+        Console.WriteLine($"Current index: {currentIndex}, Target index: {targetIndex}");
+        
+        if (currentIndex == targetIndex)
+        {
+            Console.WriteLine("No change in position needed");
+            return;
+        }
+        
+        // Remove and insert to reorder the list
+        visibleColumns.Remove(sourceColumn);
+        
+        // Adjust target index
+        if (currentIndex < targetIndex)
+            targetIndex--;
+            
+        if (targetIndex >= visibleColumns.Count)
+            visibleColumns.Add(sourceColumn);
+        else
+            visibleColumns.Insert(targetIndex, sourceColumn);
+            
+        // Update the original list
+        var updatedColumns = new List<Home.DashboardColumn>();
+        
+        // Add invisible columns first
+        updatedColumns.AddRange(Columns.Where(c => !c.IsVisible));
+        
+        // Add visible columns in the new order
+        updatedColumns.AddRange(visibleColumns);
+        
+        Columns = updatedColumns;
+        
+        Console.WriteLine("Column order updated");
+        StateHasChanged();
+    }
+    
+    private Task OnCancel()
+    {
+        return OnClose.InvokeAsync();
+    }
+    
+    private async Task SaveChanges()
+    {
+        await OnSave.InvokeAsync(Columns);
+    }
+    
+    public void Dispose()
+    {
+        _dotNetRef?.Dispose();
+    }
+}
