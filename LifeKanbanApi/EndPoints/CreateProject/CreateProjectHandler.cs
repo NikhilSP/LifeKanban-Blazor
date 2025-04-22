@@ -21,6 +21,7 @@ public class CreateProjectHandler(ProjectRepository projectRepository)
         {
             Id = Guid.NewGuid(),
             Name = request.Project.Name,
+            Description = request.Project.Description, // Add this line to include the description
             Position = maxPosition + 10, // Position it after the last project
             Tasks = [],
             Milestones = [],
