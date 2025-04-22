@@ -743,7 +743,7 @@
         _showLifeSettings = true;
     }
 
-    private async void OnProjectsChanged()
+    private async Task OnProjectsChanged()
     {
         await LoadInProgressTasks();
         StateHasChanged();
@@ -851,7 +851,7 @@
         await QuickTodosClient.UpdateQuickTodo(todo);
     }
 
-    private async void HandleNewTodoKeyDown(KeyboardEventArgs e)
+    private async Task HandleNewTodoKeyDown(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" || e.Code == "NumpadEnter")
         {
@@ -859,7 +859,7 @@
         }
     }
 
-    private async void HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
+    private async Task HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
     {
         if ((e.Code == "Enter" || e.Code == "NumpadEnter") && string.IsNullOrWhiteSpace(todo.Title))
         {

@@ -588,7 +588,7 @@ This action cannot be undone."
         await RefreshTasks();
     }
 
-    private async void DeleteTask(Guid taskId)
+    private async Task DeleteTask(Guid taskId)
     {
         var res = await Client.DeleteTask(taskId);
         if (res)
@@ -621,7 +621,7 @@ This action cannot be undone."
         await RefreshMilestones();
     }
 
-    public async void HandelOnEditProject(ProjectItem item)
+    public async Task HandelOnEditProject(ProjectItem item)
     {
         await RefreshTasks();
         await RefreshMilestones();
