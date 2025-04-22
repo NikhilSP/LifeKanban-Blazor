@@ -8,14 +8,22 @@
 @inject NavigationManager NavigationManager
 @inject ProjectStateService ProjectStateService
 
-<div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
-    <h3 class="me-2 mb-0">@_projectItem.name</h3>
-    <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="EditProjectDialogOnClick">
-        <span class="bi bi-pencil"></span>
-    </button>
-    <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="ConfirmDeleteProject">
-        <span class="bi bi-trash"></span>
-    </button>
+<div class="project-header mb-3">
+    <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
+        <h3 class="me-2 mb-0">@_projectItem.name</h3>
+        <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="EditProjectDialogOnClick">
+            <span class="bi bi-pencil"></span>
+        </button>
+        <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="ConfirmDeleteProject">
+            <span class="bi bi-trash"></span>
+        </button>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(_projectItem.description))
+    {
+        <div class="project-description mt-2 mb-3">
+            @_projectItem.description
+        </div>
+    }
 </div>
 
 <div class="kanban-board">
@@ -42,7 +50,7 @@
                     <button type="button" @onclick="() => ToggleColumnCollapse(column.Id)" title="@(isCollapsed ? "Expand" : "Collapse")">
                         <span class="bi @(isCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
                     </button>
-                    
+
                     @if (column.Id == 0)
                     {
                         <button type="button" @onclick="AddMilestoneDialogOpen">
@@ -173,6 +181,19 @@
     }
 </div>
 
+<style>
+    .project-header {
+        padding: 0 12px;
+    }
+
+    .project-description {
+        color: var(--dark-text-secondary);
+        font-size: 14px;
+        max-width: 800px;
+        white-space: pre-line;
+    }
+</style>
+
 @if (AddTaskDialogFlag)
 {
     <AddTaskDialog ProjectItem="@_projectItem"
@@ -287,9 +308,9 @@ This action cannot be undone."
         {
             _collapsedColumns[columnId] = false;
         }
-        
+
         _collapsedColumns[columnId] = !_collapsedColumns[columnId];
-        
+
         var key = $"column_{columnId}_collapsed";
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", key, _collapsedColumns[columnId].ToString().ToLower());
     }
@@ -718,4 +739,5 @@ This action cannot be undone."
         // Update the task on the server
         await Client.UpdateTask(taskItem, _projectItem.id);
     }
+
 }

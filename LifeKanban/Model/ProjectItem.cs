@@ -11,6 +11,8 @@ public class ProjectItem
     [StringLength(100, ErrorMessage = "Project name cannot exceed 100 characters")]
     public string name { get; set; } = string.Empty;
     
+    public string description { get; set; } = string.Empty;
+    
     public int position { get; set; } = 0;
     
     public List<ProjectTaskItem> tasks { get; set; } = new();

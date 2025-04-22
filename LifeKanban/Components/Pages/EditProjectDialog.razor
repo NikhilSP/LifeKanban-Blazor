@@ -22,6 +22,11 @@
                             <div class="text-danger mt-1">@duplicateError</div>
                         }
                     </div>
+                    
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">Description</label>
+                        <InputTextArea id="projectDescription" class="form-control" @bind-Value="FormProjectItem.description" rows="3"/>
+                    </div>
                 </EditForm>
 
                 @if (showNotification)
@@ -133,6 +138,7 @@
         {
             id = ProjectItem.id,
             name = ProjectItem.name,
+            description = ProjectItem.description,
             position = ProjectItem.position,
             tasks = ProjectItem.tasks,
             milestones = ProjectItem.milestones
