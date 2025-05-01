@@ -2,7 +2,7 @@
 @implements IAsyncDisposable
 @rendermode InteractiveServer
 
-<button @onclick="ToggleTheme" class="theme-toggle-btn" title="@($"Switch to {(CurrentTheme == "dark" ? "claude" : "dark")} theme")">
+@*<button @onclick="ToggleTheme" class="theme-toggle-btn" title="@($"Switch to {(CurrentTheme == "dark" ? "claude" : "dark")} theme")">
     @if (CurrentTheme == "dark")
     {
         <span class="bi bi-brightness-high"></span>
@@ -11,7 +11,7 @@
     {
         <span class="bi bi-moon"></span>
     }
-</button>
+</button>*@
 
 @code {
     private string CurrentTheme = "dark";

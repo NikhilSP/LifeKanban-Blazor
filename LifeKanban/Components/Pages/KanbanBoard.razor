@@ -59,7 +59,7 @@
                     }
                     else
                     {
-                        <button type="button" @onclick="AddTaskDialogOpen">
+                        <button type="button" @onclick="() => AddTaskDialogOpen(column.Id)">
                             <span class="bi bi-plus"></span>
                         </button>
                     }
@@ -193,6 +193,12 @@
         padding-left:  1rem;
         white-space: pre-line;
     }
+
+    .kanban-board {
+        height: calc(100vh - 130px);
+        overflow: hidden;
+    }
+    
 </style>
 
 @if (AddTaskDialogFlag)
@@ -563,9 +569,28 @@ This action cannot be undone."
         public MilestoneItem Milestone { get; set; }
     }
 
-    private void AddTaskDialogOpen()
+    private void AddTaskDialogOpen(int columnId)
     {
         _projectTaskItem = null;
+
+        // Set default status based on column ID
+        string status = columnId switch
+        {
+            1 => "To Do",
+            2 => "In Progress",
+            4 => "Done",
+            _ => "To Do" // Default fallback
+        };
+
+        // Create a new task with the appropriate status
+        _projectTaskItem = new ProjectTaskItem
+        {
+            title = "",
+            description = "",
+            status = status,
+            subtasks = new List<SubTaskItem>()
+        };
+
         AddTaskDialogFlag = true;
         StateHasChanged();
     }

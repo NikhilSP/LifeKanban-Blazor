@@ -86,6 +86,7 @@
                             <div class="d-flex mt-2">
                                 <input class="form-control form-control-sm @(string.IsNullOrWhiteSpace(newSubtaskValidationMessage) ? "" : "is-invalid")"
                                        @bind="newSubtaskTitle"
+                                       @bind:event="oninput"
                                        placeholder="New subtask..." @onkeydown="@HandleSubtaskKeyDown"/>
                                 <button type="button" class="btn btn-sm ms-2" @onclick="AddNewSubtask">
                                     <span class="bi bi-plus"></span>
@@ -380,6 +381,14 @@
             _inEditMode = true;
             Title = "Edit Task Details";
             _actionButtonString = "Save Task";
+            ProjectTaskItem = CurrentTaskItem;
+        }
+        
+        if(CurrentTaskItem is not null && string.IsNullOrWhiteSpace(CurrentTaskItem.title) && !string.IsNullOrWhiteSpace(CurrentTaskItem.status))
+        {
+            _inEditMode = false;
+            Title = "Add Task Details";
+            _actionButtonString = "Add Task";
             ProjectTaskItem = CurrentTaskItem;
         }
     }
