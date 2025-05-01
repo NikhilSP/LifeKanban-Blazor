@@ -409,6 +409,19 @@ h3.me-2.mb-0 {
     color: #ffffff !important;
 }
 
+.kanban-column[data-column-id="0"] .kanban-card {  
+    border-left: 3px solid #7e57c2; /* Purple accent to match milestone theme */
+}
+
+.kanban-column[data-column-id="4"] .kanban-card:hover {
+    background-color: #313a33; /* Darker green-tint on hover */
+    opacity: 1; /* Full opacity on hover */
+}
+
+.kanban-column[data-column-id="0"] .kanban-card:hover {
+    background-color: #33334a; /* Darker blue-tint on hover */
+}
+
 .card-title a {
     color: var(--dark-text);
     text-decoration: none;
