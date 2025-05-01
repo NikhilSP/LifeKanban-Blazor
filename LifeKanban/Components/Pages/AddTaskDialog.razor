@@ -43,23 +43,43 @@
                     <div class="mb-3">
                         <label class="form-label">Subtasks</label>
                         <div class="subtasks-container">
-                            @foreach (var subtask in ProjectTaskItem.subtasks.OrderBy(s => s.position))
+                            @if (ProjectTaskItem.subtasks.Any())
                             {
-                                <div class="subtask-item d-flex align-items-center mb-2">
-                                    <div class="form-check d-flex align-items-center flex-grow-1">
-                                        <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted"
-                                               @onchange="e => subtask.isCompleted = (bool)e.Value"/>
-                                        <input class="form-control form-control-sm ms-2" value="@subtask.title"
-                                               @onchange="e => UpdateSubtaskTitle(subtask, e.Value.ToString())"/>
-                                    </div>
-                                    <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);"
-                                            @onclick="() => RemoveSubtask(subtask)">
-                                        <span class="bi bi-trash"></span>
-                                    </button>
-                                </div>
-                                @if (subtaskValidationErrors.ContainsKey(subtask.id))
+                                var subtasks = ProjectTaskItem.subtasks.OrderBy(s => s.position).ToList();
+                                @for(int subtaskIndex=0;subtaskIndex<subtasks.Count;subtaskIndex++)
                                 {
-                                    <div class="text-danger small mb-2 ms-4">@subtaskValidationErrors[subtask.id]</div>
+                                    var subtask = subtasks[subtaskIndex];
+                                    <div class="subtask-item d-flex align-items-center mb-2">
+                                        <div class="form-check d-flex align-items-center flex-grow-1">
+                                            <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted"
+                                                   @onchange="e => subtask.isCompleted = (bool)e.Value"/>
+                                            <input class="form-control form-control-sm ms-2" value="@subtask.title"
+                                                   @onchange="e => UpdateSubtaskTitle(subtask, e.Value.ToString())"/>
+                                        </div>
+                                        <div class="subtask-actions">
+                                            <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);"
+                                                    @onclick="() => MoveSubtaskUp(subtask)"
+                                                    disabled="@(subtaskIndex == 0)"
+                                                    title="Move up">
+                                                <span class="bi bi-arrow-up"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);"
+                                                    @onclick="() => MoveSubtaskDown(subtask)"
+                                                    disabled="@(subtaskIndex == ProjectTaskItem.subtasks.Count - 1)"
+                                                    title="Move down">
+                                                <span class="bi bi-arrow-down"></span>
+                                            </button>
+                                            <button type="button" class="btn btn-sm" style="color: var(--gl-text-secondary);"
+                                                    @onclick="() => RemoveSubtask(subtask)"
+                                                    title="Delete">
+                                                <span class="bi bi-trash"></span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    @if (subtaskValidationErrors.ContainsKey(subtask.id))
+                                    {
+                                        <div class="text-danger small mb-2 ms-4">@subtaskValidationErrors[subtask.id]</div>
+                                    }
                                 }
                             }
 
@@ -244,11 +264,11 @@
                 title = newSubtaskTitle,
                 isCompleted = false
             });
-        
+
             // Clear the input field
             newSubtaskTitle = string.Empty;
         }
-        
+
         // Validate task title
         if (string.IsNullOrWhiteSpace(ProjectTaskItem.title))
         {
@@ -289,18 +309,18 @@
 
         return true;
     }
-    
+
     private void ShowInfoNotification(string title, string message)
     {
         notificationTitle = title;
         notificationMessage = message;
         notificationClass = "alert-info";
         showNotification = true;
-    
+
         // Auto-hide after 3 seconds
-        var timer = new System.Threading.Timer(async _ => 
+        var timer = new System.Threading.Timer(async _ =>
         {
-            await InvokeAsync(() => 
+            await InvokeAsync(() =>
             {
                 showNotification = false;
                 StateHasChanged();
@@ -498,6 +518,36 @@
         Ok,
         OkCancel,
         DeleteCancel
+    }
+
+    private void MoveSubtaskUp(SubTaskItem subtask)
+    {
+        var orderedSubtasks = ProjectTaskItem.subtasks.OrderBy(s => s.position).ToList();
+        var currentIndex = orderedSubtasks.IndexOf(subtask);
+
+        if (currentIndex > 0)
+        {
+            // Swap positions with the subtask above
+            var subtaskAbove = orderedSubtasks[currentIndex - 1];
+            (subtask.position, subtaskAbove.position) = (subtaskAbove.position, subtask.position);
+
+            StateHasChanged();
+        }
+    }
+
+    private void MoveSubtaskDown(SubTaskItem subtask)
+    {
+        var orderedSubtasks = ProjectTaskItem.subtasks.OrderBy(s => s.position).ToList();
+        var currentIndex = orderedSubtasks.IndexOf(subtask);
+
+        if (currentIndex < orderedSubtasks.Count - 1)
+        {
+            // Swap positions with the subtask below
+            var subtaskBelow = orderedSubtasks[currentIndex + 1];
+            (subtask.position, subtaskBelow.position) = (subtaskBelow.position, subtask.position);
+
+            StateHasChanged();
+        }
     }
 
 }
