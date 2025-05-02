@@ -1,5 +1,5 @@
 /**
- * NavMenuDrag.js - Handles drag and drop functionality for the project navigation menu
+ * NavMenuDrag.js - Handles drag and drop functionality for the project navigation menu with insertion line indicator
  */
 window.navMenuDrag = {
     // Store these variables on the global object to avoid 'this' context issues
@@ -99,6 +99,89 @@ window.navMenuDrag = {
     handleDragOver: function (e) {
         // Default is already prevented in the event listener
         e.dataTransfer.dropEffect = 'move';
+
+        // Get the dragged ID
+        const draggedId = window.navMenuDrag.draggedId;
+        if (!draggedId) return;
+
+        // Remove existing insertion line
+        this.removeInsertionLine();
+
+        // Find the projects list container
+        const projectsList = document.querySelector('.projects-list');
+        if (!projectsList) return;
+
+        // Find all project items
+        const projectItems = Array.from(projectsList.querySelectorAll('.project-item'));
+
+        // Find insertion point based on mouse position
+        let insertIndex = projectItems.length;
+
+        for (let i = 0; i < projectItems.length; i++) {
+            const item = projectItems[i];
+            // Skip the dragged item itself
+            if (item.getAttribute('data-id') === draggedId) continue;
+
+            const rect = item.getBoundingClientRect();
+            const middle = rect.top + rect.height / 2;
+
+            if (e.clientY < middle) {
+                // Insert before this item
+                this.createInsertionLine(projectsList, item, true);
+                insertIndex = i;
+                break;
+            }
+        }
+
+        // If no insertion point found, append at end
+        if (insertIndex === projectItems.length) {
+            const lastItem = projectItems[projectItems.length - 1];
+            // Don't show indicator if we're already at the bottom and that's the dragged item
+            if (lastItem && lastItem.getAttribute('data-id') !== draggedId) {
+                this.createInsertionLine(projectsList, null, false);
+            }
+        }
+    },
+
+    /**
+     * Create an insertion line indicator
+     * @param {Element} container - The container element
+     * @param {Element} beforeElement - Element to insert before (null for end)
+     * @param {boolean} insertBefore - Whether to insert before or after the element
+     */
+    createInsertionLine: function(container, beforeElement, insertBefore) {
+        // Create the indicator element
+        const indicator = document.createElement('div');
+        indicator.id = 'nav-insertion-indicator';
+        indicator.style.height = '4px';
+        indicator.style.backgroundColor = '#009966'; // Same green color as KanbanBoard
+        indicator.style.margin = '4px 0';
+        indicator.style.borderRadius = '2px';
+        indicator.style.width = '90%';
+        indicator.style.marginLeft = '5%';
+
+        if (beforeElement) {
+            if (insertBefore) {
+                container.insertBefore(indicator, beforeElement);
+            } else {
+                const nextElement = beforeElement.nextElementSibling;
+                if (nextElement) {
+                    container.insertBefore(indicator, nextElement);
+                } else {
+                    container.appendChild(indicator);
+                }
+            }
+        } else {
+            container.appendChild(indicator);
+        }
+    },
+
+    /**
+     * Remove the insertion line indicator
+     */
+    removeInsertionLine: function() {
+        const indicator = document.getElementById('nav-insertion-indicator');
+        if (indicator) indicator.remove();
     },
 
     /**
@@ -111,16 +194,6 @@ window.navMenuDrag = {
 
         // Skip if entering the item being dragged
         if (item.getAttribute('data-id') === window.navMenuDrag.draggedId) return;
-
-        // Remove highlight from previous target
-        if (window.navMenuDrag.currentDropTarget &&
-            window.navMenuDrag.currentDropTarget !== item) {
-            window.navMenuDrag.currentDropTarget.classList.remove('drag-over');
-        }
-
-        // Set and highlight new target
-        window.navMenuDrag.currentDropTarget = item;
-        item.classList.add('drag-over');
 
         e.stopPropagation();
     },
@@ -137,8 +210,6 @@ window.navMenuDrag = {
         // Check if we're truly leaving this item or just moving to a child element
         const relatedTarget = e.relatedTarget;
         if (!relatedTarget || (!item.contains(relatedTarget) && relatedTarget !== item)) {
-            item.classList.remove('drag-over');
-
             if (window.navMenuDrag.currentDropTarget === item) {
                 window.navMenuDrag.currentDropTarget = null;
             }
@@ -153,6 +224,9 @@ window.navMenuDrag = {
      */
     handleDrop: function (e) {
         console.log("Drop event triggered");
+
+        // Remove the insertion line
+        this.removeInsertionLine();
 
         // Get the stored ID from the global object
         const draggedId = window.navMenuDrag.draggedId;
@@ -171,56 +245,52 @@ window.navMenuDrag = {
             return;
         }
 
-        // Find the drop target
-        const dropTarget = e.target.closest('.project-item');
-        if (!dropTarget) {
-            console.error("No valid drop target found");
-            return;
+        // Find the drop target and insertion point
+        const projectsList = document.querySelector('.projects-list');
+        const projectItems = Array.from(projectsList.querySelectorAll('.project-item'));
+
+        // Find closest project item based on Y position
+        let targetIndex = projectItems.length - 1; // Default to end
+        const draggedIndex = projectItems.findIndex(item => item.getAttribute('data-id') === sourceId);
+
+        for (let i = 0; i < projectItems.length; i++) {
+            // Skip the dragged item
+            if (i === draggedIndex) continue;
+
+            const rect = projectItems[i].getBoundingClientRect();
+            const middle = rect.top + rect.height / 2;
+
+            if (e.clientY < middle) {
+                targetIndex = i;
+                break;
+            }
         }
 
-        const dropTargetId = dropTarget.getAttribute('data-id');
-
-        // Don't drop onto self
-        if (sourceId === dropTargetId) {
-            console.log("Dropped onto self, ignoring");
-            return;
+        // If dropping after itself, adjust the target index
+        if (draggedIndex !== -1 && draggedIndex < targetIndex) {
+            targetIndex--;
         }
-
-        // Clear highlight
-        if (window.navMenuDrag.currentDropTarget) {
-            window.navMenuDrag.currentDropTarget.classList.remove('drag-over');
-            window.navMenuDrag.currentDropTarget = null;
-        }
-
-        // Get target index
-        const projectItems = Array.from(document.querySelectorAll('.project-item'));
-        const targetIndex = projectItems.indexOf(dropTarget);
 
         console.log("Drop details:", {
             sourceId: sourceId,
-            targetIndex: targetIndex,
-            dropTargetId: dropTargetId
+            draggedIndex: draggedIndex,
+            targetIndex: targetIndex
         });
 
-        // Apply animation before making the actual change
-        this.animateReordering(sourceId, targetIndex);
+        // Call the .NET method
+        if (window.navMenuDrag.dotNetRef) {
+            console.log("Calling .NET HandleProjectDrop with:", sourceId, targetIndex);
 
-        // Call the .NET method with a short delay to allow animation to start
-        setTimeout(() => {
-            if (window.navMenuDrag.dotNetRef) {
-                console.log("Calling .NET HandleProjectDrop with:", sourceId, targetIndex);
-
-                window.navMenuDrag.dotNetRef.invokeMethodAsync('HandleProjectDrop', sourceId, targetIndex)
-                    .then(() => {
-                        console.log("HandleProjectDrop completed successfully");
-                    })
-                    .catch(error => {
-                        console.error("Error in HandleProjectDrop:", error);
-                    });
-            } else {
-                console.error("No .NET reference available");
-            }
-        }, 50);
+            window.navMenuDrag.dotNetRef.invokeMethodAsync('HandleProjectDrop', sourceId, targetIndex)
+                .then(() => {
+                    console.log("HandleProjectDrop completed successfully");
+                })
+                .catch(error => {
+                    console.error("Error in HandleProjectDrop:", error);
+                });
+        } else {
+            console.error("No .NET reference available");
+        }
     },
 
     /**
@@ -228,58 +298,17 @@ window.navMenuDrag = {
      * @param {DragEvent} e - The drag event
      */
     handleDragEnd: function (e) {
+        // Remove insertion line
+        this.removeInsertionLine();
+
         // Clean up all styling
         document.querySelectorAll('.project-item').forEach(item => {
             item.classList.remove('dragging');
             item.classList.remove('drag-over');
         });
 
-        // For debugging
-        console.log("Drag ended, final draggedId was:", window.navMenuDrag.draggedId);
-
         // Reset stored values
         window.navMenuDrag.currentDropTarget = null;
         window.navMenuDrag.draggedId = null;
-    },
-
-    /**
-     * Animate the reordering of projects
-     * @param {string} sourceId - ID of the project being moved
-     * @param {number} targetIndex - Target position index
-     */
-    animateReordering: function(sourceId, targetIndex) {
-        const projectItems = Array.from(document.querySelectorAll('.project-item'));
-        const sourceElement = document.querySelector(`.project-item[data-id="${sourceId}"]`);
-
-        if (!sourceElement) {
-            console.error("Source element not found for animation");
-            return;
-        }
-
-        const sourceIndex = projectItems.indexOf(sourceElement);
-        console.log(`Animating: moving from index ${sourceIndex} to ${targetIndex}`);
-
-        // Apply animations based on movement direction
-        if (sourceIndex < targetIndex) {
-            // Moving down - items in between move up
-            for (let i = sourceIndex + 1; i <= targetIndex; i++) {
-                if (projectItems[i]) {
-                    projectItems[i].classList.add('move-up');
-                    setTimeout(() => {
-                        projectItems[i].classList.remove('move-up');
-                    }, 300);
-                }
-            }
-        } else {
-            // Moving up - items in between move down
-            for (let i = targetIndex; i < sourceIndex; i++) {
-                if (projectItems[i]) {
-                    projectItems[i].classList.add('move-down');
-                    setTimeout(() => {
-                        projectItems[i].classList.remove('move-down');
-                    }, 300);
-                }
-            }
-        }
     }
 };
