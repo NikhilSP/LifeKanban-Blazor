@@ -228,34 +228,27 @@ window.navMenuDrag = {
         // Remove the insertion line
         this.removeInsertionLine();
 
-        // Get the stored ID from the global object
+        // Get the stored ID
         const draggedId = window.navMenuDrag.draggedId;
-        console.log("Using stored draggedId:", draggedId);
-
-        // Fallback to dataTransfer if our stored ID is missing
-        let sourceId = draggedId;
-        if (!sourceId) {
-            sourceId = e.dataTransfer.getData('text/plain');
-            console.log("Fallback to dataTransfer ID:", sourceId);
-        }
-
-        // Validate we have an ID
-        if (!sourceId) {
-            console.error("No valid source ID for drop operation");
+        if (!draggedId) {
+            console.error("No dragged ID found");
             return;
         }
 
-        // Find the drop target and insertion point
+        // Find the projects list and items
         const projectsList = document.querySelector('.projects-list');
         const projectItems = Array.from(projectsList.querySelectorAll('.project-item'));
 
-        // Find closest project item based on Y position
-        let targetIndex = projectItems.length - 1; // Default to end
-        const draggedIndex = projectItems.findIndex(item => item.getAttribute('data-id') === sourceId);
+        // Find the dragged item's original index
+        const draggedItem = projectItems.find(item => item.getAttribute('data-id') === draggedId);
+        const sourceIndex = projectItems.indexOf(draggedItem);
+
+        // Determine target index based on mouse position
+        let targetIndex = projectItems.length;
 
         for (let i = 0; i < projectItems.length; i++) {
-            // Skip the dragged item
-            if (i === draggedIndex) continue;
+            // Skip the dragged item itself
+            if (i === sourceIndex) continue;
 
             const rect = projectItems[i].getBoundingClientRect();
             const middle = rect.top + rect.height / 2;
@@ -266,30 +259,28 @@ window.navMenuDrag = {
             }
         }
 
-        // If dropping after itself, adjust the target index
-        if (draggedIndex !== -1 && draggedIndex < targetIndex) {
-            targetIndex--;
+        // If dropping at the same position, do nothing
+        if (targetIndex === sourceIndex ||
+            (sourceIndex < targetIndex && targetIndex === sourceIndex + 1)) {
+            console.log("Dropping in the same position, ignoring");
+            return;
         }
 
         console.log("Drop details:", {
-            sourceId: sourceId,
-            draggedIndex: draggedIndex,
+            sourceId: draggedId,
+            sourceIndex: sourceIndex,
             targetIndex: targetIndex
         });
 
-        // Call the .NET method
+        // Call the .NET method with the correct indices
         if (window.navMenuDrag.dotNetRef) {
-            console.log("Calling .NET HandleProjectDrop with:", sourceId, targetIndex);
-
-            window.navMenuDrag.dotNetRef.invokeMethodAsync('HandleProjectDrop', sourceId, targetIndex)
+            window.navMenuDrag.dotNetRef.invokeMethodAsync('HandleProjectDrop', draggedId, targetIndex)
                 .then(() => {
                     console.log("HandleProjectDrop completed successfully");
                 })
                 .catch(error => {
                     console.error("Error in HandleProjectDrop:", error);
                 });
-        } else {
-            console.error("No .NET reference available");
         }
     },
 
