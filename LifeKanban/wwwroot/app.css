@@ -386,9 +386,6 @@ h3.me-2.mb-0 {
         width: 0;
     }
 
-    /* Hide scrollbar for IE, Edge and Firefox */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Fir
 }
 
 /* Card styling */
