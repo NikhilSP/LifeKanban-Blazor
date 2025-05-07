@@ -148,15 +148,7 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
 
         return false;
     }
-
-    public async Task<List<ProjectTask>> GetTasksByProject(Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.Tasks
-            .Where(t => t.Project.Id == projectId)
-            .ToListAsync(cancellationToken);
-    }
-
+    
     public async Task<ProjectTask?> GetTaskById(Guid taskId, CancellationToken cancellationToken = default)
     {
         return await projectDbContext.Tasks
@@ -211,78 +203,8 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         return false;
     }
 
-    public async Task<List<Milestone>> GetMilestonesByProject(Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.Milestones
-            .Where(m => m.Project.Id == projectId)
-            .ToListAsync(cancellationToken);
-    }
-
-    // Get tasks grouped by status (for Kanban board columns)
-    public async Task<Dictionary<string, List<ProjectTask>>> GetTasksByStatus(Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        var tasks = await projectDbContext.Tasks
-            .Where(t => t.ProjectId == projectId)
-            .Include(t => t.Milestone)
-            .ToListAsync(cancellationToken);
-
-        return tasks.GroupBy(t => t.Status)
-            .ToDictionary(g => g.Key, g => g.ToList());
-    }
-
-// Update task status (moving between Kanban columns)
-    public async Task<bool> UpdateTaskStatus(Guid taskId, string newStatus,
-        CancellationToken cancellationToken = default)
-    {
-        var task = await GetTaskById(taskId, cancellationToken);
-        if (task != null)
-        {
-            task.Status = newStatus;
-            await projectDbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
-        return false;
-    }
-
-// Assign task to milestone
-    public async Task<bool> AssignTaskToMilestone(Guid taskId, Guid milestoneId,
-        CancellationToken cancellationToken = default)
-    {
-        var task = await GetTaskById(taskId, cancellationToken);
-        var milestone = await GetMilestoneById(milestoneId, cancellationToken);
-
-        if (task != null && milestone != null)
-        {
-            task.MilestoneId = milestoneId;
-            task.Milestone = milestone;
-            await projectDbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
-        return false;
-    }
-
-// Remove task from milestone
-    public async Task<bool> RemoveTaskFromMilestone(Guid taskId, CancellationToken cancellationToken = default)
-    {
-        var task = await GetTaskById(taskId, cancellationToken);
-
-        if (task != null)
-        {
-            task.MilestoneId = null;
-            task.Milestone = null;
-            await projectDbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
-        return false;
-    }
-
     // Get a specific milestone by ID
-    public async Task<Milestone?> GetMilestoneById(Guid milestoneId, CancellationToken cancellationToken = default)
+    private async Task<Milestone?> GetMilestoneById(Guid milestoneId, CancellationToken cancellationToken = default)
     {
         return await projectDbContext.Milestones
             .Include(m => m.Tasks)
@@ -335,92 +257,8 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         return false;
     }
 
-// Get tasks by milestone
-    public async Task<List<ProjectTask>> GetTasksByMilestone(Guid milestoneId,
-        CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.Tasks
-            .Where(t => t.MilestoneId == milestoneId)
-            .ToListAsync(cancellationToken);
-    }
 
-    // Expand your current GetProject method to include all related data
-    public async Task<Project?> GetProjectWithAllDetails(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.Projects
-            .Include(p => p.Tasks)
-            .ThenInclude(t => t.Milestone)
-            .Include(p => p.Tasks)
-            .ThenInclude(t => t.SubTasks)
-            .Include(p => p.Milestones)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-    }
-
-
-// Get project statistics
-    public async Task<ProjectStatistics> GetProjectStatistics(Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        var project = await GetProjectWithAllDetails(projectId, cancellationToken);
-
-        if (project == null)
-            return new ProjectStatistics();
-
-        return new ProjectStatistics
-        {
-            TotalTasks = project.Tasks.Count,
-            CompletedTasks = project.Tasks.Count(t => t.Status == "Done" || t.Status == "Completed"),
-            TasksByStatus = project.Tasks.GroupBy(t => t.Status)
-                .ToDictionary(g => g.Key, g => g.Count()),
-            MilestoneCount = project.Milestones.Count,
-            TasksWithNoMilestone = project.Tasks.Count(t => t.MilestoneId == null)
-        };
-    }
-
-    // Get tasks that are not assigned to any milestone
-    public async Task<List<ProjectTask>> GetTasksWithoutMilestone(Guid projectId,
-        CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.Tasks
-            .Where(t => t.ProjectId == projectId && t.MilestoneId == null)
-            .ToListAsync(cancellationToken);
-    }
-
-// Copy a task (create a duplicate)
-    public async Task<Guid?> DuplicateTask(Guid taskId, CancellationToken cancellationToken = default)
-    {
-        var original = await GetTaskById(taskId, cancellationToken);
-
-        if (original != null)
-        {
-            var duplicate = new ProjectTask
-            {
-                Id = Guid.NewGuid(),
-                Title = $"{original.Title} (Copy)",
-                Description = original.Description,
-                Status = original.Status,
-                ProjectId = original.ProjectId,
-                MilestoneId = original.MilestoneId
-            };
-
-            projectDbContext.Tasks.Add(duplicate);
-            await projectDbContext.SaveChangesAsync(cancellationToken);
-            return duplicate.Id;
-        }
-
-        return null;
-    }
-
-// Search for tasks by title or description
-    public async Task<List<ProjectTask>> SearchTasks(Guid projectId, string searchTerm,
-        CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.Tasks
-            .Where(t => t.ProjectId == projectId &&
-                        (t.Title.Contains(searchTerm) || t.Description.Contains(searchTerm)))
-            .Include(t => t.Milestone)
-            .ToListAsync(cancellationToken);
-    }
+    
     
     public async Task<bool> AddSubTask(SubTask subtask, Guid taskId, CancellationToken cancellationToken = default)
     {
@@ -471,29 +309,6 @@ public class ProjectRepository(ProjectDbContext projectDbContext) : IProjectRepo
         if (subtask is not null)
         {
             projectDbContext.SubTasks.Remove(subtask);
-            await projectDbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-    
-        return false;
-    }
-
-// Get all subtasks for a task
-    public async Task<List<SubTask>> GetSubTasksByTask(Guid taskId, CancellationToken cancellationToken = default)
-    {
-        return await projectDbContext.SubTasks
-            .Where(s => s.ProjectTaskId == taskId)
-            .ToListAsync(cancellationToken);
-    }
-
-// Toggle subtask completion status
-    public async Task<bool> ToggleSubTaskCompletion(Guid subtaskId, CancellationToken cancellationToken = default)
-    {
-        var subtask = await projectDbContext.SubTasks.FindAsync([subtaskId], cancellationToken);
-    
-        if (subtask is not null)
-        {
-            subtask.IsCompleted = !subtask.IsCompleted;
             await projectDbContext.SaveChangesAsync(cancellationToken);
             return true;
         }
