@@ -14,7 +14,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         var assembly = typeof(Program).Assembly;
-        builder.Services.AddCarter();
+        //  builder.Services.AddCarter();
+        builder.Services.AddControllers();
         builder.Services.AddMediatR(config => { config.RegisterServicesFromAssembly(assembly); });
         builder.Services.AddDbContext<ProjectDbContext>(options =>
             options.UseSqlite(builder.Configuration.GetConnectionString("Database")));
@@ -22,16 +23,17 @@ public class Program
         builder.Services.AddScoped<ProjectRepository>();
         MapsterConfig.Configure();
         var app = builder.Build();
-       
-        
+
+
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             var repository = services.GetRequiredService<ProjectRepository>();
             repository.InitializeProjectPositions().GetAwaiter().GetResult();
         }
-        
-        app.MapCarter();
+
+        // app.MapCarter();
+        app.MapControllers();
         app.Run();
     }
 }
