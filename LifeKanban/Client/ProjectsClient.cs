@@ -38,7 +38,16 @@ public class ProjectsClient(HttpClient httpClient)
 
     public async Task<Guid?> AddProject(ProjectItem newProjectItem)
     {
-        var request = new CreateProjectRequest(newProjectItem);
+        // Create a properly cased anonymous object matching what the API expects
+        var request = new 
+        { 
+            Project = new 
+            {
+                Name = newProjectItem.name,
+                Description = newProjectItem.description,
+                Position = newProjectItem.position
+            }
+        };
 
         var response = await httpClient.PostAsJsonAsync("/addProject", request);
 
