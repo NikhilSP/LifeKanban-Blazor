@@ -1,0 +1,35 @@
+@using LifeKanban.Model
+
+<div class="project-header mb-3">
+    <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
+        <h3 class="me-2 mb-0">@Project.name</h3>
+        <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="OnEdit">
+            <span class="bi bi-pencil"></span>
+        </button>
+        <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="OnDelete">
+            <span class="bi bi-trash"></span>
+        </button>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Project.description))
+    {
+        <div class="project-description mt-2 mb-3">
+            @Project.description
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public ProjectItem Project { get; set; }
+    [Parameter] public EventCallback OnEditRequest { get; set; }
+    [Parameter] public EventCallback OnDeleteRequest { get; set; }
+
+    private async Task OnEdit()
+    {
+        await OnEditRequest.InvokeAsync();
+    }
+
+    private async Task OnDelete()
+    {
+        await OnDeleteRequest.InvokeAsync();
+    }
+}

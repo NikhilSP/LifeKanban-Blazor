@@ -1,0 +1,99 @@
+@using LifeKanban.Client
+@using LifeKanban.Model
+@using LifeKanban.StateManagement
+@inject ProjectsClient Client
+@inject ProjectStateService ProjectStateService
+@inject NavigationManager NavigationManager
+
+<div class="kanban-column column-inprogress">
+    <div class="column-header">
+        <div class="column-title">
+            In Progress
+            <div class="column-count">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                    <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                </svg>
+                @_inProgressTasks.Count
+            </div>
+        </div>
+    </div>
+    <div class="cards-container">
+        @foreach (var task in _inProgressTasks)
+        {
+            <TaskCard 
+                Task="task.Task" 
+                ProjectName="task.ProjectName"
+                ProjectId="task.ProjectId"
+                OnEditRequest="_=>GoToProject(task.ProjectId)"
+                OnDeleteRequest="id => MarkTaskAsDone(task)"
+            />
+        }
+    </div>
+</div>
+
+@code {
+    private List<InProgressTaskViewModel> _inProgressTasks = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInProgressTasks();
+        ProjectStateService.ProjectsChanged += OnProjectsChanged;
+    }
+
+    private async Task OnProjectsChanged()
+    {
+        await LoadInProgressTasks();
+        StateHasChanged();
+    }
+
+    private async Task LoadInProgressTasks()
+    {
+        _inProgressTasks.Clear();
+        var projects = await Client.GetProjects();
+
+        foreach (var project in projects)
+        {
+            var fullProject = await Client.GetProjectById(project.id);
+            if (fullProject != null)
+            {
+                var inProgressTasks = fullProject.tasks
+                    .Where(t => t.status == "In Progress")
+                    .Select(t => new InProgressTaskViewModel
+                    {
+                        Task = t,
+                        ProjectId = project.id,
+                        ProjectName = project.name
+                    })
+                    .ToList();
+
+                _inProgressTasks.AddRange(inProgressTasks);
+            }
+        }
+    }
+
+    private async Task MarkTaskAsDone(InProgressTaskViewModel task)
+    {
+        task.Task.status = "Done";
+        await Client.UpdateTask(task.Task, task.ProjectId);
+        await LoadInProgressTasks();
+        ProjectStateService.NotifyStateChanged();
+    }
+
+    private void GoToProject(Guid projectId)
+    {
+        NavigationManager.NavigateTo($"/kanbanboard/{projectId}");
+    }
+
+    public class InProgressTaskViewModel
+    {
+        public ProjectTaskItem Task { get; set; }
+        public Guid ProjectId { get; set; }
+        public string ProjectName { get; set; } = string.Empty;
+    }
+
+    public void Dispose()
+    {
+        ProjectStateService.ProjectsChanged -= OnProjectsChanged;
+    }
+}

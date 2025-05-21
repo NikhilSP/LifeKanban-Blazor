@@ -1,0 +1,311 @@
+@using LifeKanban.Client
+@using LifeKanban.Model
+@inject QuickTodosClient QuickTodosClient
+
+<div class="kanban-column">
+    <div class="column-header" style="border-top: 4px solid #0066cc;">
+        <div class="column-title">
+            Quick To-Dos
+            <div class="column-count">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                    <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
+                </svg>
+                @_quickTodos.Count
+            </div>
+        </div>
+    </div>
+    <div class="cards-container">
+        <div class="add-todo-container">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <div class="form-check-input me-2 placeholder-checkbox"></div>
+                    <input type="text" class="todo-input"
+                           placeholder="Click here to add new to-do..."
+                           @bind="_newTodoTitle"
+                           @bind:event="oninput"
+                           @onkeydown="HandleNewTodoKeyDown"/>
+                </div>
+                <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
+                    <span class="bi bi-plus"></span>
+                </button>
+            </div>
+        </div>
+
+        @{
+        // Group non-completed todos by date
+        var incompleteTodosByDate = _quickTodos
+        .Where(t => !t.IsCompleted)
+        .GroupBy(t => t.DateCreated.Date)
+        .OrderByDescending(g => g.Key); // Newest date first
+
+        // Get completed todos
+        var completedTodos = _quickTodos
+        .Where(t => t.IsCompleted)
+        .OrderByDescending(t => t.DateCompleted);
+        }
+
+        @* Display non-completed todos grouped by date *@
+        @foreach (var dateGroup in incompleteTodosByDate)
+        {
+        <div class="date-group">
+            <div class="date-header">
+                @if (dateGroup.Key.Date == DateTime.Today)
+                {
+                <span>Today</span>
+                }
+                else if (dateGroup.Key.Date == DateTime.Today.AddDays(-1))
+                {
+                <span>Yesterday</span>
+                }
+                else
+                {
+                <span>@dateGroup.Key.ToString("MMMM d")</span>
+                }
+            </div>
+
+            @foreach (var todo in dateGroup.OrderByDescending(t => t.DateCreated))
+            {
+            <div class="todo-item" @key="todo.Id">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <input type="checkbox" class="form-check-input me-2"
+                               checked="@todo.IsCompleted"
+                               @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
+                        <input type="text" class="todo-input"
+                               value="@todo.Title"
+                               @oninput="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                               @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                    </div>
+                    <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                        <span class="bi bi-trash"></span>
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+        @* Display completed todos section if there are any *@
+        @if (completedTodos.Any())
+        {
+        <div class="date-group">
+            <div class="date-header completed-header">
+                <span>Completed</span>
+            </div>
+
+            @foreach (var todo in completedTodos)
+            {
+            <div class="todo-item completed-todo" @key="todo.Id">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <input type="checkbox" class="form-check-input me-2"
+                               checked="@todo.IsCompleted"
+                               @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
+                        <input type="text" class="todo-input completed-input"
+                               value="@todo.Title"
+                               @onchange="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
+                               @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
+                    </div>
+                    <button type="button" class="todo-delete-btn" @onclick="() => DeleteQuickTodo(todo)">
+                        <span class="bi bi-trash"></span>
+                    </button>
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+</div>
+
+<style>
+    /* Date grouping styles for Quick Todos */
+    .date-group {
+        margin-bottom: 16px;
+    }
+
+    .date-header {
+        font-size: 12px;
+        color: var(--dark-text-secondary);
+        margin-bottom: 6px;
+        padding-left: 4px;
+        font-weight: 500;
+    }
+
+    .completed-header {
+        margin-top: 16px;
+        padding-top: 8px;
+        border-top: 1px solid var(--dark-border);
+    }
+
+    /* Todo item styling */
+    .todo-item {
+        padding: 8px;
+        margin-bottom: 10px;
+        background-color: transparent;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    .todo-item:hover {
+        background-color: var(--dark-card-hover);
+    }
+
+    .todo-delete-btn {
+        background: transparent;
+        border: none;
+        color: var(--dark-text-secondary);
+        opacity: 0.7;
+    }
+
+    .todo-delete-btn:hover {
+        opacity: 1;
+        color: #ff6b6b;
+    }
+
+    .add-todo-container {
+        padding: 8px;
+        position: relative;
+        background-color: transparent;
+        margin-bottom: 10px;
+    }
+
+    .todo-input {
+        width: 100%;
+        background-color: transparent;
+        border: none;
+        color: var(--dark-text);
+        outline: none;
+    }
+
+    .todo-input:focus {
+        background-color: rgba(255, 255, 255, 0.05);
+        outline: none;
+        transition: background-color 0.2s ease;
+        border-left: 2px solid var(--primary-color);
+        padding-left: 3px;
+    }
+
+    .todo-item:has(.todo-input:focus) {
+        background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .todo-add-btn {
+        background: transparent;
+        border: none;
+        color: var(--dark-text-secondary);
+        opacity: 0.7;
+    }
+
+    .todo-add-btn:hover {
+        opacity: 1;
+        color: var(--primary-color);
+    }
+
+    .placeholder-checkbox {
+        width: 16px;
+        height: 16px;
+        border: 1px solid var(--dark-text-secondary);
+        border-radius: 3px;
+        opacity: 0.3;
+    }
+
+    .completed-todo {
+        opacity: 0.6;
+    }
+
+    .completed-input {
+        text-decoration: line-through;
+    }
+</style>
+
+@code {
+    private List<QuickTodoItem> _quickTodos = [];
+    private string _newTodoTitle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQuickTodos();
+    }
+
+    private async Task LoadQuickTodos()
+    {
+        _quickTodos = await QuickTodosClient.GetQuickTodos();
+        StateHasChanged();
+    }
+
+    private async Task AddQuickTodo()
+    {
+        if (!string.IsNullOrWhiteSpace(_newTodoTitle))
+        {
+            var newTodo = new QuickTodoItem
+            {
+                Title = _newTodoTitle,
+                IsCompleted = false,
+                DateCreated = DateTime.Now
+            };
+
+            var result = await QuickTodosClient.AddQuickTodo(newTodo);
+
+            if (result != null)
+            {
+                newTodo.Id = result.Value;
+                _quickTodos.Add(newTodo);
+            }
+
+            _newTodoTitle = string.Empty;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteQuickTodo(QuickTodoItem todo)
+    {
+        var result = await QuickTodosClient.DeleteQuickTodo(todo.Id);
+
+        if (result)
+        {
+            _quickTodos.Remove(todo);
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleQuickTodoCompletion(QuickTodoItem todo, bool isCompleted)
+    {
+        todo.IsCompleted = isCompleted;
+
+        if (isCompleted)
+        {
+            todo.DateCompleted = DateTime.Now;
+        }
+        else
+        {
+            todo.DateCompleted = null;
+        }
+
+        await QuickTodosClient.UpdateQuickTodo(todo);
+        StateHasChanged();
+    }
+
+    private async Task UpdateQuickTodoTitle(QuickTodoItem todo, string newTitle)
+    {
+        todo.Title = newTitle;
+        await QuickTodosClient.UpdateQuickTodo(todo);
+    }
+
+    private async Task HandleNewTodoKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await AddQuickTodo();
+        }
+    }
+
+    private async Task HandleTodoKeyDown(KeyboardEventArgs e, QuickTodoItem todo)
+    {
+        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && string.IsNullOrWhiteSpace(todo.Title))
+        {
+            await DeleteQuickTodo(todo);
+        }
+    }
+}

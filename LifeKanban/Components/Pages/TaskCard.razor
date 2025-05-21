@@ -1,0 +1,105 @@
+@using LifeKanban.Model
+@using LifeKanban.Client
+@inject ProjectsClient Client
+
+<div class="kanban-card"
+     draggable="@(IsDraggable ? "true" : "false")"
+     @ondragstart="@(IsDraggable ? OnDragStart : null)"
+     @ondragend="@(IsDraggable ? OnDragEnd : null)"
+     @key="Task.id">
+    <div class="card-title">@Task.title</div>
+
+    @if (!string.IsNullOrEmpty(Task.description))
+    {
+        <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@Task.description</p>
+    }
+
+    @if (Task.subtasks.Any())
+    {
+        <div class="subtasks-list">
+            @foreach (var subtask in Task.subtasks.OrderBy(s => s.position))
+            {
+                <div class="subtask-item">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
+                               @onchange="async () => await ToggleSubtaskCompletion(subtask)">
+                        <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
+                            @subtask.title
+                        </label>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="card-footer">
+        <div class="card-metadata">
+            @if (Task.milestone != null)
+            {
+                <div class="card-labels bottom-labels">
+                    <span class="card-label" style="background-color: var(--column-ready-color);">
+                        @Task.milestone.name
+                    </span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(ProjectName))
+            {
+                <div class="card-labels bottom-labels">
+                    <span class="card-label" style="background-color: var(--column-ready-color);">
+                        @ProjectName
+                    </span>
+                </div>
+            }
+        </div>
+        <div class="card-actions">
+            <button type="button" class="card-btn" title="Edit" @onclick="OnEdit">
+                <span class="bi bi-pencil"></span>
+            </button>
+            <button type="button" class="card-btn" style="padding: 4px;" @onclick="OnDelete">
+                <span class="bi bi-trash"></span>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ProjectTaskItem Task { get; set; }
+    [Parameter] public string ProjectName { get; set; } = string.Empty;
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public bool IsDraggable { get; set; } = true;
+    [Parameter] public EventCallback<ProjectTaskItem> OnEditRequest { get; set; }
+    [Parameter] public EventCallback<Guid> OnDeleteRequest { get; set; }
+    [Parameter] public EventCallback<TaskDragStartEventArgs> OnDragStartEvent { get; set; }
+    [Parameter] public EventCallback OnDragEndEvent { get; set; }
+
+    private async Task ToggleSubtaskCompletion(SubTaskItem subtask)
+    {
+        subtask.isCompleted = !subtask.isCompleted;
+        await Client.UpdateTask(Task, ProjectId);
+    }
+
+    private async Task OnEdit()
+    {
+        await OnEditRequest.InvokeAsync(Task);
+    }
+
+    private async Task OnDelete()
+    {
+        await OnDeleteRequest.InvokeAsync(Task.id);
+    }
+
+    private async Task OnDragStart()
+    {
+        await OnDragStartEvent.InvokeAsync(new TaskDragStartEventArgs { Task = Task });
+    }
+
+    private async Task OnDragEnd()
+    {
+        await OnDragEndEvent.InvokeAsync();
+    }
+
+    public class TaskDragStartEventArgs
+    {
+        public ProjectTaskItem Task { get; set; }
+    }
+}

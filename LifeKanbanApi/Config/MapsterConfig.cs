@@ -1,5 +1,4 @@
 using LifeKanbanApi.DTO;
-using LifeKanbanApi.EndPoints.GetProject;
 using LifeKanbanApi.Model;
 using Mapster;
 

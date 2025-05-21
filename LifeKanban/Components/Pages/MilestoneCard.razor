@@ -1,0 +1,51 @@
+@using LifeKanban.Model
+
+<div class="kanban-card" @key="Milestone.id">
+    <div class="card-title">@Milestone.name</div>
+    <div style="height: 4px; width: 100%; background-color: var(--gl-border-color);">
+        <div style="height: 100%; width: @CompletionPercentage%; background-color: var(--column-ready-color);"></div>
+    </div>
+    <div class="text-end small mt-1" style="color: var(--gl-text-secondary);">
+        @CompletedTasks/@TotalTasks
+    </div>
+
+    <div class="card-footer">
+        <div class="card-metadata">
+            <div class="card-id">
+                <span title="Subtasks completed">
+                    <span class="bi bi-check2-square" style="font-size: 14px;"></span> @CompletedSubtasks/@TotalSubtasks
+                </span>
+            </div>
+        </div>
+        <div class="card-actions">
+            <button type="button" class="card-btn" @onclick="OnEdit">
+                <span class="bi bi-pencil"></span>
+            </button>
+            <button type="button" class="card-btn" style="padding: 4px;" @onclick="OnDelete">
+                <span class="bi bi-trash"></span>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public MilestoneItem Milestone { get; set; }
+    [Parameter] public int CompletedTasks { get; set; }
+    [Parameter] public int TotalTasks { get; set; }
+    [Parameter] public int CompletedSubtasks { get; set; }
+    [Parameter] public int TotalSubtasks { get; set; }
+    [Parameter] public EventCallback<MilestoneItem> OnEditRequest { get; set; }
+    [Parameter] public EventCallback<Guid> OnDeleteRequest { get; set; }
+
+    private int CompletionPercentage => TotalTasks > 0 ? (CompletedTasks * 100 / TotalTasks) : 0;
+
+    private async Task OnEdit()
+    {
+        await OnEditRequest.InvokeAsync(Milestone);
+    }
+
+    private async Task OnDelete()
+    {
+        await OnDeleteRequest.InvokeAsync(Milestone.id);
+    }
+}
