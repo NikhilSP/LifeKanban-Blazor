@@ -7,199 +7,72 @@
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @inject ProjectStateService ProjectStateService
+@implements IDisposable
 
-<div class="project-header mb-3">
-    <div class="d-flex align-items-center mb-3" style="color: var(--gl-text-color);">
-        <h3 class="me-2 mb-0">@_projectItem.name</h3>
-        <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="EditProjectDialogOnClick">
-            <span class="bi bi-pencil"></span>
-        </button>
-        <button type="button" class="btn btn-link" style="color: var(--gl-text-color);" @onclick="ConfirmDeleteProject">
-            <span class="bi bi-trash"></span>
-        </button>
-    </div>
-    @if (!string.IsNullOrWhiteSpace(_projectItem.description))
-    {
-        <div class="project-description mt-2 mb-3">
-            @_projectItem.description
-        </div>
-    }
-</div>
+<ProjectHeader
+    Project="@_projectItem"
+    OnEditRequest="EditProjectDialogOnClick"
+    OnDeleteRequest="ConfirmDeleteProject"/>
 
 <div class="kanban-board">
     @foreach (var column in _columns)
     {
         string cssName = column.Title.ToLower().Replace(" ", "");
-        var columnClass = $"kanban-column column-{cssName}";
-        bool isCollapsed = _collapsedColumns.ContainsKey(column.Id) && _collapsedColumns[column.Id];
 
-        <div class="@columnClass @(isCollapsed ? "column-collapsed" : "")" data-column-id="@column.Id">
-            <div class="column-header">
-                <div class="column-title">
-                    @column.Title
-                    <div class="column-count">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M8 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
-                            <path fill-rule="evenodd" d="M8 0a8 8 0 100 16A8 8 0 008 0zM1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0z"/>
-                        </svg>
-                        @(column.Id == 0 ? _milestones.Count : _tasks.Count(t => t.ColumnId == column.Id))
-                    </div>
-                </div>
-                <div class="column-actions">
-                    <!-- Add this button for collapsing/expanding -->
-                    <button type="button" @onclick="() => ToggleColumnCollapse(column.Id)" title="@(isCollapsed ? "Expand" : "Collapse")">
-                        <span class="bi @(isCollapsed ? "bi-chevron-right" : "bi-chevron-left")"></span>
-                    </button>
+        <KanbanColumn
+            Title="@column.Title"
+            ColumnId="@column.Id"
+            ItemCount="@(column.Id == 0 ? _milestones.Count : _tasks.Count(t => t.ColumnId == column.Id))"
+            AllowAdd="true"
+            HeaderStyle="@GetHeaderStyle(column.Id)"
+            CssClass="@($"column-{cssName}")"
+            IsCollapsed="@GetColumnCollapsedState(column.Id)"
+            OnAdd="HandleColumnAdd"
+            OnDrop="HandleDrop"
+            OnCollapseToggle="(isCollapsed) => ToggleColumnCollapse(column.Id, isCollapsed)">
 
-                    @if (column.Id == 0)
-                    {
-                        <button type="button" @onclick="AddMilestoneDialogOpen">
-                            <span class="bi bi-plus"></span>
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="button" @onclick="() => AddTaskDialogOpen(column.Id)">
-                            <span class="bi bi-plus"></span>
-                        </button>
-                    }
-                </div>
-            </div>
-            <div class="cards-container"
-                 dropzone="move"
-                 ondragenter="event.preventDefault();"
-                 ondragover="return window.kanbanInterop.handleDragOver(event, @column.Id)"
-                 @ondrop="async () => await HandleDrop(column.Id)">
-
-                @if (column.Id == 0)
+            @if (column.Id == 0)
+            {
+                <!-- Milestones Column Content -->
+                @foreach (var milestone in _milestones)
                 {
-                    <!-- Milestones Column Content -->
-                    @foreach (var milestone in _milestones)
-                    {
-                        var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
-                        var totalTasks = tasks.Count;
-                        var completedTasks = tasks.Count(t => t.status == "Done");
-                        var completionPercentage = totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0;
+                    var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
+                    var totalTasks = tasks.Count;
+                    var completedTasks = tasks.Count(t => t.status == "Done");
 
-                        <div class="kanban-card" @key="milestone.Milestone.id">
-                            <div class="card-title">@milestone.Milestone.name</div>
-                            <div style="height: 4px; width: 100%; background-color: var(--gl-border-color);">
-                                <div style="height: 100%; width: @completionPercentage%; background-color: var(--column-ready-color);"></div>
-                            </div>
-                            <div class="text-end small mt-1" style="color: var(--gl-text-secondary);">
-                                @completedTasks/@totalTasks
-                            </div>
+                    // Count total subtasks
+                    var milestoneTasks = _tasks.Where(t => t.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
+                    int totalSubtasks = milestoneTasks.Sum(t => t.subtasks.Count);
+                    int completedSubtasks = milestoneTasks.Sum(t => t.subtasks.Count(s => s.isCompleted));
 
-                            <div class="card-footer">
-                                <div class="card-metadata">
-                                    <div class="card-id">
-                                        @{
-                                            // Count total subtasks across all tasks in this milestone
-                                            var milestoneTasks = _tasks.Where(t => t.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
-                                            int totalSubtasks = milestoneTasks.Sum(t => t.subtasks.Count);
-                                            int completedSubtasks = milestoneTasks.Sum(t => t.subtasks.Count(s => s.isCompleted));
-                                        }
-                                        <span title="Subtasks completed">
-                                            <span class="bi bi-check2-square" style="font-size: 14px;"></span> @completedSubtasks/@totalSubtasks
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="card-actions">
-                                    <button type="button" class="card-btn" @onclick="() => EditMilestoneDialogOnClick(milestone.Milestone)">
-                                        <span class="bi bi-pencil"></span>
-                                    </button>
-                                    <button type="button" class="card-btn" style="padding: 4px;" @onclick="() => ConfirmDeleteMilestone(milestone.Milestone.id)">
-                                        <span class="bi bi-trash"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    <MilestoneCard
+                        Milestone="@milestone.Milestone"
+                        CompletedTasks="@completedTasks"
+                        TotalTasks="@totalTasks"
+                        CompletedSubtasks="@completedSubtasks"
+                        TotalSubtasks="@totalSubtasks"
+                        OnEditRequest="EditMilestoneDialogOnClick"
+                        OnDeleteRequest="ConfirmDeleteMilestone"/>
                 }
-                else
+            }
+            else
+            {
+                <!-- Task Columns Content -->
+                @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
                 {
-                    <!-- Task Columns Content -->
-                    @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
-                    {
-                        <div class="kanban-card"
-                             draggable="true"
-                             @ondragstart="() => HandleDragStart(task)"
-                             @ondragend="HandleDragEnd"
-                             @key="task.Task.id">
-                            <div class="card-title">@task.Task.title</div>
-
-                            @if (!string.IsNullOrEmpty(task.Task.description))
-                            {
-                                <p style="color: var(--gl-text-secondary); font-size: 13px; margin-bottom: 12px;">@task.Task.description</p>
-                            }
-
-                            @if (task.Task.subtasks.Any())
-                            {
-                                <div class="subtasks-list">
-                                    @foreach (var subtask in task.Task.subtasks.OrderBy(s => s.position))
-                                    {
-                                        <div class="subtask-item">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
-                                                       @onchange="async () => await ToggleSubtaskCompletion(task.Task, subtask)">
-                                                <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
-                                                    @subtask.title
-                                                </label>
-                                            </div>
-                                        </div>
-                                    }
-                                </div>
-                            }
-
-                            <div class="card-footer">
-                                <div class="card-metadata">
-                                    <div class="card-metadata">
-                                        @if (task.Task.milestone != null)
-                                        {
-                                            <div class="card-labels bottom-labels">
-                                                <span class="card-label" style="background-color: var(--column-ready-color);">
-                                                    @task.Task.milestone.name
-                                                </span>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="card-actions">
-                                    <button type="button" class="card-btn" title="Edit" @onclick="() => EditTaskDialogOnClick(task)">
-                                        <span class="bi bi-pencil"></span>
-                                    </button>
-                                    <button type="button" class="card-btn" style="padding: 4px;" @onclick="() => ConfirmDeleteTask(task.Task.id)">
-                                        <span class="bi bi-trash"></span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
+                    <TaskCard
+                        Task="@task.Task"
+                        ProjectId="@_projectItem.id"
+                        IsDraggable="true"
+                        OnEditRequest="EditTaskDialogOnClick"
+                        OnDeleteRequest="ConfirmDeleteTask"
+                        OnDragStartEvent="HandleDragStart"
+                        OnDragEndEvent="HandleDragEnd"/>
                 }
-            </div>
-        </div>
+            }
+        </KanbanColumn>
     }
 </div>
-
-<style>
-    .project-header {
-        padding: 0 12px;
-    }
-
-    .project-description {
-        color: var(--dark-text-secondary);
-        font-size: 14px;
-        max-width: 800px;
-        padding-left:  1rem;
-        white-space: pre-line;
-    }
-
-    .kanban-board {
-        height: calc(100vh - 130px);
-        overflow: hidden;
-    }
-    
-</style>
 
 @if (AddTaskDialogFlag)
 {
@@ -270,7 +143,7 @@ This action cannot be undone."
         new KanbanColumn { Id = 4, Title = "Done" }
     ];
 
-    // Dictionary to track collapsed state of each column
+// Dictionary to track collapsed state of each column
     private Dictionary<int, bool> _collapsedColumns = new Dictionary<int, bool>();
 
     private List<KanbanTask> _tasks = [];
@@ -284,12 +157,28 @@ This action cannot be undone."
     private bool AddTaskDialogFlag { get; set; }
     private bool AddMilestoneDialogFlag { get; set; }
     private bool EditProjectDialogFlag { get; set; }
+    private bool ShowDeleteProjectConfirmation { get; set; }
+    private bool ShowDeleteMilestoneConfirmation { get; set; }
+    private bool ShowDeleteTaskConfirmation { get; set; }
+    private Guid? ItemToDeleteId { get; set; }
+
+    private int _insertIndex = -1;
+    private DotNetObjectReference<KanbanBoard> _dotNetRef;
 
     protected override async Task OnInitializedAsync()
     {
         await RefreshTasks();
         await RefreshMilestones();
-        await LoadColumnStates();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await LoadColumnStates();
+            await JSRuntime.InvokeVoidAsync("kanbanInterop.setDotNetReference", _dotNetRef);
+        }
     }
 
     private async Task LoadColumnStates()
@@ -309,17 +198,28 @@ This action cannot be undone."
         }
     }
 
-    private async Task ToggleColumnCollapse(int columnId)
+    private bool GetColumnCollapsedState(int columnId)
     {
-        if (!_collapsedColumns.ContainsKey(columnId))
+        return _collapsedColumns.ContainsKey(columnId) && _collapsedColumns[columnId];
+    }
+
+    private string GetHeaderStyle(int columnId)
+    {
+        return columnId switch
         {
-            _collapsedColumns[columnId] = false;
-        }
+            0 => "border-top: 4px solid transparent;",
+            1 => "border-top: 4px solid var(--column-todo-color);",
+            2 => "border-top: 4px solid var(--column-inprogress-color);",
+            4 => "border-top: 4px solid var(--column-done-color);",
+            _ => ""
+        };
+    }
 
-        _collapsedColumns[columnId] = !_collapsedColumns[columnId];
-
+    private async Task ToggleColumnCollapse(int columnId, bool isCollapsed)
+    {
+        _collapsedColumns[columnId] = isCollapsed;
         var key = $"column_{columnId}_collapsed";
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", key, _collapsedColumns[columnId].ToString().ToLower());
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", key, isCollapsed.ToString().ToLower());
     }
 
     private string GetProjectMessage()
@@ -334,7 +234,7 @@ This action cannot be undone."
         _tasks.Clear();
         foreach (var task in _projectItem.tasks.OrderBy(t => t.columnPosition))
         {
-            // Map status to column ID
+// Map status to column ID
             int columnId = task.status switch
             {
                 "To Do" => 1,
@@ -369,38 +269,6 @@ This action cannot be undone."
         _projectMilestoneItem = null;
     }
 
-    private double _lastPosition = 0;
-    private int _dropIndex = -1;
-    private KanbanTask _taskBeingDroppedOn;
-    private int _insertIndex = -1;
-
-    private DotNetObjectReference<KanbanBoard> _dotNetRef;
-
-    // Initialize in OnAfterRender
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            _dotNetRef = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("kanbanInterop.setDotNetReference", _dotNetRef);
-        }
-    }
-
-    [JSInvokable]
-    public static Task<double> CalculatePositionValue(int columnId, int insertIndex)
-    {
-        // This method will be called from JS to get the position value
-        // Since it's static, we need to implement this logic in the HandleDrop method instead
-        return Task.FromResult(0.0);
-    }
-
-    [JSInvokable]
-    public void OnInsertIndexChanged(int index)
-    {
-        _insertIndex = index;
-        StateHasChanged();
-    }
-
     [JSInvokable]
     public void UpdateInsertIndex(int insertIndex)
     {
@@ -408,9 +276,9 @@ This action cannot be undone."
         Console.WriteLine($"Insert index updated to {_insertIndex}");
     }
 
-    private void HandleDragStart(KanbanTask task)
+    private void HandleDragStart(TaskCard.TaskDragStartEventArgs args)
     {
-        _draggedTask = task;
+        _draggedTask = _tasks.FirstOrDefault(t => t.Task.id == args.Task.id);
         Console.WriteLine($"Started dragging");
     }
 
@@ -420,40 +288,17 @@ This action cannot be undone."
         Console.WriteLine("Drag ended");
     }
 
-    private async Task HandleDragOver(DragEventArgs e, int columnId)
-    {
-        if (_draggedTask == null) return;
-
-        try
-        {
-            Console.WriteLine($"Dragging over column {columnId}");
-
-            // Call JS function with proper error handling
-            var result = await JSRuntime.InvokeAsync<int>(
-                "kanbanInterop.showInsertionLine",
-                columnId, e.ClientY);
-
-            _insertIndex = result;
-            Console.WriteLine($"Got insert index: {_insertIndex}");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"JS Error: {ex.Message}");
-            _insertIndex = -1;
-        }
-    }
-
     private async Task HandleDrop(int newColumnId)
     {
         if (_draggedTask != null)
         {
-            // Remove the insertion indicator
+// Remove the insertion indicator
             await JSRuntime.InvokeVoidAsync("kanbanInterop.removeInsertionLine");
 
             var originColumnId = _draggedTask.ColumnId;
             _draggedTask.ColumnId = newColumnId;
 
-            // Map column ID to status text
+// Map column ID to status text
             string newStatus = newColumnId switch
             {
                 1 => "To Do",
@@ -464,116 +309,65 @@ This action cannot be undone."
 
             _draggedTask.Task.status = newStatus;
 
-            // Get tasks in the target column
+// Get tasks in the target column
             var columnTasks = _tasks
                 .Where(t => t.ColumnId == newColumnId && t.Task.id != _draggedTask.Task.id)
                 .OrderBy(t => t.Task.columnPosition)
                 .ToList();
 
-            // Calculate the new position based on the insertion index
+// Calculate the new position based on the insertion index
             if (columnTasks.Count == 0)
             {
-                // Empty column - use a default position
+// Empty column - use a default position
                 _draggedTask.Task.columnPosition = 1000;
             }
             else if (_insertIndex <= 0)
             {
-                // Insert at the beginning - position before the first task
+// Insert at the beginning - position before the first task
                 _draggedTask.Task.columnPosition = columnTasks.First().Task.columnPosition - 10;
             }
             else if (_insertIndex >= columnTasks.Count)
             {
-                // Insert at the end - position after the last task
+// Insert at the end - position after the last task
                 _draggedTask.Task.columnPosition = columnTasks.Last().Task.columnPosition + 10;
             }
             else
             {
-                // Insert between tasks - calculate the midpoint position
+// Insert between tasks - calculate the midpoint position
                 var positionBefore = columnTasks[_insertIndex - 1].Task.columnPosition;
                 var positionAfter = columnTasks[_insertIndex].Task.columnPosition;
                 _draggedTask.Task.columnPosition = (positionBefore + positionAfter) / 2;
             }
 
-            // Persist to database
+// Persist to database
             await Client.UpdateTask(_draggedTask.Task, _projectItem.id);
 
-            // Reset state
+// Reset state
             _draggedTask = null;
             _insertIndex = -1;
 
-            // Refresh the tasks to ensure correct order
+// Refresh the tasks to ensure correct order
             await RefreshTasks();
         }
     }
 
-    // Move a task up in its column
-    private async Task MoveTaskUp(KanbanTask task)
+    private void HandleColumnAdd(int columnId)
     {
-        var columnTasks = _tasks
-            .Where(t => t.ColumnId == task.ColumnId)
-            .OrderBy(t => t.Task.columnPosition)
-            .ToList();
-
-        int index = columnTasks.IndexOf(task);
-        if (index <= 0) return; // Already at the top
-
-        var taskAbove = columnTasks[index - 1];
-
-        // Swap positions
-        (task.Task.columnPosition, taskAbove.Task.columnPosition) = (taskAbove.Task.columnPosition, task.Task.columnPosition);
-
-        // Save both tasks
-        await Client.UpdateTask(task.Task, _projectItem.id);
-        await Client.UpdateTask(taskAbove.Task, _projectItem.id);
-
-        await RefreshTasks();
-    }
-
-    // Move a task down in its column
-    private async Task MoveTaskDown(KanbanTask task)
-    {
-        var columnTasks = _tasks
-            .Where(t => t.ColumnId == task.ColumnId)
-            .OrderBy(t => t.Task.columnPosition)
-            .ToList();
-
-        int index = columnTasks.IndexOf(task);
-        if (index >= columnTasks.Count - 1) return; // Already at the bottom
-
-        var taskBelow = columnTasks[index + 1];
-
-        // Swap positions
-        (task.Task.columnPosition, taskBelow.Task.columnPosition) = (taskBelow.Task.columnPosition, task.Task.columnPosition);
-
-        // Save both tasks
-        await Client.UpdateTask(task.Task, _projectItem.id);
-        await Client.UpdateTask(taskBelow.Task, _projectItem.id);
-
-        await RefreshTasks();
-    }
-
-    public class KanbanColumn
-    {
-        public int Id { get; set; }
-        public string Title { get; set; }
-    }
-
-    public class KanbanTask
-    {
-        public int ColumnId { get; set; }
-        public ProjectTaskItem Task { get; set; }
-    }
-
-    public class KanbanMilestone
-    {
-        public MilestoneItem Milestone { get; set; }
+        if (columnId == 0)
+        {
+            AddMilestoneDialogOpen();
+        }
+        else
+        {
+            AddTaskDialogOpen(columnId);
+        }
     }
 
     private void AddTaskDialogOpen(int columnId)
     {
         _projectTaskItem = null;
 
-        // Set default status based on column ID
+// Set default status based on column ID
         string status = columnId switch
         {
             1 => "To Do",
@@ -582,7 +376,7 @@ This action cannot be undone."
             _ => "To Do" // Default fallback
         };
 
-        // Create a new task with the appropriate status
+// Create a new task with the appropriate status
         _projectTaskItem = new ProjectTaskItem
         {
             title = "",
@@ -601,9 +395,9 @@ This action cannot be undone."
         StateHasChanged();
     }
 
-    private void EditTaskDialogOnClick(KanbanTask taskItem)
+    private void EditTaskDialogOnClick(ProjectTaskItem taskItem)
     {
-        _projectTaskItem = taskItem.Task;
+        _projectTaskItem = taskItem;
         AddTaskDialogFlag = true;
         StateHasChanged();
     }
@@ -611,15 +405,6 @@ This action cannot be undone."
     public async Task HandelOnAddTask(ProjectTaskItem task)
     {
         await RefreshTasks();
-    }
-
-    private async Task DeleteTask(Guid taskId)
-    {
-        var res = await Client.DeleteTask(taskId);
-        if (res)
-        {
-            await RefreshTasks();
-        }
     }
 
     private void AddMilestoneDialogOpen()
@@ -665,12 +450,6 @@ This action cannot be undone."
         StateHasChanged();
     }
 
-    private bool ShowDeleteProjectConfirmation { get; set; }
-    private bool ShowDeleteMilestoneConfirmation { get; set; }
-    private bool ShowDeleteTaskConfirmation { get; set; }
-
-    private Guid? ItemToDeleteId { get; set; }
-
     private void ConfirmDeleteProject()
     {
         ShowDeleteProjectConfirmation = true;
@@ -683,7 +462,7 @@ This action cannot be undone."
         if (res)
         {
             ProjectStateService.NotifyStateChanged();
-            // Navigate back to home after deletion
+// Navigate back to home after deletion
             NavigationManager.NavigateTo("");
         }
 
@@ -696,7 +475,7 @@ This action cannot be undone."
         StateHasChanged();
     }
 
-    // Update the milestone delete method
+// Update the milestone delete method
     private void ConfirmDeleteMilestone(Guid milestoneId)
     {
         ItemToDeleteId = milestoneId;
@@ -727,7 +506,7 @@ This action cannot be undone."
         StateHasChanged();
     }
 
-    // Update the task delete method
+// Update the task delete method
     private void ConfirmDeleteTask(Guid taskId)
     {
         ItemToDeleteId = taskId;
@@ -757,13 +536,26 @@ This action cannot be undone."
         StateHasChanged();
     }
 
-    private async Task ToggleSubtaskCompletion(ProjectTaskItem taskItem, SubTaskItem subtask)
+    public class KanbanColumn
     {
-        // Toggle the completion status
-        subtask.isCompleted = !subtask.isCompleted;
+        public int Id { get; set; }
+        public string Title { get; set; }
+    }
 
-        // Update the task on the server
-        await Client.UpdateTask(taskItem, _projectItem.id);
+    public class KanbanTask
+    {
+        public int ColumnId { get; set; }
+        public ProjectTaskItem Task { get; set; }
+    }
+
+    public class KanbanMilestone
+    {
+        public MilestoneItem Milestone { get; set; }
+    }
+
+    public void Dispose()
+    {
+        _dotNetRef?.Dispose();
     }
 
 }

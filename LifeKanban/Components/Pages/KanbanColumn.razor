@@ -49,9 +49,7 @@
     protected override async Task OnInitializedAsync()
     {
         // Load collapsed state from local storage
-        var key = $"column_{ColumnId}_collapsed";
-        var state = await JSRuntime.InvokeAsync<string>("localStorage.getItem", key);
-        IsCollapsed = state == "true";
+       
     }
 
     private async Task ToggleCollapse()
@@ -73,5 +71,19 @@
     private async Task HandleDrop()
     {
         await OnDrop.InvokeAsync(ColumnId);
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Load collapsed state from local storage
+            var key = $"column_{ColumnId}_collapsed";
+            var state = await JSRuntime.InvokeAsync<string>("localStorage.getItem", key);
+            IsCollapsed = state == "true";
+        
+            // Re-render if state changed
+            StateHasChanged();
+        }
     }
 }
