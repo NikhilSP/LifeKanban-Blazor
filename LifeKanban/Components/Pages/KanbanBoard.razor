@@ -1,56 +1,51 @@
-@rendermode InteractiveServer
-@inject ProjectsClient Client
 @page "/kanbanboard/{projectId:guid}"
 @using LifeKanban.Client
 @using LifeKanban.Model
+@using LifeKanban.Model.ViewModels
+@using LifeKanban.Services
 @using LifeKanban.StateManagement
+@using TaskStatus = LifeKanban.Model.ViewModels.TaskStatus
 @inject IJSRuntime JSRuntime
 @inject NavigationManager NavigationManager
 @inject ProjectStateService ProjectStateService
+@inject KanbanService KanbanService
+@inject ProjectsClient Client
+@rendermode InteractiveServer
 @implements IDisposable
 
 <ProjectHeader
-    Project="@_projectItem"
+    Project="@_project"
     OnEditRequest="EditProjectDialogOnClick"
     OnDeleteRequest="ConfirmDeleteProject"/>
 
 <div class="kanban-board">
-    @foreach (var column in _columns)
+    @foreach (var column in _columns.OrderBy(c => c.SortOrder))
     {
-        string cssName = column.Title.ToLower().Replace(" ", "");
-
         <KanbanColumn
             Title="@column.Title"
-            ColumnId="@column.Id"
-            ItemCount="@(column.Id == 0 ? _milestones.Count : _tasks.Count(t => t.ColumnId == column.Id))"
+            ColumnId="@((int)column.Type)"
+            ItemCount="@GetColumnItemCount(column.Type)"
             AllowAdd="true"
-            HeaderStyle="@GetHeaderStyle(column.Id)"
-            CssClass="@($"column-{cssName}")"
-            IsCollapsed="@GetColumnCollapsedState(column.Id)"
+            HeaderStyle="@($"border-top: 4px solid {column.BorderColor};")"
+            CssClass="@column.CssClass"
+            IsCollapsed="@GetColumnCollapsedState(column.Type)"
             OnAdd="HandleColumnAdd"
             OnDrop="HandleDrop"
-            OnCollapseToggle="(isCollapsed) => ToggleColumnCollapse(column.Id, isCollapsed)">
+            OnCollapseToggle="(isCollapsed) => ToggleColumnCollapse(column.Type, isCollapsed)">
 
-            @if (column.Id == 0)
+            @if (column.Type == ColumnType.Milestones)
             {
                 <!-- Milestones Column Content -->
                 @foreach (var milestone in _milestones)
                 {
-                    var tasks = _tasks.Where(x => x.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
-                    var totalTasks = tasks.Count;
-                    var completedTasks = tasks.Count(t => t.status == "Done");
-
-                    // Count total subtasks
-                    var milestoneTasks = _tasks.Where(t => t.Task.milestone?.id == milestone.Milestone.id).Select(x => x.Task).ToList();
-                    int totalSubtasks = milestoneTasks.Sum(t => t.subtasks.Count);
-                    int completedSubtasks = milestoneTasks.Sum(t => t.subtasks.Count(s => s.isCompleted));
+                    var milestoneMetrics = GetMilestoneMetrics(milestone.Milestone.id);
 
                     <MilestoneCard
                         Milestone="@milestone.Milestone"
-                        CompletedTasks="@completedTasks"
-                        TotalTasks="@totalTasks"
-                        CompletedSubtasks="@completedSubtasks"
-                        TotalSubtasks="@totalSubtasks"
+                        CompletedTasks="@milestoneMetrics.CompletedTasks"
+                        TotalTasks="@milestoneMetrics.TotalTasks"
+                        CompletedSubtasks="@milestoneMetrics.CompletedSubtasks"
+                        TotalSubtasks="@milestoneMetrics.TotalSubtasks"
                         OnEditRequest="EditMilestoneDialogOnClick"
                         OnDeleteRequest="ConfirmDeleteMilestone"/>
                 }
@@ -58,11 +53,11 @@
             else
             {
                 <!-- Task Columns Content -->
-                @foreach (var task in _tasks.Where(t => t.ColumnId == column.Id))
+                @foreach (var task in _tasks.Where(t => t.ColumnType == column.Type))
                 {
                     <TaskCard
                         Task="@task.Task"
-                        ProjectId="@_projectItem.id"
+                        ProjectId="@_project.id"
                         IsDraggable="true"
                         OnEditRequest="EditTaskDialogOnClick"
                         OnDeleteRequest="ConfirmDeleteTask"
@@ -76,7 +71,7 @@
 
 @if (AddTaskDialogFlag)
 {
-    <AddTaskDialog ProjectItem="@_projectItem"
+    <AddTaskDialog ProjectItem="@_project"
                    CurrentTaskItem="@_projectTaskItem"
                    OnClose="@AddTaskDialogClose"
                    OnItemSelected="@HandelOnAddTask"
@@ -86,7 +81,7 @@
 
 @if (AddMilestoneDialogFlag)
 {
-    <AddMilestoneDialog ProjectItem="@_projectItem"
+    <AddMilestoneDialog ProjectItem="@_project"
                         CurrentMilestoneItem="@_projectMilestoneItem"
                         OnClose="@AddMilestoneDialogClose"
                         OnItemSelected="@HandelOnAddMilestone"
@@ -96,13 +91,14 @@
 
 @if (EditProjectDialogFlag)
 {
-    <EditProjectDialog ProjectItem="@_projectItem"
+    <EditProjectDialog ProjectItem="@_project"
                        OnClose="@EditProjectDialogClose"
                        OnItemSelected="@HandelOnEditProject"
                        DialogType="EditProjectDialog.ModalDialogType.DeleteCancel">
     </EditProjectDialog>
 }
 
+<!-- Confirmation dialogs remain the same -->
 @if (ShowDeleteProjectConfirmation)
 {
     <ConfirmationDialog
@@ -135,22 +131,17 @@ This action cannot be undone."
 @code {
     [Parameter] public Guid projectId { get; set; }
 
-    private List<KanbanColumn> _columns =
-    [
-        new KanbanColumn { Id = 0, Title = "Milestones" },
-        new KanbanColumn { Id = 1, Title = "To Do" },
-        new KanbanColumn { Id = 2, Title = "In Progress" },
-        new KanbanColumn { Id = 4, Title = "Done" }
-    ];
+    // Using our strongly-typed column definitions
+    private List<ColumnDefinition> _columns = BoardConfiguration.DefaultColumns;
 
-// Dictionary to track collapsed state of each column
-    private Dictionary<int, bool> _collapsedColumns = new Dictionary<int, bool>();
+    // Dictionary to track collapsed state of each column
+    private Dictionary<ColumnType, bool> _collapsedColumns = new Dictionary<ColumnType, bool>();
 
     private List<KanbanTask> _tasks = [];
     private List<KanbanMilestone> _milestones = [];
     private KanbanTask? _draggedTask;
 
-    private ProjectItem _projectItem = new();
+    private ProjectItem _project = new();
     private ProjectTaskItem? _projectTaskItem;
     private MilestoneItem? _projectMilestoneItem;
 
@@ -167,8 +158,7 @@ This action cannot be undone."
 
     protected override async Task OnInitializedAsync()
     {
-        await RefreshTasks();
-        await RefreshMilestones();
+        await RefreshBoard();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -176,8 +166,13 @@ This action cannot be undone."
         if (firstRender)
         {
             _dotNetRef = DotNetObjectReference.Create(this);
-            await LoadColumnStates();
             await JSRuntime.InvokeVoidAsync("kanbanInterop.setDotNetReference", _dotNetRef);
+
+            // Load column collapsed states
+            await LoadColumnStates();
+
+            // Force re-render if states changed
+            StateHasChanged();
         }
     }
 
@@ -187,9 +182,9 @@ This action cannot be undone."
         {
             foreach (var column in _columns)
             {
-                var key = $"column_{column.Id}_collapsed";
+                var key = $"column_{(int)column.Type}_collapsed";
                 var state = await JSRuntime.InvokeAsync<string>("localStorage.getItem", key);
-                _collapsedColumns[column.Id] = state == "true";
+                _collapsedColumns[column.Type] = state == "true";
             }
         }
         catch (Exception ex)
@@ -198,74 +193,55 @@ This action cannot be undone."
         }
     }
 
-    private bool GetColumnCollapsedState(int columnId)
+    private bool GetColumnCollapsedState(ColumnType columnType)
     {
-        return _collapsedColumns.ContainsKey(columnId) && _collapsedColumns[columnId];
+        return _collapsedColumns.ContainsKey(columnType) && _collapsedColumns[columnType];
     }
 
-    private string GetHeaderStyle(int columnId)
+    private int GetColumnItemCount(ColumnType columnType)
     {
-        return columnId switch
-        {
-            0 => "border-top: 4px solid transparent;",
-            1 => "border-top: 4px solid var(--column-todo-color);",
-            2 => "border-top: 4px solid var(--column-inprogress-color);",
-            4 => "border-top: 4px solid var(--column-done-color);",
-            _ => ""
-        };
+        return columnType == ColumnType.Milestones
+            ? _milestones.Count
+            : _tasks.Count(t => t.ColumnType == columnType);
     }
 
-    private async Task ToggleColumnCollapse(int columnId, bool isCollapsed)
+    private (int TotalTasks, int CompletedTasks, int TotalSubtasks, int CompletedSubtasks)
+        GetMilestoneMetrics(Guid milestoneId)
     {
-        _collapsedColumns[columnId] = isCollapsed;
-        var key = $"column_{columnId}_collapsed";
+        var tasks = _tasks
+            .Where(t => t.Task.milestone?.id == milestoneId)
+            .Select(t => t.Task)
+            .ToList();
+
+        var totalTasks = tasks.Count;
+        var completedTasks = tasks.Count(t => t.status == BoardConfiguration.FromTaskStatus(TaskStatus.Done));
+
+        int totalSubtasks = tasks.Sum(t => t.subtasks.Count);
+        int completedSubtasks = tasks.Sum(t => t.subtasks.Count(s => s.isCompleted));
+
+        return (totalTasks, completedTasks, totalSubtasks, completedSubtasks);
+    }
+
+    private async Task ToggleColumnCollapse(ColumnType columnType, bool isCollapsed)
+    {
+        _collapsedColumns[columnType] = isCollapsed;
+        var key = $"column_{(int)columnType}_collapsed";
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", key, isCollapsed.ToString().ToLower());
     }
 
     private string GetProjectMessage()
     {
-        return $"Are you sure you want to delete the project {_projectItem.name}?\nThis action cannot be undone.";
+        return $"Are you sure you want to delete the project {_project.name}?\nThis action cannot be undone.";
     }
 
-    private async Task RefreshTasks()
+    private async Task RefreshBoard()
     {
-        _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
-
-        _tasks.Clear();
-        foreach (var task in _projectItem.tasks.OrderBy(t => t.columnPosition))
-        {
-// Map status to column ID
-            int columnId = task.status switch
-            {
-                "To Do" => 1,
-                "In Progress" => 2,
-                "Done" => 4,
-                _ => 1 // Default to "To Do"
-            };
-
-            _tasks.Add(new KanbanTask()
-            {
-                ColumnId = columnId,
-                Task = task
-            });
-        }
-
+        var boardData = await KanbanService.GetBoardData(projectId);
+        _project = boardData.Project;
+        _tasks = boardData.Tasks;
+        _milestones = boardData.Milestones;
+    
         _projectTaskItem = null;
-    }
-
-    private async Task RefreshMilestones()
-    {
-        _projectItem = await Client.GetProjectById(projectId) ?? new ProjectItem();
-
-        _milestones.Clear();
-        foreach (var milestone in _projectItem.milestones)
-        {
-            _milestones.Add(new KanbanMilestone()
-            {
-                Milestone = milestone
-            });
-        }
-
         _projectMilestoneItem = null;
     }
 
@@ -288,100 +264,95 @@ This action cannot be undone."
         Console.WriteLine("Drag ended");
     }
 
-    private async Task HandleDrop(int newColumnId)
+    private async Task HandleDrop(int newColumnTypeInt)
     {
         if (_draggedTask != null)
         {
-// Remove the insertion indicator
+            // Remove the insertion indicator
             await JSRuntime.InvokeVoidAsync("kanbanInterop.removeInsertionLine");
 
-            var originColumnId = _draggedTask.ColumnId;
-            _draggedTask.ColumnId = newColumnId;
+            var originColumnType = _draggedTask.ColumnType;
+            var newColumnType = (ColumnType)newColumnTypeInt;
 
-// Map column ID to status text
-            string newStatus = newColumnId switch
-            {
-                1 => "To Do",
-                2 => "In Progress",
-                4 => "Done",
-                _ => ""
-            };
-
-            _draggedTask.Task.status = newStatus;
-
-// Get tasks in the target column
+            // Get tasks in the target column
             var columnTasks = _tasks
-                .Where(t => t.ColumnId == newColumnId && t.Task.id != _draggedTask.Task.id)
+                .Where(t => t.ColumnType == newColumnType && t.Task.id != _draggedTask.Task.id)
                 .OrderBy(t => t.Task.columnPosition)
                 .ToList();
 
-// Calculate the new position based on the insertion index
+            // Calculate the new position based on the insertion index
+            double newPosition;
             if (columnTasks.Count == 0)
             {
-// Empty column - use a default position
-                _draggedTask.Task.columnPosition = 1000;
+                // Empty column - use a default position
+                newPosition = 1000;
             }
             else if (_insertIndex <= 0)
             {
-// Insert at the beginning - position before the first task
-                _draggedTask.Task.columnPosition = columnTasks.First().Task.columnPosition - 10;
+                // Insert at the beginning - position before the first task
+                newPosition = columnTasks.First().Task.columnPosition - 10;
             }
             else if (_insertIndex >= columnTasks.Count)
             {
-// Insert at the end - position after the last task
-                _draggedTask.Task.columnPosition = columnTasks.Last().Task.columnPosition + 10;
+                // Insert at the end - position after the last task
+                newPosition = columnTasks.Last().Task.columnPosition + 10;
             }
             else
             {
-// Insert between tasks - calculate the midpoint position
+                // Insert between tasks - calculate the midpoint position
                 var positionBefore = columnTasks[_insertIndex - 1].Task.columnPosition;
                 var positionAfter = columnTasks[_insertIndex].Task.columnPosition;
-                _draggedTask.Task.columnPosition = (positionBefore + positionAfter) / 2;
+                newPosition = (positionBefore + positionAfter) / 2;
             }
 
-// Persist to database
-            await Client.UpdateTask(_draggedTask.Task, _projectItem.id);
+            // Update the task with new column type and position
+            if (newColumnType != originColumnType)
+            {
+                // Status change
+                await KanbanService.UpdateTaskStatus(_draggedTask.Task, newColumnType, _project.id, newPosition);
+            }
+            else
+            {
+                // Position change only
+                await KanbanService.UpdateTaskPosition(_draggedTask.Task, newPosition, _project.id);
+            }
 
-// Reset state
+            // Reset state
             _draggedTask = null;
             _insertIndex = -1;
 
-// Refresh the tasks to ensure correct order
-            await RefreshTasks();
+            // Refresh the board to ensure correct order
+            await RefreshBoard();
         }
     }
 
     private void HandleColumnAdd(int columnId)
     {
-        if (columnId == 0)
+        var columnType = (ColumnType)columnId;
+
+        if (columnType == ColumnType.Milestones)
         {
             AddMilestoneDialogOpen();
         }
         else
         {
-            AddTaskDialogOpen(columnId);
+            AddTaskDialogOpen(columnType);
         }
     }
 
-    private void AddTaskDialogOpen(int columnId)
+    private void AddTaskDialogOpen(ColumnType columnType)
     {
         _projectTaskItem = null;
 
-// Set default status based on column ID
-        string status = columnId switch
-        {
-            1 => "To Do",
-            2 => "In Progress",
-            4 => "Done",
-            _ => "To Do" // Default fallback
-        };
+        // Get mapped status for column
+        var mappedStatus = BoardConfiguration.GetMappedStatus(columnType);
 
-// Create a new task with the appropriate status
+        // Create a new task with the appropriate status
         _projectTaskItem = new ProjectTaskItem
         {
             title = "",
             description = "",
-            status = status,
+            status = mappedStatus.HasValue ? BoardConfiguration.FromTaskStatus(mappedStatus.Value) : "To Do",
             subtasks = new List<SubTaskItem>()
         };
 
@@ -458,7 +429,7 @@ This action cannot be undone."
 
     private async Task DeleteProjectConfirmed()
     {
-        var res = await Client.DeleteProjects(_projectItem.id);
+        var res = await Client.DeleteProjects(_project.id);
         if (res)
         {
             ProjectStateService.NotifyStateChanged();
@@ -535,23 +506,59 @@ This action cannot be undone."
         ItemToDeleteId = null;
         StateHasChanged();
     }
-
-    public class KanbanColumn
+    private async Task RefreshTasks()
     {
-        public int Id { get; set; }
-        public string Title { get; set; }
+        // Use the KanbanService to get the project
+        var project = await Client.GetProjectById(projectId) ?? new ProjectItem();
+        _project = project;
+    
+        // Clear existing tasks
+        _tasks.Clear();
+    
+        // Transform project tasks to kanban tasks
+        foreach (var task in project.tasks.OrderBy(t => t.columnPosition))
+        {
+            // Convert string status to enum
+            var taskStatus = BoardConfiguration.ToTaskStatus(task.status);
+        
+            // Get corresponding column
+            var columnType = BoardConfiguration.GetColumnForStatus(taskStatus);
+        
+            _tasks.Add(new KanbanTask
+            {
+                ColumnType = columnType,
+                Task = task
+            });
+        }
+    
+        _projectTaskItem = null;
     }
 
-    public class KanbanTask
+    private async Task RefreshMilestones()
     {
-        public int ColumnId { get; set; }
-        public ProjectTaskItem Task { get; set; }
+        // Use the client to get the project (if not already loaded)
+        if (_project.id == Guid.Empty)
+        {
+            _project = await Client.GetProjectById(projectId) ?? new ProjectItem();
+        }
+    
+        // Clear existing milestones
+        _milestones.Clear();
+    
+        // Transform project milestones to kanban milestones
+        foreach (var milestone in _project.milestones)
+        {
+            _milestones.Add(new KanbanMilestone
+            {
+                Milestone = milestone
+            });
+        }
+    
+        _projectMilestoneItem = null;
     }
-
-    public class KanbanMilestone
-    {
-        public MilestoneItem Milestone { get; set; }
-    }
+ 
+ 
+    
 
     public void Dispose()
     {

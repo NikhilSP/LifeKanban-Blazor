@@ -1,5 +1,6 @@
 using LifeKanban.Client;
 using LifeKanban.Components;
+using LifeKanban.Services;
 using LifeKanban.StateManagement;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +16,7 @@ builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri("http
 builder.Services.AddSingleton<ProjectsClient>();
 builder.Services.AddSingleton<ProjectStateService>();
 builder.Services.AddSingleton<QuickTodosClient>();
+builder.Services.AddSingleton<KanbanService>();
 
 var app = builder.Build();
 
