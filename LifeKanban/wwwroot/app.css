@@ -1792,6 +1792,79 @@ textarea:focus {
     background-color: var(--dark-card-hover);
 }
 
+/* ===== SPELL CHECK ENHANCEMENTS ===== */
+
+/* Improve spell check underline visibility in dark theme */
+.form-control[spellcheck="true"],
+.todo-input[spellcheck="true"],
+.scribble-textarea[spellcheck="true"],
+textarea[spellcheck="true"],
+input[spellcheck="true"] {
+    /* Ensure spell check works properly */
+    -webkit-text-decoration-color: #ff6b6b;
+    text-decoration-color: #ff6b6b;
+}
+
+/* Custom spell check indicator styling */
+.form-control[spellcheck="true"]:focus,
+.todo-input[spellcheck="true"]:focus,
+.scribble-textarea[spellcheck="true"]:focus {
+    /* Maintain focus styles while preserving spell check */
+    outline: none;
+}
+
+/* Spell check context menu styling for dark theme */
+::-webkit-spelling-error {
+    text-decoration: underline dotted #ff6b6b 2px;
+}
+
+::-webkit-grammar-error {
+    text-decoration: underline dotted #ffa726 2px;
+}
+
+/* Firefox spell check styling */
+input::-moz-spellcheck-error,
+textarea::-moz-spellcheck-error {
+    text-decoration: underline dotted #ff6b6b 2px;
+}
+
+/* Claude theme spell check colors */
+[data-theme="claude"] ::-webkit-spelling-error {
+    text-decoration: underline dotted #F78585 2px;
+}
+
+[data-theme="claude"] ::-webkit-grammar-error {
+    text-decoration: underline dotted #F78585 2px;
+}
+
+/* Improve spell check visibility on dark backgrounds */
+.dark-theme input[spellcheck="true"],
+.dark-theme textarea[spellcheck="true"] {
+    -webkit-text-decoration-color: #ff8a80;
+    text-decoration-color: #ff8a80;
+}
+
+/* Custom spell check helper class */
+.spell-check-enabled {
+    position: relative;
+}
+
+.spell-check-enabled::after {
+    content: "📝";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.3;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+/* Hide the spell check indicator on focus */
+.spell-check-enabled:focus::after {
+    display: none;
+}
+
 /* Subtle separation between date groups */
 .date-group + .date-group {
     position: relative;
@@ -1814,3 +1887,5 @@ textarea:focus {
         50% { opacity: 1; }
         100% { opacity: 0.7; }
     }
+    
+    

@@ -19,6 +19,7 @@
                 placeholder="Type your thoughts here..."
                 @bind="_scribbleText"
                 @bind:event="oninput"
+                spellcheck="true"
                 @onblur="SaveScribble">
             </textarea>
             @if (_showScribbleSaved)

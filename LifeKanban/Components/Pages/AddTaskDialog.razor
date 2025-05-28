@@ -15,7 +15,7 @@
 
                     <div class="mb-3">
                         <label for="taskName" class="form-label required">Title</label>
-                        <InputText id="taskName" class="form-control" @bind-Value="ProjectTaskItem.title"/>
+                        <InputText id="taskName" class="form-control" @bind-Value="ProjectTaskItem.title" spellcheck="true"/>
                         <ValidationMessage For="@(() => ProjectTaskItem.title)" class="text-danger"/>
                         @if (!string.IsNullOrEmpty(duplicateError))
                         {
@@ -25,7 +25,7 @@
 
                     <div class="mb-3">
                         <label for="Description" class="form-label">Description</label>
-                        <InputTextArea id="Description" class="form-control" @bind-Value="ProjectTaskItem.description" rows="3"/>
+                        <InputTextArea id="Description" class="form-control" @bind-Value="ProjectTaskItem.description" rows="3" spellcheck="true"/>
                     </div>
 
                     <div class="mb-3">
@@ -54,6 +54,7 @@
                                             <input type="checkbox" class="form-check-input" checked="@subtask.isCompleted"
                                                    @onchange="e => subtask.isCompleted = (bool)e.Value"/>
                                             <input class="form-control form-control-sm ms-2" value="@subtask.title"
+                                                   spellcheck="true"
                                                    @onchange="e => UpdateSubtaskTitle(subtask, e.Value.ToString())"/>
                                         </div>
                                         <div class="subtask-actions">
@@ -86,6 +87,7 @@
                             <div class="d-flex mt-2">
                                 <input class="form-control form-control-sm @(string.IsNullOrWhiteSpace(newSubtaskValidationMessage) ? "" : "is-invalid")"
                                        @bind="newSubtaskTitle"
+                                       spellcheck="true"
                                        @bind:event="oninput"
                                        placeholder="New subtask..." @onkeydown="@HandleSubtaskKeyDown"/>
                                 <button type="button" class="btn btn-sm ms-2" @onclick="AddNewSubtask">

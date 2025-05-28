@@ -24,6 +24,7 @@
                            placeholder="Click here to add new to-do..."
                            @bind="_newTodoTitle"
                            @bind:event="oninput"
+                           spellcheck="true"
                            @onkeydown="HandleNewTodoKeyDown"/>
                 </div>
                 <button type="button" class="todo-add-btn" @onclick="AddQuickTodo">
@@ -74,6 +75,7 @@
                                @onchange="(e) => ToggleQuickTodoCompletion(todo, e.Value is bool value && value)"/>
                         <input type="text" class="todo-input"
                                value="@todo.Title"
+                               spellcheck="true"
                                @oninput="e => UpdateQuickTodoTitle(todo, e.Value?.ToString() ?? string.Empty)"
                                @onkeydown="e => HandleTodoKeyDown(e, todo)"/>
                     </div>
