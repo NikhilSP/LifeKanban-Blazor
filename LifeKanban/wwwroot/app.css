@@ -92,6 +92,12 @@ h3.me-2.mb-0 {
     margin-left: 4px; /* Fine-tune alignment if needed */
 }
 
+/* Alternative more specific selector if needed */
+.project-header .project-description {
+    padding-left: 16px;
+    margin-left: 0;
+}
+
 /* ===== SIDEBAR STYLES ===== */
 .sidebar {
     background-color: var(--sidebar-bg);
@@ -424,15 +430,15 @@ h3.me-2.mb-0 {
 }
 
 .card-title {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
-    color: #ffffff;
+    color: #bfbfbf;
     margin-bottom: 8px;
     word-break: break-word;
 }
 
 .kanban-board .kanban-column .kanban-card .card-title {
-    color: #ffffff !important;
+    color: #d5d5d5 !important;
 }
 
 .kanban-column[data-column-id="0"] .kanban-card {  
