@@ -276,9 +276,17 @@ This action cannot be undone."
 
             // Get tasks in the target column
             var columnTasks = _tasks
-                .Where(t => t.ColumnType == newColumnType && t.Task.id != _draggedTask.Task.id)
+                .Where(t => t.ColumnType == newColumnType)// && t.Task.id != _draggedTask.Task.id)
                 .OrderBy(t => t.Task.columnPosition)
                 .ToList();
+            
+            int sourceIndex = columnTasks.IndexOf(_draggedTask);
+            columnTasks.Remove(_draggedTask);
+
+            if (sourceIndex < _insertIndex)
+            {
+                _insertIndex--;
+            }
 
             // Calculate the new position based on the insertion index
             double newPosition;
