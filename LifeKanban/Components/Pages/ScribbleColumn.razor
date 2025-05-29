@@ -85,7 +85,7 @@
 
             _saveIndicatorTimer?.Dispose();
 
-            _saveIndicatorTimer = new System.Threading.Timer(async _ =>
+            _saveIndicatorTimer = new Timer(async _ =>
             {
                 await InvokeAsync(() =>
                 {

@@ -53,10 +53,26 @@
         </div>
         <div class="card-actions">
             <button type="button" class="card-btn" title="Edit" @onclick="OnEdit">
-                <span class="bi bi-pencil"></span>
+                @if (IsInHomePageColumn)
+                {
+                    <span class="bi bi-arrow-up-right-square" title="Go to project"></span>
+                }
+                else
+                {
+                    <span class="bi bi-pencil"></span>
+                }
+
             </button>
             <button type="button" class="card-btn" style="padding: 4px;" @onclick="OnDelete">
-                <span class="bi bi-trash"></span>
+
+                @if (IsInHomePageColumn)
+                {
+                    <span class="bi bi-award" title="Mark as done"></span>
+                }
+                else
+                {
+                    <span class="bi bi-trash"></span>
+                }
             </button>
         </div>
     </div>
@@ -71,6 +87,7 @@
     [Parameter] public EventCallback<Guid> OnDeleteRequest { get; set; }
     [Parameter] public EventCallback<TaskDragStartEventArgs> OnDragStartEvent { get; set; }
     [Parameter] public EventCallback OnDragEndEvent { get; set; }
+    [Parameter] public bool IsInHomePageColumn { get; set; } = false;
 
     private async Task ToggleSubtaskCompletion(SubTaskItem subtask)
     {
@@ -102,4 +119,5 @@
     {
         public ProjectTaskItem Task { get; set; }
     }
+
 }
