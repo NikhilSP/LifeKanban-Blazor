@@ -39,7 +39,7 @@
 @if (_showColumnManagementModal)
 {
     <ColumnManagementModal
-        Columns="@_dashboardColumns"
+        Columns="@_dashboardColumns.Select(x=>x.Clone()).ToList()"
         OnClose="CloseColumnManagement"
         OnSave="SaveColumnSettings"/>
 }
