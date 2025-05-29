@@ -1306,7 +1306,7 @@ textarea:focus {
 
 .save-indicator {
     position: absolute;
-    bottom: 12px;
+    top: 12px;
     right: 12px;
     background-color: rgba(40, 40, 40, 0.8);
     color: #5cb85c;

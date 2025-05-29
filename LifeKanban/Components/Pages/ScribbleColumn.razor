@@ -81,13 +81,10 @@
         {
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "scribbleText", _scribbleText);
 
-            // Show saved indicator
             _showScribbleSaved = true;
 
-            // Clear any existing timer
             _saveIndicatorTimer?.Dispose();
 
-            // Hide indicator after 2 seconds
             _saveIndicatorTimer = new System.Threading.Timer(async _ =>
             {
                 await InvokeAsync(() =>
