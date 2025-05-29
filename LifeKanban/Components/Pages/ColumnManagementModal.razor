@@ -1,4 +1,5 @@
 @inject IJSRuntime JSRuntime
+@using LifeKanban.Internal
 @using LifeKanban.Model.Home
 @implements IDisposable
 
@@ -122,30 +123,10 @@
     [JSInvokable]
     public void UpdateColumnOrder(string sourceId, int targetIndex)
     {
-        var sourceColumn = Columns.FirstOrDefault(c => c.Id == sourceId);
-        if (sourceColumn == null)
-        {
-            Console.WriteLine("Source column not found or not visible");
-            return;
-        }
-        
-        var currentIndex = Columns.IndexOf(sourceColumn);
-        
-        if (currentIndex == targetIndex)
-        {
-            return;
-        }
-        
-        Columns.Remove(sourceColumn);
-        
-        if (currentIndex < targetIndex)
-            targetIndex--;
-            
-        if (targetIndex >= Columns.Count)
-            Columns.Add(sourceColumn);
-        else
-            Columns.Insert(targetIndex, sourceColumn);
-        
+        var sourceIndex = Columns.FindIndex(c => c.Id == sourceId);
+        if (sourceIndex == -1 || sourceIndex == targetIndex) return;
+    
+        Columns.MoveItem(sourceIndex, targetIndex);
         StateHasChanged();
     }
     
