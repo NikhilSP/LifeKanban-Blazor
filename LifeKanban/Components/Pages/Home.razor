@@ -1,12 +1,6 @@
 ﻿@page "/"
-@using LifeKanban.Client
-@using LifeKanban.Model
-@using LifeKanban.StateManagement
-@inject ProjectsClient Client
-@inject NavigationManager NavigationManager
-@inject ProjectStateService ProjectStateService
+@using LifeKanban.Model.Home
 @rendermode InteractiveServer
-@inject QuickTodosClient QuickTodosClient
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Home</PageTitle>
@@ -52,20 +46,11 @@
 
 @code {
 
-    public class DashboardColumn
-    {
-        public string Id { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public bool IsVisible { get; set; } = true;
-        public int Order { get; set; }
-    }
-
     private List<DashboardColumn> _dashboardColumns = new();
-    private bool _showColumnManagementModal = false;
+    private bool _showColumnManagementModal;
 
     protected override async Task OnInitializedAsync()
     {
-// Initialize the dashboard columns
         _dashboardColumns = new List<DashboardColumn>
         {
             new() { Id = "life-months", Title = "Life in Months", Order = 0, IsVisible = true },
@@ -74,7 +59,6 @@
             new() { Id = "in-progress", Title = "In Progress", Order = 3, IsVisible = true }
         };
 
-// Load column settings from local storage
         await LoadColumnSettings();
     }
 
@@ -97,12 +81,10 @@
     private async Task SaveColumnSettings(List<DashboardColumn> columns)
     {
         _dashboardColumns = columns;
-
-// Update order based on position in list (only for visible columns)
-        var visibleColumns = _dashboardColumns.Where(c => c.IsVisible).ToList();
-        for (int i = 0; i < visibleColumns.Count; i++)
+        
+        for (int i = 0; i < _dashboardColumns.Count; i++)
         {
-            visibleColumns[i].Order = i;
+            _dashboardColumns[i].Order = i;
         }
 
         try
@@ -129,7 +111,6 @@
         _showColumnManagementModal = false;
     }
 
-// Event handlers for column toggle events 
     private void HandleLifeColumnToggle(bool isCollapsed)
     {
 // Any additional logic needed when life column is toggled

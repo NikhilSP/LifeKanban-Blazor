@@ -1,4 +1,5 @@
 @inject IJSRuntime JSRuntime
+@using LifeKanban.Model.Home
 @implements IDisposable
 
 <div class="modal fade show gitlab-modal" id="columnManagementModal" style="display:block; background-color: rgba(10,10,10,.8);" aria-modal="true" role="dialog">
@@ -14,24 +15,21 @@
                 <div class="column-management-list">
                     @foreach (var column in Columns)
                     {
-                        <div class="column-management-item @(column.IsVisible ? "draggable-item" : "")" 
-                             draggable="@column.IsVisible.ToString().ToLower()" 
+                        <div class="column-management-item draggable-item" 
+                             draggable="true" 
                              data-id="@column.Id" 
                              @key="column.Id">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center">
-                                    @if (column.IsVisible)
-                                    {
                                         <span class="column-drag-handle me-2">
                                             <i class="bi bi-grip-vertical"></i>
                                         </span>
-                                    }
                                     <span class="column-title">@column.Title</span>
                                 </div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" id="column-@column.Id" 
                                            checked="@column.IsVisible" 
-                                           @onchange="e => ToggleColumnVisibility(column.Id, e.Value is bool value && value)" />
+                                           @onchange="e => ToggleColumnVisibility(column.Id, e.Value is true)" />
                                 </div>
                             </div>
                         </div>
@@ -88,9 +86,9 @@
 </style>
 
 @code {
-    [Parameter] public List<Home.DashboardColumn> Columns { get; set; } = new();
+    [Parameter] public List<DashboardColumn> Columns { get; set; } = new();
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback<List<Home.DashboardColumn>> OnSave { get; set; }
+    [Parameter] public EventCallback<List<DashboardColumn>> OnSave { get; set; }
     
     private DotNetObjectReference<ColumnManagementModal>? _dotNetRef;
     private IJSObjectReference? _dragDropModule;
@@ -103,8 +101,6 @@
             {
                 _dotNetRef = DotNetObjectReference.Create(this);
                 await JSRuntime.InvokeVoidAsync("setupColumnDrag", _dotNetRef);
-                
-                Console.WriteLine("Column drag and drop initialized");
             }
             catch (Exception ex)
             {
@@ -115,8 +111,6 @@
 
     private void ToggleColumnVisibility(string id, bool isVisible)
     {
-        Console.WriteLine($"Toggling visibility of column {id} to {isVisible}");
-        
         var column = Columns.FirstOrDefault(c => c.Id == id);
         if (column != null)
         {
@@ -128,51 +122,30 @@
     [JSInvokable]
     public void UpdateColumnOrder(string sourceId, int targetIndex)
     {
-        Console.WriteLine($"UpdateColumnOrder called with sourceId: {sourceId}, targetIndex: {targetIndex}");
-        
         var sourceColumn = Columns.FirstOrDefault(c => c.Id == sourceId);
-        if (sourceColumn == null || !sourceColumn.IsVisible)
+        if (sourceColumn == null)
         {
             Console.WriteLine("Source column not found or not visible");
             return;
         }
         
-        // Get only visible columns for reordering
-        var visibleColumns = Columns.Where(c => c.IsVisible).ToList();
-        var currentIndex = visibleColumns.IndexOf(sourceColumn);
-        
-        Console.WriteLine($"Current index: {currentIndex}, Target index: {targetIndex}");
+        var currentIndex = Columns.IndexOf(sourceColumn);
         
         if (currentIndex == targetIndex)
         {
-            Console.WriteLine("No change in position needed");
             return;
         }
         
-        // Remove and insert to reorder the list
-        visibleColumns.Remove(sourceColumn);
+        Columns.Remove(sourceColumn);
         
-        // Adjust target index
         if (currentIndex < targetIndex)
             targetIndex--;
             
-        if (targetIndex >= visibleColumns.Count)
-            visibleColumns.Add(sourceColumn);
+        if (targetIndex >= Columns.Count)
+            Columns.Add(sourceColumn);
         else
-            visibleColumns.Insert(targetIndex, sourceColumn);
-            
-        // Update the original list
-        var updatedColumns = new List<Home.DashboardColumn>();
+            Columns.Insert(targetIndex, sourceColumn);
         
-        // Add invisible columns first
-        updatedColumns.AddRange(Columns.Where(c => !c.IsVisible));
-        
-        // Add visible columns in the new order
-        updatedColumns.AddRange(visibleColumns);
-        
-        Columns = updatedColumns;
-        
-        Console.WriteLine("Column order updated");
         StateHasChanged();
     }
     
