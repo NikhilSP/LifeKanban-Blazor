@@ -16,10 +16,11 @@
         <div class="scribble-container">
             <textarea
                 class="scribble-textarea"
-                placeholder="Type your thoughts here..."
+                placeholder="Type your thoughts here...(Max 2000 Characters)"
                 @bind="_scribbleText"
                 @bind:event="oninput"
                 spellcheck="true"
+                maxlength="2000"
                 @onblur="SaveScribble">
             </textarea>
             @if (_showScribbleSaved)
