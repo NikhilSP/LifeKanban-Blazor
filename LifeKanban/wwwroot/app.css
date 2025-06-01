@@ -1022,7 +1022,7 @@ textarea:focus {
 }
 
 .btn.btn-secondary{
-    background-color: rgba(246, 13, 13, 0.08);   /* subtle lift */
+    background-color: rgba(255,255,255,0.08);   /* subtle lift */
     color: var(--dark-text);
     border: 1px solid var(--dark-border);
 }

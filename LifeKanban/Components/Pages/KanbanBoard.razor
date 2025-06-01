@@ -82,7 +82,7 @@
 @if (AddMilestoneDialogFlag)
 {
     <AddMilestoneDialog ProjectItem="@_project"
-                        CurrentMilestoneItem="@_projectMilestoneItem"
+                        CurrentMilestoneItem="@_projectMilestoneItem?.Clone()"
                         OnClose="@AddMilestoneDialogClose"
                         OnItemSelected="@HandelOnAddMilestone"
                         DialogType="AddMilestoneDialog.ModalDialogType.DeleteCancel">
@@ -240,7 +240,7 @@ This action cannot be undone."
         _project = boardData.Project;
         _tasks = boardData.Tasks;
         _milestones = boardData.Milestones;
-    
+
         _projectTaskItem = null;
         _projectMilestoneItem = null;
     }
@@ -276,10 +276,10 @@ This action cannot be undone."
 
             // Get tasks in the target column
             var columnTasks = _tasks
-                .Where(t => t.ColumnType == newColumnType)// && t.Task.id != _draggedTask.Task.id)
+                .Where(t => t.ColumnType == newColumnType) // && t.Task.id != _draggedTask.Task.id)
                 .OrderBy(t => t.Task.columnPosition)
                 .ToList();
-            
+
             int sourceIndex = columnTasks.IndexOf(_draggedTask);
             columnTasks.Remove(_draggedTask);
 
@@ -392,7 +392,7 @@ This action cannot be undone."
         StateHasChanged();
     }
 
-    private async Task AddMilestoneDialogClose()
+    private void AddMilestoneDialogClose()
     {
         AddMilestoneDialogFlag = false;
         StateHasChanged();
@@ -514,45 +514,42 @@ This action cannot be undone."
         ItemToDeleteId = null;
         StateHasChanged();
     }
+
     private async Task RefreshTasks()
     {
         // Use the KanbanService to get the project
         var project = await Client.GetProjectById(projectId) ?? new ProjectItem();
         _project = project;
-    
+
         // Clear existing tasks
         _tasks.Clear();
-    
+
         // Transform project tasks to kanban tasks
         foreach (var task in project.tasks.OrderBy(t => t.columnPosition))
         {
             // Convert string status to enum
             var taskStatus = BoardConfiguration.ToTaskStatus(task.status);
-        
+
             // Get corresponding column
             var columnType = BoardConfiguration.GetColumnForStatus(taskStatus);
-        
+
             _tasks.Add(new KanbanTask
             {
                 ColumnType = columnType,
                 Task = task
             });
         }
-    
+
         _projectTaskItem = null;
     }
 
     private async Task RefreshMilestones()
     {
-        // Use the client to get the project (if not already loaded)
-        if (_project.id == Guid.Empty)
-        {
-            _project = await Client.GetProjectById(projectId) ?? new ProjectItem();
-        }
-    
+        _project = await Client.GetProjectById(projectId) ?? new ProjectItem();
+
         // Clear existing milestones
         _milestones.Clear();
-    
+
         // Transform project milestones to kanban milestones
         foreach (var milestone in _project.milestones)
         {
@@ -561,12 +558,10 @@ This action cannot be undone."
                 Milestone = milestone
             });
         }
-    
+
         _projectMilestoneItem = null;
     }
- 
- 
-    
+
 
     public void Dispose()
     {
