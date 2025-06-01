@@ -115,5 +115,10 @@ window.kanbanInterop = {
         } else {
             container.appendChild(indicator);
         }
+    },
+
+    clearDotNetReference: function() {
+        this._dotNetRef = null;
+        console.log("DotNet reference cleared");
     }
 };

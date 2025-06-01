@@ -83,8 +83,20 @@
 
     private async Task ToggleSubtaskCompletion(SubTaskItem subtask)
     {
-        subtask.isCompleted = !subtask.isCompleted;
-        await Client.UpdateTask(Task, ProjectId);
+        var originalState = subtask.isCompleted;
+    
+        try
+        {
+            subtask.isCompleted = !subtask.isCompleted;
+            await Client.UpdateTask(Task, ProjectId);
+        }
+        catch (Exception ex)
+        {
+            // Revert on failure
+            subtask.isCompleted = originalState;
+            Console.WriteLine($"Failed to update subtask: {ex.Message}");
+            StateHasChanged();
+        }
     }
 
     private async Task OnEdit()

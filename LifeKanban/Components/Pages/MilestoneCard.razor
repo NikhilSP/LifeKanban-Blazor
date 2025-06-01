@@ -5,10 +5,12 @@
     <div style="height: 4px; width: 100%; background-color: var(--gl-border-color);">
         <div style="height: 100%; width: @CompletionPercentage%; background-color: var(--column-ready-color);"></div>
     </div>
-    <div class="text-end small mt-1" style="color: var(--gl-text-secondary);">
-        @CompletedTasks/@TotalTasks
-    </div>
-
+    @if (TotalTasks != 0)
+    {
+        <div class="text-end small mt-1" style="color: var(--gl-text-secondary);">
+            @CompletedTasks/@TotalTasks
+        </div>
+    }
     <div class="card-footer">
         <div class="card-metadata">
             <div class="card-id">
