@@ -11,4 +11,14 @@ public class MilestoneItem
     public string name { get; set; } = string.Empty;
     
     public int position { get; set; } = 0;
+
+    public MilestoneItem Clone()
+    {
+        return new MilestoneItem()
+        {
+            id = id,
+            name = name,
+            position = position
+        };
+    }
 }

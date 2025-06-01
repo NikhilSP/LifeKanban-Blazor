@@ -68,18 +68,14 @@
 
     private bool ValidateMilestone()
     {
-        // Clear previous errors
         duplicateError = string.Empty;
 
-        // Validate milestone name
         if (string.IsNullOrWhiteSpace(MilestoneItem.name))
         {
             ShowErrorNotification("Validation Error", "Milestone name is required.");
             return false;
         }
 
-        // Check for duplicate milestone name
-        // Skip duplicate check if we're in edit mode and the name hasn't changed
         if (!_inEditMode || (CurrentMilestoneItem != null && MilestoneItem.name != CurrentMilestoneItem.name))
         {
             bool isDuplicate = Client.IsMilestoneNameDuplicate(MilestoneItem.name, ProjectItem);
@@ -93,7 +89,6 @@
         return true;
     }
 
-    // A wrapper for the ModalOk method with error handling and validation
     private async Task SafeModalOk()
     {
         try
@@ -187,7 +182,7 @@
         showNotification = true;
 
         // Auto-hide after 3 seconds
-        var timer = new System.Threading.Timer(async _ =>
+        var timer = new Timer(async _ =>
         {
             await InvokeAsync(() =>
             {

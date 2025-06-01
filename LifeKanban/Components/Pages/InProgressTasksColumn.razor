@@ -22,7 +22,7 @@
         @foreach (var task in _inProgressTasks)
         {
             <TaskCard 
-                Task="task.Task" 
+                Task="task.Task"
                 ProjectName="task.ProjectName"
                 ProjectId="task.ProjectId"
                 OnEditRequest="_=>GoToProject(task.ProjectId)"

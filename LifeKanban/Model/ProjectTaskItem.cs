@@ -19,5 +19,19 @@ public class ProjectTaskItem
     public MilestoneItem? milestone { get; set; }
     
     public List<SubTaskItem> subtasks { get; set; } = new();
+
+    public ProjectTaskItem Clone()
+    {
+        return new ProjectTaskItem()
+        {
+            id = id,
+            title = title,
+            description = description,
+            status = status,
+            columnPosition = columnPosition,
+            milestone = milestone?.Clone(),
+            subtasks = subtasks.Select(x=>x.Clone()).ToList()
+        };
+    }
 }
 

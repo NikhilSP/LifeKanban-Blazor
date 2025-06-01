@@ -72,7 +72,7 @@
 @if (AddTaskDialogFlag)
 {
     <AddTaskDialog ProjectItem="@_project"
-                   CurrentTaskItem="@_projectTaskItem"
+                   CurrentTaskItem="@_projectTaskItem?.Clone()"
                    OnClose="@AddTaskDialogClose"
                    OnItemSelected="@HandelOnAddTask"
                    DialogType="AddTaskDialog.ModalDialogType.DeleteCancel">

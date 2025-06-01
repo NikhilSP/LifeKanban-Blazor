@@ -12,4 +12,15 @@ public class SubTaskItem
     
     public bool isCompleted { get; set; }
     public int position { get; set; } = 0;
+    
+    public SubTaskItem Clone()
+    {
+        return new SubTaskItem()
+        {
+            id = id,
+            title = title,
+            isCompleted=isCompleted,
+            position = position
+        };
+    }
 }
