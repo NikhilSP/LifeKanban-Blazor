@@ -57,14 +57,14 @@
                 @foreach (var task in _tasks.Where(t => t.ColumnType == column.Type))
                 {
                     <TaskCard
-                        @key="task.Task.id"
                         Task="@task.Task"
                         ProjectId="@_project.id"
                         IsDraggable="true"
                         OnEditRequest="EditTaskDialogOnClick"
                         OnDeleteRequest="ConfirmDeleteTask"
                         OnDragStartEvent="HandleDragStart"
-                        OnDragEndEvent="HandleDragEnd"/>
+                        OnDragEndEvent="HandleDragEnd"
+                        OnSubtaskToggle="HandleSubtaskToggle" />
                 }
             }
         </KanbanColumn>
@@ -583,6 +583,38 @@ This action cannot be undone."
         {
             JSRuntime.InvokeVoidAsync("kanbanInterop.clearDotNetReference");
             _dotNetRef.Dispose();
+        }
+    }
+    
+    private async Task HandleSubtaskToggle(TaskCard.SubtaskToggleEventArgs args)
+    {
+        try
+        {
+            var kanbanTask = _tasks.FirstOrDefault(t => t.Task.id == args.TaskId);
+            if (kanbanTask == null) return;
+
+            var subtask = kanbanTask.Task.subtasks.FirstOrDefault(s => s.id == args.SubtaskId);
+            if (subtask == null) return;
+
+            var originalState = subtask.isCompleted;
+
+            subtask.isCompleted = args.IsCompleted;
+            StateHasChanged();
+
+            var result = await Client.UpdateTask(kanbanTask.Task, _project.id);
+            
+            if (result == null)
+            {
+                subtask.isCompleted = originalState;
+                StateHasChanged();
+                
+                Console.WriteLine("Failed to update subtask");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating subtask: {ex.Message}");
+            await RefreshBoard();
         }
     }
 

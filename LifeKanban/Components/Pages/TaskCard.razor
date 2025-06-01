@@ -1,12 +1,11 @@
 @using LifeKanban.Model
-@using LifeKanban.Client
-@inject ProjectsClient Client
 
 <div class="kanban-card"
      draggable="@(IsDraggable ? "true" : "false")"
      @ondragstart="@(IsDraggable ? OnDragStart : null)"
      @ondragend="@(IsDraggable ? OnDragEnd : null)"
      @key="Task.id">
+    
     <div class="card-title">@Task.title</div>
 
     @if (!string.IsNullOrEmpty(Task.description))
@@ -21,8 +20,10 @@
             {
                 <div class="subtask-item">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" checked="@subtask.isCompleted"
-                               @onchange="async () => await ToggleSubtaskCompletion(subtask)">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               checked="@subtask.isCompleted"
+                               @onchange="() => OnSubtaskToggle.InvokeAsync(new SubtaskToggleEventArgs { TaskId = Task.id, SubtaskId = subtask.id, IsCompleted = !subtask.isCompleted })">
                         <label class="form-check-label @(subtask.isCompleted ? "text-decoration-line-through" : "")">
                             @subtask.title
                         </label>
@@ -53,10 +54,8 @@
                 {
                     <span class="bi bi-pencil"></span>
                 }
-
             </button>
             <button type="button" class="card-btn" style="padding: 4px;" @onclick="OnDelete">
-
                 @if (IsInHomePageColumn)
                 {
                     <span class="bi bi-check-circle" title="Mark as done"></span>
@@ -80,24 +79,9 @@
     [Parameter] public EventCallback<TaskDragStartEventArgs> OnDragStartEvent { get; set; }
     [Parameter] public EventCallback OnDragEndEvent { get; set; }
     [Parameter] public bool IsInHomePageColumn { get; set; } = false;
-
-    private async Task ToggleSubtaskCompletion(SubTaskItem subtask)
-    {
-        var originalState = subtask.isCompleted;
     
-        try
-        {
-            subtask.isCompleted = !subtask.isCompleted;
-            await Client.UpdateTask(Task, ProjectId);
-        }
-        catch (Exception ex)
-        {
-            // Revert on failure
-            subtask.isCompleted = originalState;
-            Console.WriteLine($"Failed to update subtask: {ex.Message}");
-            StateHasChanged();
-        }
-    }
+    // NEW: Event for subtask toggle
+    [Parameter] public EventCallback<SubtaskToggleEventArgs> OnSubtaskToggle { get; set; }
 
     private async Task OnEdit()
     {
@@ -119,9 +103,16 @@
         await OnDragEndEvent.InvokeAsync();
     }
 
+    // NEW: Event args for subtask toggle
+    public class SubtaskToggleEventArgs
+    {
+        public Guid TaskId { get; set; }
+        public Guid SubtaskId { get; set; }
+        public bool IsCompleted { get; set; }
+    }
+
     public class TaskDragStartEventArgs
     {
         public ProjectTaskItem Task { get; set; }
     }
-
 }

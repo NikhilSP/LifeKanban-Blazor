@@ -27,8 +27,8 @@
                 ProjectId="task.ProjectId"
                 OnEditRequest="_=>GoToProject(task.ProjectId)"
                 OnDeleteRequest="id => MarkTaskAsDone(task)"
-                IsInHomePageColumn="true"
-            />
+                OnSubtaskToggle="HandleSubtaskToggleInProgress"
+                IsInHomePageColumn="true" />
         }
     </div>
 </div>
@@ -96,5 +96,42 @@
     public void Dispose()
     {
         ProjectStateService.ProjectsChanged -= OnProjectsChanged;
+    }
+    
+    private async Task HandleSubtaskToggleInProgress(TaskCard.SubtaskToggleEventArgs args)
+    {
+        // Find the task wrapper
+        var taskWrapper = _inProgressTasks.FirstOrDefault(t => t.Task.id == args.TaskId);
+        if (taskWrapper == null) return;
+
+        var subtask = taskWrapper.Task.subtasks.FirstOrDefault(s => s.id == args.SubtaskId);
+        if (subtask == null) return;
+
+        var originalState = subtask.isCompleted;
+
+        try
+        {
+            subtask.isCompleted = args.IsCompleted;
+            StateHasChanged();
+
+            var result = await Client.UpdateTask(taskWrapper.Task, taskWrapper.ProjectId);
+            
+            if (result == null)
+            {
+                subtask.isCompleted = originalState;
+                StateHasChanged();
+            }
+            else
+            {
+                ProjectStateService.NotifyStateChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Rollback and refresh
+            subtask.isCompleted = originalState;
+            await LoadInProgressTasks();
+            Console.WriteLine($"Error updating subtask: {ex.Message}");
+        }
     }
 }
