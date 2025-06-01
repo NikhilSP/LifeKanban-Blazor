@@ -23,7 +23,7 @@
         {
             <TaskCard 
                 Task="task.Task"
-                ProjectName="task.ProjectName"
+                ProjectName="@task.ProjectName"
                 ProjectId="task.ProjectId"
                 OnEditRequest="_=>GoToProject(task.ProjectId)"
                 OnDeleteRequest="id => MarkTaskAsDone(task)"

@@ -42,20 +42,12 @@
                     </span>
                 </div>
             }
-            @if (!string.IsNullOrEmpty(ProjectName))
-            {
-                <div class="card-labels bottom-labels">
-                    <span class="card-label" style="background-color: var(--column-ready-color);">
-                        @ProjectName
-                    </span>
-                </div>
-            }
         </div>
         <div class="card-actions">
             <button type="button" class="card-btn" title="Edit" @onclick="OnEdit">
                 @if (IsInHomePageColumn)
                 {
-                    <span class="bi bi-arrow-up-right-square" title="Go to project"></span>
+                    <span class="bi bi-arrow-bar-right" title="Go to project"></span>
                 }
                 else
                 {
@@ -67,7 +59,7 @@
 
                 @if (IsInHomePageColumn)
                 {
-                    <span class="bi bi-award" title="Mark as done"></span>
+                    <span class="bi bi-check-circle" title="Mark as done"></span>
                 }
                 else
                 {
