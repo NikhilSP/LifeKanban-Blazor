@@ -1021,9 +1021,30 @@ textarea:focus {
     transition: all 0.2s;
 }
 
+.btn.btn-secondary{
+    background-color: rgba(246, 13, 13, 0.08);   /* subtle lift */
+    color: var(--dark-text);
+    border: 1px solid var(--dark-border);
+}
+
+.btn.btn-secondary:hover{
+    background-color: rgba(255,255,255,0.15);
+}
+
 .app-btn-secondary:hover {
     background-color: rgba(255, 255, 255, 0.05);
     border-color: var(--dark-border-strong);
+}
+
+.app-btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
 }
 
 .app-btn-danger {

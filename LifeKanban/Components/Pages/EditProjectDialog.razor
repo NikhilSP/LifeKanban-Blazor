@@ -44,11 +44,11 @@
                         <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">Update</button>
                         break;
                     case ModalDialogType.OkCancel:
-                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-secondary" @onclick="@ModalCancel">Cancel</button>
                         <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">Update</button>
                         break;
                     case ModalDialogType.DeleteCancel:
-                        <button type="button" class="btn" @onclick="@ModalCancel">Cancel</button>
+                        <button type="button" class="btn btn-secondary" @onclick="@ModalCancel">Cancel</button>
                         <button type="button" class="btn btn-primary" @onclick="ValidateAndSubmit">Update</button>
                         break;
                 }
