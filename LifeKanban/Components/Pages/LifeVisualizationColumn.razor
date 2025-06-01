@@ -1,3 +1,4 @@
+@using System.Globalization
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -15,77 +16,83 @@
             </button>
         </div>
     </div>
+
     <div class="cards-container">
         @if (_showLifeSettings)
         {
-        <div class="life-settings-card">
-            <div class="card-title">Life Settings</div>
-            <div class="mb-3">
-                <label for="birthDate" class="form-label">Birth Date</label>
-                <input type="date" class="form-control" id="birthDate" @bind="_birthDate"/>
+            <div class="life-settings-card">
+                <div class="card-title">Life Settings</div>
+
+                <div class="mb-3">
+                    <label for="birthDate" class="form-label">Birth Date</label>
+                    <input type="date" class="form-control" id="birthDate" @bind="_birthDate" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
+                    <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120" />
+                </div>
+
+                <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
             </div>
-            <div class="mb-3">
-                <label for="expectedYears" class="form-label">Expected Life Span (years)</label>
-                <input type="number" class="form-control" id="expectedYears" @bind="_expectedYears" min="1" max="120"/>
-            </div>
-            <button type="button" class="btn btn-primary" @onclick="SaveLifeSettings">Save</button>
-        </div>
         }
         else
         {
-        <div class="view-toggle-container mb-3">
-            <div class="btn-group">
-                <button type="button"
-                        class="btn @(_lifeViewType == LifeViewType.Months ? "btn-primary" : "btn-outline-secondary")"
-                        @onclick="() => SwitchLifeView(LifeViewType.Months)">
-                    Life in Months
-                </button>
-                <button type="button"
-                        class="btn @(_lifeViewType == LifeViewType.WeeksInYear ? "btn-primary" : "btn-outline-secondary")"
-                        @onclick="() => SwitchLifeView(LifeViewType.WeeksInYear)">
-                    Weeks in Year
-                </button>
-            </div>
-        </div>
-
-        @if (_lifeViewType == LifeViewType.Months)
-        {
-        <div class="life-months-chart">
-            <p class="text-center mb-3">
-                @(_totalMonths - _currentMonth) of @_totalMonths months left (@Math.Round(_percentComplete)% complete)
-            </p>
-            <div class="months-container">
-                @for (int i = 0; i < _totalMonths; i++)
-                {
-                bool isPast = i < _currentMonth;
-                bool isCurrent = i == _currentMonth;
-
-                <div class="month-circle @(isPast ? "past-month" : "") @(isCurrent ? "current-month" : "")"
-                     title="Month @(i + 1) of @_totalMonths">
+            <div class="view-toggle-container mb-3">
+                <div class="btn-group">
+                    <button type="button"
+                            class="btn @(_lifeViewType == LifeViewType.Months ? "btn-primary" : "btn-outline-secondary")"
+                            @onclick="() => SwitchLifeView(LifeViewType.Months)">
+                        Life in Months
+                    </button>
+                    <button type="button"
+                            class="btn @(_lifeViewType == LifeViewType.WeeksInYear ? "btn-primary" : "btn-outline-secondary")"
+                            @onclick="() => SwitchLifeView(LifeViewType.WeeksInYear)">
+                        Weeks in Year
+                    </button>
                 </div>
-                }
             </div>
-        </div>
-        }
-        else
-        {
-        <div class="weeks-in-year-chart">
-            <p class="text-center mb-3">
-                @(_weeksLeftInYear) of 52 weeks left in @DateTime.Now.Year
-            </p>
-            <div class="weeks-container">
-                @for (int i = 0; i < 52; i++)
-                {
-                bool isPast = i < _currentWeekOfYear;
-                bool isCurrent = i == _currentWeekOfYear;
 
-                <div class="week-square @(isPast ? "past-week" : "") @(isCurrent ? "current-week" : "")"
-                     title="Week @(i + 1) of 52">
+            @if (_lifeViewType == LifeViewType.Months)
+            {
+                <div class="life-months-chart">
+                    <p class="text-center mb-3">
+                        @(_totalMonths - _monthsLived) of @_totalMonths months left (@Math.Round(_percentComplete)% complete)
+                    </p>
+
+                    <div class="months-container">
+                        @for (int i = 0; i < _totalMonths; i++)
+                        {
+                            bool isPast    = i < _currentMonthIdx;
+                            bool isCurrent = i == _currentMonthIdx;
+
+                            <div class="month-circle @(isPast ? "past-month" : "") @(isCurrent ? "current-month" : "")"
+                                 title="Month @(i + 1) of @_totalMonths">
+                            </div>
+                        }
+                    </div>
                 </div>
-                }
-            </div>
-        </div>
-        }
+            }
+            else
+            {
+                <div class="weeks-in-year-chart">
+                    <p class="text-center mb-3">
+                        @_weeksLeftInYear of @_weeksInYear weeks left in @DateTime.Now.Year
+                    </p>
+
+                    <div class="weeks-container">
+                        @for (int i = 0; i < _weeksInYear; i++)
+                        {
+                            bool isPast    = i < _currentWeekIdx;
+                            bool isCurrent = i == _currentWeekIdx;
+
+                            <div class="week-square @(isPast ? "past-week" : "") @(isCurrent ? "current-week" : "")"
+                                 title="Week @(i + 1) of @_weeksInYear">
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
         }
     </div>
 </div>
@@ -199,59 +206,54 @@
 @code {
     [Parameter] public EventCallback<bool> OnToggle { get; set; }
 
-    private bool _isColumnCollapsed = false;
-    private bool _showLifeSettings = false;
-    private DateTime _birthDate = DateTime.Now.AddYears(-30);
-    private int _expectedYears = 60;
-    private int _totalMonths = 720;
-    private int _currentMonth = 360;
-    private double _percentComplete = 50;
-    private int _currentWeekOfYear = 0;
+    private bool       _isColumnCollapsed = false;
+    private bool       _showLifeSettings  = false;
+
+    private DateTime   _birthDate         = DateTime.Now.AddYears(-30);
+    private int        _expectedYears     = 60;
+
+    // --- Months view fields
+    private int    _totalMonths     = 0;
+    private int    _monthsLived     = 0; // completed months
+    private int    _currentMonthIdx = 0; // 0-based for UI
+    private double _percentComplete = 0;
+
+    // --- Weeks view fields
+    private int _weeksInYear     = 52;
+    private int _currentWeekIdx  = 0; // 0-based for UI
     private int _weeksLeftInYear = 0;
 
-    private enum LifeViewType
-    {
-        Months,
-        WeeksInYear
-    }
-
+    private enum LifeViewType { Months, WeeksInYear }
     private LifeViewType _lifeViewType = LifeViewType.Months;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadLifeSettings();
-        await CalculateLifeMonths();
-        await CalculateWeeksInYear();
+        CalculateLifeMonths();
+        CalculateWeeksInYear();
     }
 
     private async Task LoadLifeSettings()
     {
         try
         {
-            var birthDateStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeBirthDate");
+            var birthDateStr   = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeBirthDate");
             var expectedYearsStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeExpectedYears");
-            var collapsedStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeColumnCollapsed");
-            var viewTypeStr = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeViewType");
+            var collapsedStr   = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeColumnCollapsed");
+            var viewTypeStr    = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "lifeViewType");
 
-            if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out DateTime savedBirthDate))
-            {
+            if (!string.IsNullOrEmpty(birthDateStr) && DateTime.TryParse(birthDateStr, out var savedBirthDate))
                 _birthDate = savedBirthDate;
-            }
 
-            if (!string.IsNullOrEmpty(expectedYearsStr) && int.TryParse(expectedYearsStr, out int savedExpectedYears))
-            {
-                _expectedYears = savedExpectedYears;
-            }
+            if (!string.IsNullOrEmpty(expectedYearsStr) && int.TryParse(expectedYearsStr, out var savedYears))
+                _expectedYears = savedYears;
 
-            if (!string.IsNullOrEmpty(collapsedStr) && bool.TryParse(collapsedStr, out bool savedCollapsed))
-            {
+            if (!string.IsNullOrEmpty(collapsedStr) && bool.TryParse(collapsedStr, out var savedCollapsed))
                 _isColumnCollapsed = savedCollapsed;
-            }
 
-            if (!string.IsNullOrEmpty(viewTypeStr) && Enum.TryParse<LifeViewType>(viewTypeStr, out var savedViewType))
-            {
-                _lifeViewType = savedViewType;
-            }
+            if (!string.IsNullOrEmpty(viewTypeStr)
+                && Enum.TryParse(viewTypeStr, ignoreCase: true, out LifeViewType savedView))
+                _lifeViewType = savedView;
         }
         catch (Exception ex)
         {
@@ -259,27 +261,15 @@
         }
     }
 
-    private async Task ToggleColumn()
-    {
-        _isColumnCollapsed = !_isColumnCollapsed;
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeColumnCollapsed", _isColumnCollapsed.ToString().ToLower());
-        await OnToggle.InvokeAsync(_isColumnCollapsed);
-    }
-
-    private void OpenLifeSettings()
-    {
-        _showLifeSettings = true;
-    }
-
     private async Task SaveLifeSettings()
     {
         try
         {
-            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeBirthDate", _birthDate.ToString("o"));
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeBirthDate",      _birthDate.ToString("o"));
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeExpectedYears", _expectedYears.ToString());
 
             _showLifeSettings = false;
-            await CalculateLifeMonths();
+            CalculateLifeMonths();
         }
         catch (Exception ex)
         {
@@ -287,55 +277,57 @@
         }
     }
 
-    private async Task CalculateLifeMonths()
+    private async Task ToggleColumn()
     {
-        // Calculate total months based on expected years
-        _totalMonths = _expectedYears * 12;
-
-        // Calculate current month based on birth date
-        var now = DateTime.Now;
-        var monthsLived = ((now.Year - _birthDate.Year) * 12) + now.Month - _birthDate.Month;
-
-        if (now.Day < _birthDate.Day)
-        {
-            monthsLived--; // Adjust if we haven't reached the day of month yet
-        }
-
-        _currentMonth = Math.Max(0, Math.Min(monthsLived, _totalMonths));
-
-        // Calculate percentage complete
-        _percentComplete = Math.Round((double)_currentMonth / _totalMonths * 100, 1);
-
-        StateHasChanged();
+        _isColumnCollapsed = !_isColumnCollapsed;
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem",
+                                        "lifeColumnCollapsed",
+                                        _isColumnCollapsed.ToString().ToLower());
+        await OnToggle.InvokeAsync(_isColumnCollapsed);
     }
+
+    private void OpenLifeSettings() => _showLifeSettings = true;
 
     private async Task SwitchLifeView(LifeViewType viewType)
     {
         _lifeViewType = viewType;
-
         if (viewType == LifeViewType.WeeksInYear)
-        {
-            await CalculateWeeksInYear();
-        }
+            CalculateWeeksInYear();
 
         await JSRuntime.InvokeVoidAsync("localStorage.setItem", "lifeViewType", viewType.ToString());
     }
 
-    private Task CalculateWeeksInYear()
+    private void CalculateLifeMonths()
     {
-        var currentDate = DateTime.Now;
+        _totalMonths = _expectedYears * 12;
 
-        // Calculate current week of year (approximately)
-        _currentWeekOfYear = (int)Math.Floor((currentDate.DayOfYear - 1) / 7.0);
+        var now = DateTime.Now;
+        int monthsLived = (now.Year - _birthDate.Year) * 12
+                        + now.Month - _birthDate.Month
+                        - (now.Day < _birthDate.Day ? 1 : 0);
 
-        // Calculate weeks left in year
-        _weeksLeftInYear = 52 - _currentWeekOfYear;
+        _monthsLived     = Math.Clamp(monthsLived, 0, _totalMonths);
+        _currentMonthIdx = Math.Clamp(_monthsLived - 1, 0, _totalMonths - 1);
+        _percentComplete = _totalMonths == 0
+            ? 0
+            : Math.Round(_monthsLived / (double)_totalMonths * 100, 1);
 
-        return Task.CompletedTask;
+        StateHasChanged();
     }
 
+    private void CalculateWeeksInYear()
+    {
+        var now               = DateTime.Now;
+        int weekOneBased      = ISOWeek.GetWeekOfYear(now);          // 1-based
+        _weeksInYear          = ISOWeek.GetWeeksInYear(now.Year);    // 52 or 53
+        _currentWeekIdx       = weekOneBased - 1;                    // 0-based for UI
+        _weeksLeftInYear      = _weeksInYear - weekOneBased;         // exclude current week
+
+        StateHasChanged();
+    }
+    
     public void Dispose()
     {
-        // Cleanup code if needed
+        // No unmanaged resources yet
     }
 }
