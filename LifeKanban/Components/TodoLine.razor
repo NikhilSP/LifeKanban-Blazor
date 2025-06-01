@@ -1,0 +1,99 @@
+@using LifeKanban.Model
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="todo-item @(Completed ? "completed-todo" : "")" @key="Todo.Id">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center flex-grow-1">
+            <input type="checkbox"
+                   class="form-check-input me-2"
+                   checked="@Todo.IsCompleted"
+                   @onchange="(e) => OnToggle.InvokeAsync((Todo, e.Value is true))"/>
+
+            <input type="text"
+                   class="todo-input @(Completed ? "completed-input" : "")"
+                   value="@Todo.Title"
+                   spellcheck="true"
+                   @oninput="e => _draftTitle = e.Value?.ToString() ?? string.Empty"
+                   @onblur="() => OnSaveTitle.InvokeAsync((Todo, _draftTitle))"
+                   @onkeydown="HandleKeyDown"/>
+        </div>
+
+        <button type="button"
+                class="todo-delete-btn"
+                @onclick="() => OnDelete.InvokeAsync(Todo)">
+            <span class="bi bi-trash"></span>
+        </button>
+    </div>
+</div>
+
+
+<style>
+
+.todo-item {
+padding: 8px;
+margin-bottom: 10px;
+background-color: transparent;
+cursor: pointer;
+border-radius: 4px;
+transition: background-color 0.2s ease;
+}
+
+.todo-item:hover {
+background-color: var(--dark-card-hover);
+}
+
+.todo-delete-btn {
+background: transparent;
+border: none;
+color: var(--dark-text-secondary);
+opacity: 0.7;
+}
+
+.todo-delete-btn:hover {
+opacity: 1;
+color: #ff6b6b;
+}
+
+.todo-input {
+width: 100%;
+background-color: transparent;
+border: none;
+color: var(--dark-text);
+outline: none;
+}
+
+.todo-input:focus {
+background-color: rgba(255, 255, 255, 0.05);
+outline: none;
+transition: background-color 0.2s ease;
+border-left: 2px solid var(--primary-color);
+padding-left: 3px;
+}
+
+.todo-item:has(.todo-input:focus) {
+background-color: rgba(255, 255, 255, 0.02);
+}
+</style>
+
+@code {
+    [Parameter] public QuickTodoItem Todo { get; set; } = default!;
+    [Parameter] public EventCallback<(QuickTodoItem, bool)> OnToggle { get; set; }
+    [Parameter] public EventCallback<(QuickTodoItem, string)> OnSaveTitle { get; set; }
+    [Parameter] public EventCallback<QuickTodoItem> OnDelete { get; set; }
+    [Parameter] public bool Completed { get; set; }
+
+    private string _draftTitle = string.Empty;
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code is "Enter" or "NumpadEnter")
+        {
+            if (string.IsNullOrWhiteSpace(_draftTitle))
+                await OnDelete.InvokeAsync(Todo);
+            else
+                await OnSaveTitle.InvokeAsync((Todo, _draftTitle));
+        }
+    }
+
+    protected override void OnParametersSet() => _draftTitle = Todo.Title;
+}
