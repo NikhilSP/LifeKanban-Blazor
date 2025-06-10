@@ -18,6 +18,9 @@ builder.Services.AddSingleton<ProjectStateService>();
 builder.Services.AddSingleton<QuickTodosClient>();
 builder.Services.AddSingleton<KanbanService>();
 
+// Add the new app initialization service
+builder.Services.AddScoped<AppInitializationService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -29,8 +32,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
 app.UseAntiforgery();
 
 app.MapStaticAssets();

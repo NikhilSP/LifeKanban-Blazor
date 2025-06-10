@@ -1,7 +1,9 @@
 ﻿@page "/"
 @using LifeKanban.Model.Home
+@using LifeKanban.Services
 @rendermode InteractiveServer
 @inject IJSRuntime JSRuntime
+@inject AppInitializationService AppInitService
 
 <PageTitle>Home</PageTitle>
 
@@ -60,6 +62,14 @@
         };
 
         await LoadColumnSettings();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Initialize app in background - no waiting for user
+            _ = AppInitService.InitializeAppIfNeeded();
+        }
     }
 
     private async Task LoadColumnSettings()

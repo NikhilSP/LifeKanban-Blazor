@@ -4,7 +4,7 @@ using LifeKanbanApi.Repository;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LifeKanbanApi.Controllers
+namespace LifeKanbanApi.Controller
 {
     [ApiController]
     [Route("")]

@@ -6,25 +6,83 @@ namespace LifeKanbanApi.Data;
 public class SeedDataService
 {
     private readonly ProjectDbContext _context;
+    private readonly ILogger<SeedDataService> _logger;
 
-    public SeedDataService(ProjectDbContext context)
+    public SeedDataService(ProjectDbContext context, ILogger<SeedDataService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
+    // Remove the automatic checks - we'll call this only when needed
     public async Task SeedDefaultDataAsync()
     {
-        // Check if data already exists
-        if (await _context.Projects.AnyAsync())
+        try
         {
-            return; // Data already seeded
-        }
+            _logger.LogInformation("Starting data seeding...");
 
-        // Create sample projects
-        var projects = CreateSampleProjects();
-        
-        await _context.Projects.AddRangeAsync(projects);
-        await _context.SaveChangesAsync();
+            // Create sample projects
+            var projects = CreateSampleProjects();
+            
+            _logger.LogInformation($"Created {projects.Count} sample projects");
+            
+            await _context.Projects.AddRangeAsync(projects);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Successfully seeded default project data");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while seeding default data");
+            throw;
+        }
+    }
+
+    public async Task SeedQuickTodosAsync()
+    {
+        try
+        {
+            _logger.LogInformation("Starting quick todos seeding...");
+
+            var quickTodos = new List<QuickTodo>
+            {
+                new QuickTodo
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Welcome! Try adding your own quick todo",
+                    IsCompleted = false,
+                    DateCreated = DateTime.UtcNow
+                },
+                new QuickTodo
+                {
+                    Id = Guid.NewGuid(),
+                    Title = "Check out the projects section",
+                    IsCompleted = false,
+                    DateCreated = DateTime.UtcNow.AddMinutes(-30)
+                }
+            };
+
+            await _context.QuickTodos.AddRangeAsync(quickTodos);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation($"Successfully seeded {quickTodos.Count} quick todos");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while seeding quick todos");
+            throw;
+        }
+    }
+
+    // Helper methods for the controller
+    public async Task<int> GetProjectCount()
+    {
+        return await _context.Projects.CountAsync();
+    }
+
+    public async Task<int> GetQuickTodoCount()
+    {
+        return await _context.QuickTodos.CountAsync();
     }
 
     private List<Project> CreateSampleProjects()
@@ -240,34 +298,5 @@ public class SeedDataService
         }
 
         return new List<Project> { welcomeProject, personalProject, learningProject };
-    }
-
-    public async Task SeedQuickTodosAsync()
-    {
-        if (await _context.QuickTodos.AnyAsync())
-        {
-            return; // Quick todos already exist
-        }
-
-        var quickTodos = new List<QuickTodo>
-        {
-            new QuickTodo
-            {
-                Id = Guid.NewGuid(),
-                Title = "Welcome! Try adding your own quick todo",
-                IsCompleted = false,
-                DateCreated = DateTime.UtcNow
-            },
-            new QuickTodo
-            {
-                Id = Guid.NewGuid(),
-                Title = "Check out the projects section",
-                IsCompleted = false,
-                DateCreated = DateTime.UtcNow.AddMinutes(-30)
-            }
-        };
-
-        await _context.QuickTodos.AddRangeAsync(quickTodos);
-        await _context.SaveChangesAsync();
     }
 }

@@ -28,23 +28,18 @@ public class Program
         
         var app = builder.Build();
 
-        // Initialize database and seed data
+        // Only ensure database exists - no automatic seeding
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             var context = services.GetRequiredService<ProjectDbContext>();
             var repository = services.GetRequiredService<ProjectRepository>();
-            var seedService = services.GetRequiredService<SeedDataService>();
             
             // Ensure database is created
             context.Database.EnsureCreated();
             
             // Initialize project positions for existing data
             repository.InitializeProjectPositions().GetAwaiter().GetResult();
-            
-            // Seed default data for new installations
-            seedService.SeedDefaultDataAsync().GetAwaiter().GetResult();
-            seedService.SeedQuickTodosAsync().GetAwaiter().GetResult();
         }
 
         // Configure middleware
