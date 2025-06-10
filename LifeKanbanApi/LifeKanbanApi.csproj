@@ -27,4 +27,8 @@
       <PackageVersion Update="Carter" Version="7.1.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Migrations\" />
+    </ItemGroup>
+
 </Project>

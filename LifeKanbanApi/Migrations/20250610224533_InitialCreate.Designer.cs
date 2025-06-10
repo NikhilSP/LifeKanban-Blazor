@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LifeKanbanApi.Migrations
 {
     [DbContext(typeof(ProjectDbContext))]
-    [Migration("20250422232811_AddProjectDescription")]
-    partial class AddProjectDescription
+    [Migration("20250610224533_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

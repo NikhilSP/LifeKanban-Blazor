@@ -17,11 +17,27 @@ namespace LifeKanbanApi.Migrations
                 {
                     Id = table.Column<Guid>(type: "TEXT", nullable: false),
                     Name = table.Column<string>(type: "TEXT", nullable: false),
+                    Description = table.Column<string>(type: "TEXT", nullable: false),
                     Position = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Projects", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuickTodos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DateCompleted = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuickTodos", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -71,10 +87,36 @@ namespace LifeKanbanApi.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "SubTasks",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "TEXT", nullable: false),
+                    Title = table.Column<string>(type: "TEXT", nullable: false),
+                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    Position = table.Column<int>(type: "INTEGER", nullable: false),
+                    ProjectTaskId = table.Column<Guid>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SubTasks", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_SubTasks_Tasks_ProjectTaskId",
+                        column: x => x.ProjectTaskId,
+                        principalTable: "Tasks",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Milestones_ProjectId",
                 table: "Milestones",
                 column: "ProjectId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SubTasks_ProjectTaskId",
+                table: "SubTasks",
+                column: "ProjectTaskId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tasks_MilestoneId",
@@ -90,6 +132,12 @@ namespace LifeKanbanApi.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "QuickTodos");
+
+            migrationBuilder.DropTable(
+                name: "SubTasks");
+
             migrationBuilder.DropTable(
                 name: "Tasks");
 
